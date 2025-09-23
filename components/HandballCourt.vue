@@ -3,9 +3,13 @@ import type { Orientation, Position, Team, Match, MatchLineup, Player } from '..
 import { AttackPosValues, DefensePosValues } from '../types/handball'
 import upperSideImg from '~/assets/upper_side.svg';
 import lowerSideImg from '~/assets/lower_side.svg';
-import PositionActionMenu, {type ActionItem, type GoalKeeperActionItem} from './PositionActionMenu.vue';
+import PositionActionMenu, {type ActionItem } from './PositionActionMenu.vue';
+import CourtStats from './CourtStats.vue';
 import { useHandballStore } from '~/composables/useHandballStore';
 import PlayerChangeModal from "./PlayerChangeModal.vue";
+import attack from './icons/attack.vue';
+import defense from './icons/defense.vue';
+import all_players from './icons/all_players.vue';
 
 const props = defineProps<{
   orientation: Orientation;
@@ -33,8 +37,9 @@ const basePositions: Position[] = [
 ];
 const baseDefense: Position[] = [
 ];
-const mode = ref<"attack" | "defense">("attack");
+const mode = ref<"attack" | "defense" | "all">("attack");
 
+const selectedPlayer = ref<Player | null>(null);
 const selectedPosition = ref<Position | null>(null);
 const showPlayerModal = ref(false);
 const actionMenuOpen = ref(false);
@@ -44,17 +49,11 @@ const store = useHandballStore();
 const courtRef = ref<HTMLDivElement | null>(null);
 const positions = ref<Position[]>([]);
 const activePositions = computed(() => mode.value == "attack" ?  
-positions.value.filter(p => (AttackPosValues as readonly string[]).includes(p.key) || p.key == "GK") : 
-positions.value.filter(p => (DefensePosValues as readonly string[]).includes(p.key) || p.key == "GK"))
-
-
-const toggleMode = () => {
-  if (mode.value == "attack"){
-    mode.value = "defense";
-  }else{
-    mode.value = "attack";
-  }
-}
+  positions.value.filter(p => (AttackPosValues as readonly string[]).includes(p.key) || p.key == "GK") : 
+  positions.value.filter(p => (DefensePosValues as readonly string[]).includes(p.key) || p.key == "GK")
+)
+const teamPlayers = store.teams.value[0]?.players;
+const showPlayerActionIndication = ref<boolean>(false);
 
 function loadPositions() {
   const saved = store.getTeamPositionLayouts(props.team.id);
@@ -64,16 +63,23 @@ function loadPositions() {
   });
 }
 
-watch(() => props.team.id, () => loadPositions(), { immediate: true });
+onMounted(() => {
+  loadPositions();
+})
+
+const changeViewMode = (type: 'all' | 'defense' | 'attack') => {
+  mode.value = type;
+  closeAllMenus();
+}
 
 function getAssigned(lineup: MatchLineup, position: Position) {
-  return lineup[position.key] as string | null;
+  return lineup[position.key] as number | null;
 }
 
 function getAssignedPlayer(position: Position): Player | null {
-  const playerId = getAssigned(props.match.lineup, position);
+  const playerId = store.selectedTeam.value?.lineups[0]![position.key];
   if (!playerId) return null;
-  return props.team.players.find(p => p.id === playerId) || null;
+  return store.selectedTeam.value?.players.find(p => p.id === playerId) || null;
 }
 
 function onPositionClick(position: Position) {
@@ -81,11 +87,31 @@ function onPositionClick(position: Position) {
   if(wasOpen && position.key === selectedPosition.value?.key){
     closeAllMenus();
   }else{
+    selectedPlayer.value = getAssignedPlayer(position);
     selectedPosition.value = position;
-    actionMenuOpen.value = true;
+    if(selectedPlayer.value){
+      actionMenuOpen.value = true;
+    }else{
+      showPlayerModal.value = true;
+    }
   }
 }
 
+function onPlayerClick(p: Player) {
+  const wasOpen = actionMenuOpen.value;
+  if(wasOpen && p.position === selectedPosition.value?.key){
+    closeAllMenus();
+  }else{
+    selectedPosition.value = {
+      key: p.position,
+      label: p.position,
+      x: 0,
+      y:50
+    };
+    selectedPlayer.value = p;
+    actionMenuOpen.value = true;
+  }
+}
 function onPlayerSelect(playerId: string | null) {
   if (selectedPosition.value) {
     // emit('assign', selectedPosition.value, playerId);
@@ -103,18 +129,31 @@ function getPlayerInitials(player: Player | null): number {
   return player.number
 }
 
-function onSelectAction(position: Position, action: ActionItem['name'] | GoalKeeperActionItem['name']) {
-  // emit('action', position, action);
-  // TODO
-  if (action === 'change') {
-    showPlayerModal.value = true;
+function showActionPerformed(){
+  showPlayerActionIndication.value=true;
+  setTimeout(() => {
+    showPlayerActionIndication.value = false;
+  }, 2000);
+}
+
+function onSelectAction(action: ActionItem['type']) {
+  const playerIndex = store.selectedTeam.value?.players.findIndex(p => p.id === selectedPlayer.value!.id)
+  if (playerIndex !== undefined && playerIndex > -1) {
+    // Update each field in place
+    const targetPlayer = store.selectedTeam.value!.players[playerIndex]
+    console.log(targetPlayer?.id,action)
+    store.increasePlayerStat(targetPlayer!,action);
+    showActionPerformed();
   }
-  actionMenuOpen.value = false;
+  // if (action === 'change') {
+  //   showPlayerModal.value = true;
+  // }
 }
 
 function closeAllMenus() {
   actionMenuOpen.value = false;
   selectedPosition.value = null;
+  selectedPlayer.value = null;
 }
 
 // Drag-and-drop logic with threshold to distinguish click vs drag
@@ -205,12 +244,48 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
       ]" alt="Court" />
       <div class="absolute top-1/2 left-0 w-full border-2 border-white"></div>
       <div class="relative top-0 w-full h-1/2">
-        <div class="absolute bottom-0 -left-5 -mb-7 w-full">
-          <button class="shadow-2xl text-white font-semibold rounded-full w-24 h-14" :class="mode === 'attack' ? 'bg-red-500 border-red-700' : 'bg-blue-900 border-gray-900'" @click="toggleMode">{{ mode === "attack" ? 'Defense' : 'Attack' }}</button>
+        <div 
+        class="absolute bottom-0 -left-6 -mb-20 flex flex-col rounded-full w-12 h-38 z-100 bg-gray-900 shadow-2xl items-center space-y-4 justify-center"
+        >
+        <!-- style="background: rgba(0,0,0,0.8)" -->
+          <all_players  @click="changeViewMode('all')"   class="w-8 h-8   rounded-full":class="mode === 'all' ? 'bg-white text-gray-900' : 'bg-gray-500 text-gray-600'"/>
+          <attack @click="changeViewMode('attack')" class="w-8 h-8  rounded-full" :class="mode === 'attack' ? 'text-white bg-blue-500' : 'text-gray-500 bg-blue-900'"  />
+          <defense @click="changeViewMode('defense')" class="w-8 h-8   rounded-full" :class="mode === 'defense' ? 'text-white bg-red-600' : 'text-gray-500 bg-red-900'" />
         </div>
+        <CourtStats :match-id="match.id" class="pt-48"/>
+      </div>
+      
+      <div v-if="actionMenuOpen" class="absolute top-0 h-1/2 w-full z-50"
+        style="background: rgba(28,28,28,0.9)"
+      >
+        <PositionActionMenu
+          class="relative flex flex-col h-full justify-center items-center select-none "
+          :open="actionMenuOpen"
+          :selectedPosition="selectedPosition"
+          :playerNumber="selectedPlayer?.number"
+          @toggle="actionMenuOpen = !actionMenuOpen"
+          @select="(action) => onSelectAction(action)"
+        />
+      </div>
+      <div v-if="mode === 'all'" class="flex items-start justify-center flex-wrap content-end p-4 h-1/2  w-full space-x-4 space-y-3 ">
+        <button
+          v-for="p in teamPlayers"
+            @click="onPlayerClick(p)"
+            :class="[
+            'w-16 h-16 rounded-full flex items-center justify-center z-50 border-2 text-sm font-bold text-white transition-colors ',
+            selectedPlayer?.id == p.id ? 'shadow-inner  border-white bg-gray-500' : ' border-gray-900 shadow-xl bg-gray-800'
+          ]">
+          <span v-if="selectedPlayer && selectedPlayer?.id === p?.id && showPlayerActionIndication" class="absolute top-0 right-0 size-5 flex">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex size-5 rounded-full bg-gray-800 justify-center">1</span>
+          </span>
+          <span>
+            {{ getPlayerInitials(p) }}
+          </span>
+        </button>
       </div>
       <!-- Position Circles -->
-      <div v-for="pos in activePositions" :key="pos.key" 
+      <div v-if="mode !== 'all'" v-for="pos in activePositions" :key="pos.key" 
           class="cursor-pointer">
         <div @mousedown.stop="startDrag(pos.key, $event)"
             @touchstart.stop="startDrag(pos.key, $event)"
@@ -223,10 +298,14 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
               transform: 'translate(-50%, -50%)'
             }"
             :class="[
-            'w-16 h-16 rounded-full flex items-center justify-center border-2 text-sm font-bold text-white transition-colors',
-            selectedPosition?.key == pos.key ? 'shadow-inner shadow-lg bg-gray-500 border-gray-600' : mode === 'attack' ? 'shadow-xl bg-blue-800 border-blue-800' : 'shadow-xl border-red-500 bg-red-500'
+            'relative w-16 h-16 rounded-full flex items-center justify-center border-2 text-sm font-bold text-white transition-colors',
+            selectedPosition?.key == pos.key ? 'shadow-inner bg-gray-500 border-gray-600' : mode === 'attack' ? 'shadow-xl bg-blue-800 border-blue-800' : 'shadow-xl border-red-500 bg-red-500',
           ]">
-          <span v-if="getAssignedPlayer(pos)">
+           <span v-if="selectedPlayer && selectedPlayer?.id === getAssignedPlayer(pos)?.id && showPlayerActionIndication" class="absolute top-0 right-0 size-5 flex">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+              <span class="relative inline-flex size-5 rounded-full bg-gray-800 justify-center">1</span>
+            </span>
+          <span class="relative" v-if="getAssignedPlayer(pos)">
             {{ getPlayerInitials(getAssignedPlayer(pos)) }}
           </span>
           <span v-else>{{ pos.key }}</span>
@@ -236,14 +315,6 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
         {{ pos.label }}
       </div> -->
       </div>
-      <div class="absolute -mt-34 rounded-2xl w-full z-50">
-          <PositionActionMenu
-            :open="actionMenuOpen"
-            :selectedPosition="selectedPosition"
-            @toggle="actionMenuOpen = !actionMenuOpen"
-            @select="(action) => onSelectAction(selectedPosition!, action)"
-          />
-        </div>
     </div>
 
     <!-- Player Selection Modal -->

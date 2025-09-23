@@ -16,9 +16,9 @@ const emit = defineEmits<{
 const store = useHandballStore();
 
 
-function onPlayerSelect(playerId: string | null) {
+function onPlayerSelect(playerId: number) {
   if (props.selectedPosition) {
-    store.assignPlayer(props.match.id, props.selectedPosition, playerId);
+    store.changePlayer(props.match.id, props.selectedPosition, playerId);
   }
   emit("cancel")
 }
@@ -29,18 +29,13 @@ function getPlayersForPosition(position: Position): Player[] {
 
 </script>
 <template>
-    <div class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="fixed inset-0 flex items-center justify-center z-100">
       <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 class="text-lg font-semibold mb-4">
           Select Player for {{ selectedPosition.label }}
         </h3>
         
         <div class="space-y-2 mb-4 max-h-60 overflow-y-auto">
-          <button @click="onPlayerSelect(null)" 
-                  class="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
-            <span class="font-medium text-gray-500">- None -</span>
-          </button>
-          
           <button v-for="player in getPlayersForPosition(selectedPosition)" 
                   :key="player.id"
                   @click="onPlayerSelect(player.id)"

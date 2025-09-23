@@ -4,10 +4,10 @@ import type { Position } from '../../types/handball';
 
 const route = useRoute();
 const store = useHandballStore();
-const id = route.params.id as string;
+const id = Number(route.params.id);
 
 const match = computed(() => store.getMatch(id));
-const team = computed(() => match.value ? store.getTeam(match.value.teamId) : null);
+const team = computed(() => match.value ? store.getTeam(match.value.teamid) : null);
 
 // Responsive orientation: horizontal on md+ screens, vertical on small
 const isWide = ref(false);

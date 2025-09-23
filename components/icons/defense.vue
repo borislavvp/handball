@@ -1,0 +1,3 @@
+<template>
+    <svg version="1.1" viewBox="0 0 48 48"  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g id="Artboard-Copy" transform="translate(-407.000000, -129.000000)"><path d="M431,170 C446.102,164.421 446.000009,151.621 446.000009,151.621 L446.000009,141.07 C437.605,140.288 431.307,134.295 431,134 C430.693,134.295 424.395,140.288 415.999982,141.07 L415.999982,151.621 C415.999982,151.621 415.898,164.421 431,170" fill="currentColor" id="shield"/><g id="slices" transform="translate(47.000000, 9.000000)"/></g></g></svg>
+</template>

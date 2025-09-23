@@ -27,5 +27,11 @@ export default defineNuxtConfig({
         { src: "/icons/pwa-512x512.png", sizes: "512x512", type: "image/png" }
       ]
     }
+  },
+  runtimeConfig: {
+    public: {
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+    }
   }
 })

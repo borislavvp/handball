@@ -26,31 +26,83 @@ export type Position = {
 }
 
 export interface Player {
-  id: string;
+  id: number;
   name: string;
   number: number;
   position: Position["key"];
+  stats:PlayerStats[]
 }
 
 export interface Team {
-  id: string;
+  id: number;
   name: string;
   players: Player[];
   // Default players for each position (by player id)
-  defaults?: Partial<Record<Position["key"], string | null>>;
+  lineups: MatchLineup[]
 }
 export type MatchLineup = {
-  [key in Position["key"]] : Player["id"] | null
+  id:number,
+  D1?: number
+  D2?: number
+  D3?: number
+  D4?: number
+  D5?: number
+  D6?: number
+  GK?: number
+  CB?: number
+  LB?: number
+  LW?: number
+  PV?: number
+  PV2?: number
+  RB?: number
+  RW?: number
 }
 
 export interface Match {
-  id: string;
-  name: string;
-  teamId: string;
+  id: number;
+  opponent: string;
+  teamid: number;
+  result: "WIN" | "LOST" | null;
   lineup: MatchLineup;
-  createdAt: number;
+  createdat?: string;
 }
 
 export type Orientation = 'vertical' | 'horizontal';
 
+export type Stats = "goal"|
+  "miss"|
+  "goodpass"|
+  "badpass"|
+  "safe"|
+  "gooddefense"|
+  "baddefense"|
+  "penaltymade"|
+  "penaltyscored"|
+  "intercept"|
+  "twominutes"|
+  "yellowcard" |
+  "redcard" |
+  "lostball"
 
+export type PlayerStats = {
+  goal:number,
+  miss:number,
+  goodpass:number,
+  badpass:number,
+  safe:number
+  gooddefense:number,
+  baddefense:number,
+  penaltymade:number,
+  penaltyscored:number,
+  intercept:number,
+  lostball:number,
+  twominutes:number,
+  yellowcard:number,
+  redcard:number,
+  match:{
+    id: number,
+    opponent: string,
+    result: string | null,
+    createdat?: string 
+  }
+}

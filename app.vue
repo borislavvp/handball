@@ -1,13 +1,23 @@
+<script setup lang="ts">
+import { createHandballStore,provideHandballStore } from './composables/useHandballStore';
+const store = createHandballStore()
+provideHandballStore(store)
+
+onMounted(async () => {
+  await store.initialize();
+})
+</script>
 <template>
   <div>
     <NuxtRouteAnnouncer />
     <NuxtLoadingIndicator />
+    
     <header class="px-3 py-2 flex gap-3 items-center border-b border-gray-200 bg-gray-50">
       <NuxtLink to="/" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Teams</NuxtLink>
       <NuxtLink to="/matches" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Matches</NuxtLink>
     </header>
     <main class="overflow-x-hidden">
-      <NuxtPage />
+        <NuxtPage :keepalive="true"/>
     </main>
   </div>
 </template>
