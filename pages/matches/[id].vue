@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useHandballStore } from '~/composables/useHandballStore';
-import type { Position } from '../../types/handball';
 
 const route = useRoute();
 const store = useHandballStore();
@@ -11,12 +10,21 @@ const team = computed(() => match.value ? store.getTeam(match.value.teamid) : nu
 
 // Responsive orientation: horizontal on md+ screens, vertical on small
 const isWide = ref(false);
+let mq: MediaQueryList | null = null;
+const update = () => {
+  if (!mq) return;
+  isWide.value = mq.matches;
+  store.setOrientation(mq.matches ? 'horizontal' : 'vertical');
+};
+
 onMounted(() => {
-  const mq = window.matchMedia('(min-width: 768px)');
-  const update = () => { isWide.value = mq.matches; store.setOrientation(mq.matches ? 'horizontal' : 'vertical'); };
+  mq = window.matchMedia('(min-width: 768px)');
   mq.addEventListener('change', update);
   update();
-  onBeforeUnmount(() => mq.removeEventListener('change', update));
+});
+
+onBeforeUnmount(() => {
+  if (mq) mq.removeEventListener('change', update);
 });
 </script>
 
