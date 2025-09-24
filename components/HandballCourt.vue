@@ -234,15 +234,15 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
     <!-- Court Image -->
     <div ref="courtRef" class="relative w-full h-full border-4 border-white">
       <!-- <div class="absolute top-0 left-1/2 w- border-3 border-white h-4 -mt-4"></div> -->
-      <img :src="upperSideImg" style="margin-top: -26.6px" :class="[
-        'w-full object-contain absolute top-0',
+      <img :src="upperSideImg" :class="[
+        'w-full object-contain absolute top-0 -mt-1',
         orientation === 'horizontal' ? 'rotate-90' : ''
       ]" alt="Court" />
-      <img :src="lowerSideImg"  style="margin-bottom: -26.6px" :class="[
-        'w-full object-contain absolute bottom-0',
+      <img :src="lowerSideImg" :class="[
+        'w-full object-contain absolute bottom-0 -mb-1',
         orientation === 'horizontal' ? 'rotate-90' : ''
       ]" alt="Court" />
-      <div class="absolute top-1/2 left-0 w-full border-2 border-white"></div>
+      <div class="absolute top-1/2 left-0 w-full border-2 border-white z-100"></div>
       <div class="relative top-0 w-full h-1/2">
         <div 
         class="absolute bottom-0 -left-6 -mb-20 flex flex-col rounded-full w-12 h-38 z-100 bg-gray-900 shadow-2xl items-center space-y-4 justify-center"
@@ -252,14 +252,16 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
           <attack @click="changeViewMode('attack')" class="w-8 h-8  rounded-full" :class="mode === 'attack' ? 'text-white bg-blue-500' : 'text-gray-500 bg-blue-900'"  />
           <defense @click="changeViewMode('defense')" class="w-8 h-8   rounded-full" :class="mode === 'defense' ? 'text-white bg-red-600' : 'text-gray-500 bg-red-900'" />
         </div>
-        <CourtStats :match-id="match.id" class="pt-48"/>
+        <div class="absolute w-full bottom-0 h-1/2">
+          <CourtStats :match-id="match.id" class="pt-auto"/>
+        </div>
       </div>
       
       <div v-if="actionMenuOpen" class="absolute top-0 h-1/2 w-full z-50"
         style="background: rgba(28,28,28,0.9)"
       >
         <PositionActionMenu
-          class="relative flex flex-col h-full justify-center items-center select-none "
+          class="w-full flex flex-row justify-around items-start relative inset-0 z-50 p-4 overflow-y-auto max-h-full select-none"
           :open="actionMenuOpen"
           :selectedPosition="selectedPosition"
           :playerNumber="selectedPlayer?.number"
@@ -267,7 +269,7 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
           @select="(action) => onSelectAction(action)"
         />
       </div>
-      <div v-if="mode === 'all'" class="flex items-start justify-center flex-wrap content-end p-4 h-1/2  w-full space-x-4 space-y-3 ">
+      <div v-if="mode === 'all'" class="flex items-start justify-center flex-wrap content-end p-4 max-h-1/2 overflow-y-auto w-full space-x-4 space-y-3 ">
         <button
           v-for="p in teamPlayers"
             @click="onPlayerClick(p)"

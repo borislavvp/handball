@@ -6,7 +6,7 @@ import { onMounted, watch } from 'vue';
 const store = useHandballStore();
 
 const newTeamName = ref('');
-const positions: Position["key"][] = ['LW', 'LB', 'CB', 'RB', 'RW', 'PV', "GK"];
+const positions: Position["key"][] = ['LW', 'LB', 'CB', 'RB', 'RW', 'PV', "GK", "PV2"];
 const newPlayerName = ref('');
 const newPlayerPosition = ref<Position["key"]>('LW');
 const newPlayerNumber = ref<number | null>(null);
@@ -53,27 +53,23 @@ const lineupChanged = async (position:Position["key"], playerID:EventTarget) => 
 <template>
   <div class="p-4 max-w-md mx-auto space-y-4 mb-20">
     <!-- Team Header -->
-    <div class="bg-white shadow-md rounded-2xl p-4 flex justify-between items-center">
-      <h2 class="text-xl font-bold text-gray-800">{{ store.selectedTeam.value?.name || 'Select a Team' }}</h2>
-      <!-- Team actions could go here -->
-    </div>
-
-    <!-- Add Player Accordion -->
-    <div class="bg-white shadow-md rounded-2xl">
+    <div class="bg-white shadow-md rounded-2xl p-4 flex flex-col justify-between items-center">
       <button
-        class="w-full flex justify-between items-center px-4 py-3 text-left text-gray-700 font-medium"
-        @click="showAddPlayer = !showAddPlayer"
-      >
-        <span>Add Player</span>
-        <svg
-          :class="{'rotate-180': showAddPlayer}"
-          class="h-5 w-5 transition-transform"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          class="w-full flex justify-between items-center py-3 text-left text-gray-700 font-medium"
+          @click="showAddPlayer = !showAddPlayer"
         >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      <div v-if="showAddPlayer" class="p-4 space-y-3 border-t border-gray-200">
+          <span>Add Player to {{ store.selectedTeam.value?.name  }}</span>
+          <svg
+            :class="{'rotate-180': showAddPlayer}"
+            class="h-5 w-5 transition-transform"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      <!-- Team actions could go here -->
+      <!-- Add Player Accordion -->
+      <div v-if="showAddPlayer" class="space-y-3 border-t border-gray-200">
         <div class="flex gap-2 flex-wrap">
           <input
             v-model="newPlayerName"
@@ -187,7 +183,7 @@ const lineupChanged = async (position:Position["key"], playerID:EventTarget) => 
             >
               <option value="">- None -</option>
               <option
-                v-for="pl in (store.selectedTeam.value?.players || []).filter(pl => pl.position === pos)"
+                v-for="pl in (store.selectedTeam.value?.players || []).filter(pl => pos==='PV2' ? pl.position === 'PV' : pl.position === pos)"
                 :key="pl.id"
                 :value="pl.id"
               >

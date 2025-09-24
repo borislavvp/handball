@@ -58,7 +58,7 @@ const passAcc = computed(() => {
   <div class="flex flex-col items-center">
     <span class="text-gray-100 text-xl font-medium">Defense</span>
     <div class="mt-2 w-20 h-20 flex items-center justify-center rounded-full bg-gray-200 relative">
-      <span class="text-2xl font-bold " :class="defenseEff > 70 ? 'text-green-600' : goalAcc > 40 ?'text-yellow-500' : 'text-red-500'">{{ defenseEff }}%</span>
+      <span class="text-2xl font-bold " :class="defenseEff > 70 ? 'text-green-600' : defenseEff > 40 ?'text-yellow-500' : 'text-red-500'">{{ defenseEff }}%</span>
     </div>
   </div>
 
@@ -66,7 +66,7 @@ const passAcc = computed(() => {
   <div class="flex flex-col items-center">
     <span class="text-gray-100 text-xl font-medium">Pass</span>
     <div class="mt-2 w-20 h-20 flex items-center justify-center rounded-full bg-gray-200 relative">
-      <span class="text-2xl font-bold ":class="passAcc > 70 ? 'text-green-600' : goalAcc > 40 ?'text-yellow-500' : 'text-red-500'">{{ passAcc }}%</span>
+      <span class="text-2xl font-bold ":class="passAcc > 70 ? 'text-green-600' : passAcc > 40 ?'text-yellow-500' : 'text-red-500'">{{ passAcc }}%</span>
     </div>
   </div>
 </div>

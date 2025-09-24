@@ -53,45 +53,42 @@ function handleClick(action: ActionItem["type"]) {
   <transition name="slide-fade">
     <div
       v-if="open"
-      class="fixed inset-0 flex justify-center items-end z-50 p-2"
       @click.self="$emit('toggle')"
     >
-      <div class="w-full  p-4 flex flex-row justify-around items-start">
-        <!-- Positive Actions -->
-        <div class="flex flex-col gap-2 items-center">
-          <button
-            v-for="action in menuActions.filter(a => a.icon === 'plus')"
-            :key="action.type"
-            @click.stop="handleClick(action.type!)"
-            class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-green-700 bg-green-100 border border-green-600 text-sm font-medium active:scale-95"
-          >
-            <span>{{ action.name }}</span>
-          </button>
-        </div>
+      <!-- Positive Actions -->
+      <div class="flex flex-col gap-2 items-center">
+        <button
+          v-for="action in menuActions.filter(a => a.icon === 'plus')"
+          :key="action.type"
+          @click.stop="handleClick(action.type!)"
+          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-green-700 bg-green-100 border border-green-600 text-sm font-medium active:scale-95"
+        >
+          <span>{{ action.name }}</span>
+        </button>
+      </div>
 
-        <!-- Neutral / Special Actions -->
-        <div class="flex flex-col gap-2 items-center">
-          <button
-            v-for="action in menuActions.filter(a => !a.icon)"
-            :key="action.type"
-            @click.stop="handleClick(action.type!)"
-            class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-yellow-700 bg-yellow-100 border border-yellow-500 text-sm font-medium active:scale-95"
-          >
-            <span>{{ action.name }}</span>
-          </button>
-        </div>
+      <!-- Neutral / Special Actions -->
+      <div class="flex flex-col gap-2 items-center">
+        <button
+          v-for="action in menuActions.filter(a => !a.icon)"
+          :key="action.type"
+          @click.stop="handleClick(action.type!)"
+          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-yellow-700 bg-yellow-100 border border-yellow-500 text-sm font-medium active:scale-95"
+        >
+          <span>{{ action.name }}</span>
+        </button>
+      </div>
 
-        <!-- Negative Actions -->
-        <div class="flex flex-col gap-2 items-center">
-          <button
-            v-for="action in menuActions.filter(a => a.icon === 'minus')"
-            :key="action.type"
-            @click.stop="handleClick(action.type!)"
-            class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-red-700 bg-red-100 border border-red-600 text-sm font-medium active:scale-95"
-          >
-            <span>{{ action.name }}</span>
-          </button>
-        </div>
+      <!-- Negative Actions -->
+      <div class="flex flex-col gap-2 items-center">
+        <button
+          v-for="action in menuActions.filter(a => a.icon === 'minus')"
+          :key="action.type"
+          @click.stop="handleClick(action.type!)"
+          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-red-700 bg-red-100 border border-red-600 text-sm font-medium active:scale-95"
+        >
+          <span>{{ action.name }}</span>
+        </button>
       </div>
     </div>
   </transition>
