@@ -141,7 +141,6 @@ function onSelectAction(action: ActionItem['type']) {
   if (playerIndex !== undefined && playerIndex > -1) {
     // Update each field in place
     const targetPlayer = store.selectedTeam.value!.players[playerIndex]
-    console.log(targetPlayer?.id,action)
     store.increasePlayerStat(targetPlayer!,action);
     showActionPerformed();
   }
@@ -235,11 +234,11 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
     <div ref="courtRef" class="relative w-full h-full border-4 border-white">
       <!-- <div class="absolute top-0 left-1/2 w- border-3 border-white h-4 -mt-4"></div> -->
       <img :src="upperSideImg" :class="[
-        'w-full object-contain absolute top-0 -mt-1',
+        'w-full object-contain absolute top-0 -mt-1 opacity-70',
         orientation === 'horizontal' ? 'rotate-90' : ''
       ]" alt="Court" />
       <img :src="lowerSideImg" :class="[
-        'w-full object-contain absolute bottom-0 -mb-1',
+        'w-full object-contain absolute bottom-0 -mb-1 opacity-70',
         orientation === 'horizontal' ? 'rotate-90' : ''
       ]" alt="Court" />
       <div class="absolute top-1/2 left-0 w-full border-2 border-white z-100"></div>
@@ -249,8 +248,14 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
         >
         <!-- style="background: rgba(0,0,0,0.8)" -->
           <all_players  @click="changeViewMode('all')"   class="w-8 h-8   rounded-full":class="mode === 'all' ? 'bg-white text-gray-900' : 'bg-gray-500 text-gray-600'"/>
-          <attack @click="changeViewMode('attack')" class="w-8 h-8  rounded-full" :class="mode === 'attack' ? 'text-white bg-blue-500' : 'text-gray-500 bg-blue-900'"  />
+          <attack @click="changeViewMode('attack')" class="w-8 h-8  rounded-full" :class="mode === 'attack' ? 'text-white bg-blue-700' : 'text-gray-500 bg-blue-900'"  />
           <defense @click="changeViewMode('defense')" class="w-8 h-8   rounded-full" :class="mode === 'defense' ? 'text-white bg-red-600' : 'text-gray-500 bg-red-900'" />
+        </div>
+        
+        <div class="absolute w-full top-0 h-1/2 flex items-center space-x-4 justify-center">
+          <span class="text-xl font-semibold uppercase text-white rounded-full bg-red-600 px-2 py-1">{{ store.selectedTeam.value?.name }}</span>
+          <span class="text-sm italic font-medium text-gray-900 rounded-full shadow-md px-2 bg-white"> vs </span>
+          <span class="text-xl font-semibold uppercase text-white rounded-full bg-gray-800 px-2 py-1">{{ store.currentMatch.value?.opponent }}</span>
         </div>
         <div class="absolute w-full bottom-0 h-1/2">
           <CourtStats :match-id="match.id" class="pt-auto"/>
@@ -269,12 +274,12 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
           @select="(action) => onSelectAction(action)"
         />
       </div>
-      <div v-if="mode === 'all'" class="flex items-start justify-center flex-wrap content-end p-4 max-h-1/2 overflow-y-auto w-full space-x-4 space-y-3 ">
+      <div v-if="mode === 'all'" class="flex items-start justify-center flex-wrap p-4 max-h-1/2 overflow-y-auto w-full space-x-4 space-y-3 ">
         <button
           v-for="p in teamPlayers"
             @click="onPlayerClick(p)"
             :class="[
-            'w-16 h-16 rounded-full flex items-center justify-center z-50 border-2 text-sm font-bold text-white transition-colors ',
+            'relative w-16 h-16 rounded-full flex items-center justify-center z-50 border-2 text-sm font-bold text-white transition-colors ',
             selectedPlayer?.id == p.id ? 'shadow-inner  border-white bg-gray-500' : ' border-gray-900 shadow-xl bg-gray-800'
           ]">
           <span v-if="selectedPlayer && selectedPlayer?.id === p?.id && showPlayerActionIndication" class="absolute top-0 right-0 size-5 flex">

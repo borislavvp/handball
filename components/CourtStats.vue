@@ -1,8 +1,4 @@
 <script setup lang="ts">
-const props = defineProps<{
-    matchId: number
-}>()
-
 const store = useHandballStore()
 const goalAcc = computed(() => {
     let totalGoals = 0;
@@ -14,7 +10,7 @@ const goalAcc = computed(() => {
             allAttempts += stats.goal + stats.miss;
         }
     } )
-    return Math.round(Number((totalGoals/allAttempts).toFixed(2))*100);
+    return Math.round(Number((totalGoals/allAttempts).toFixed(2))*100) || 0;
 })
 const defenseEff = computed(() => {
     let totalGoodDeff = 0;
@@ -26,7 +22,7 @@ const defenseEff = computed(() => {
             allDeff += stats.gooddefense + stats.baddefense;
         }
     } )
-    return Math.round(Number((totalGoodDeff/allDeff).toFixed(2))*100);
+    return Math.round(Number((totalGoodDeff/allDeff).toFixed(2))*100) || 0;
 })
 const passAcc = computed(() => {
     let totalGoodPass = 0;
@@ -34,12 +30,12 @@ const passAcc = computed(() => {
     store.selectedTeam.value?.players.forEach(p => {
         const stats = p.stats[p.stats.length-1];
         if(stats){
-            console.log(stats)
             totalGoodPass += stats.goodpass;
             allPass += stats.goodpass + stats.badpass;
         }
     })
-    return Math.round(Number((totalGoodPass/allPass).toFixed(2))*100);
+    
+    return Math.round(Number((totalGoodPass/allPass).toFixed(2))*100) || 0;
 })
 
 </script>

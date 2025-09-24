@@ -284,13 +284,20 @@ export function createHandballStore() {
     m.lineup[position.key] = playerId;
     $fetch('/api/stats', {
       method: 'POST',
-      body: { matchid: matchId, playerid: playerId }
+      body: { matchId: matchId, playerId: playerId }
     })
   }
 
   function increasePlayerStat(player: Player,stat:Stats){
+    if(!player.stats.length){
+        player.stats.splice(0, 0, initPlayerStats(currentMatch.value!));
+        $fetch('/api/stats', {
+          method: 'POST',
+          body: { matchId: currentMatch.value?.id, playerId: player.id }
+        })
+    }
     const pStats = player!.stats[player.stats.length-1]
-    pStats![stat] += pStats![stat];
+    pStats![stat] += 1;
     $fetch('/api/stats', {
       method: 'PUT',
       body: { matchId: currentMatch.value?.id, playerId: player.id, statType: stat }
@@ -299,6 +306,17 @@ export function createHandballStore() {
 
   function getTeam(teamId: number) {
     return teams.value.find(t => t.id === teamId) || null;
+  }
+
+  function endCurrentMatch(result: "WIN" | "LOST"){
+    if(currentMatch.value){
+      currentMatch.value.result = result;
+      $fetch('/api/match', {
+        method: 'PUT',
+        body: { matchId: currentMatch.value?.id, result }
+      })
+      currentMatch.value = null;
+    }
   }
 
   async function fetchMatches() {
@@ -373,6 +391,7 @@ export function createHandballStore() {
     increasePlayerStat,
     getTeam,
     getMatch,
+    endCurrentMatch,
     getPlayerStats,
     getTeamPositionLayouts,
     setTeamPosition,

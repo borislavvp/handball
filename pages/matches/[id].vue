@@ -31,13 +31,13 @@ onBeforeUnmount(() => {
 <template>
   <div class="h-screen flex flex-col">
     <div v-if="!match || !team" class="flex items-center justify-center h-full">
-      <p class="text-lg text-gray-600">Match not found.</p>
+      <p class="text-lg text-gray-600">{{store.loading.value ? 'Loading...' : 'Match not found.'}}</p>
     </div>
     <div v-else class="flex-1 flex flex-col">
       <HandballCourt
           :orientation="store.orientation.value"
-          :team="team"
-          :match="match"
+          :team="team!"
+          :match="match!"
         />
       <!-- <div class="bg-white shadow-sm border-b border-gray-200 px-4 py-3">
         <h2 class="text-xl font-semibold text-gray-900">{{ match.name }} — {{ team.name }}</h2>

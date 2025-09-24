@@ -48,12 +48,13 @@ function handleClick(action: ActionItem["type"]) {
     activeAction.value = null
   }, 50) // flicker duration
 }
+
+
 </script>
 <template>
-  <transition name="slide-fade">
+  <transition>
     <div
       v-if="open"
-      @click.self="$emit('toggle')"
     >
       <!-- Positive Actions -->
       <div class="flex flex-col gap-2 items-center">
@@ -61,7 +62,7 @@ function handleClick(action: ActionItem["type"]) {
           v-for="action in menuActions.filter(a => a.icon === 'plus')"
           :key="action.type"
           @click.stop="handleClick(action.type!)"
-          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-green-700 bg-green-100 border border-green-600 text-sm font-medium active:scale-95"
+          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-white bg-emerald-600 border border-green-600 text-sm font-medium active:scale-95 transition-transform duration-150 cursor-pointer"
         >
           <span>{{ action.name }}</span>
         </button>
@@ -73,7 +74,7 @@ function handleClick(action: ActionItem["type"]) {
           v-for="action in menuActions.filter(a => !a.icon)"
           :key="action.type"
           @click.stop="handleClick(action.type!)"
-          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-yellow-700 bg-yellow-100 border border-yellow-500 text-sm font-medium active:scale-95"
+          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-white bg-yellow-600 border border-yellow-500 text-sm font-medium active:scale-95 transition-transform duration-150 cursor-pointer"
         >
           <span>{{ action.name }}</span>
         </button>
@@ -85,7 +86,7 @@ function handleClick(action: ActionItem["type"]) {
           v-for="action in menuActions.filter(a => a.icon === 'minus')"
           :key="action.type"
           @click.stop="handleClick(action.type!)"
-          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-red-700 bg-red-100 border border-red-600 text-sm font-medium active:scale-95"
+          class="flex items-center justify-center w-18 h-16 rounded-xl shadow-sm text-white bg-red-700 border border-red-600 text-sm font-medium active:scale-95 transition-transform duration-150 cursor-pointer"
         >
           <span>{{ action.name }}</span>
         </button>
@@ -93,27 +94,3 @@ function handleClick(action: ActionItem["type"]) {
     </div>
   </transition>
 </template>
-
-
-<style>
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.2s ease;
-}
-.slide-fade-enter-from {
-  transform: translateY(100%);
-  opacity: 0;
-}
-.slide-fade-enter-to {
-  transform: translateY(0%);
-  opacity: 1;
-}
-.slide-fade-leave-from {
-  transform: translateY(0%);
-  opacity: 1;
-}
-.slide-fade-leave-to {
-  transform: translateY(100%);
-  opacity: 0;
-}
-</style>

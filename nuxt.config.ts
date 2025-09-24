@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
-      name: "My PWA App",
+      name: "Handball Stats",
       short_name: "PWA",
       start_url: "/",
       display: "standalone",

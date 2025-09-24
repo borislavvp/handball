@@ -12,6 +12,10 @@ export interface CreatePlayerBody {
     position?: Position["key"] 
 }
   
+export interface UpdateMatchBody {
+    matchId: number
+    result: "WIN" | "LOST"
+}
 export interface CreateMatchBody {
     opponent: string
     teamId: number
