@@ -22,7 +22,12 @@ useHead({
     { name: 'apple-mobile-web-app-title', content: 'Handball Stats' }
   ],
   link: [
-    { rel: 'apple-touch-icon', href: '~/assets/icons/handball.png' }
+    { rel: 'apple-touch-icon', sizes: "180x180", href:"/icons/apple-touch-icon.png" },
+    { rel: 'shortcut icon',  href:"/icons/favicon.ico" },
+    { rel: 'manifest',  href:"/icons/site.webmanifest" },
+    { rel: 'icon', type: "image/svg+xml", href:"/icons/favicon.svg" },
+    { rel: 'icon', type: "image/png", href:"/icons/favicon-96x96.png" , sizes:"96x96" }
+    
   ]
 })
 </script>

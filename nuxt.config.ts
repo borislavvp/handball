@@ -23,8 +23,8 @@ export default defineNuxtConfig({
       background_color: "#ffffff",
       theme_color: "#42b883",
       icons: [
-        { src: "/assets/icons/handball.png", sizes: "192x192", type: "image/png" },
-        { src: "/assets/icons/handball.png", sizes: "512x512", type: "image/png" }
+        { src: "icons/web-app-manifest-192x192.png", sizes: "192x192", type: "image/png" },
+        { src: "icons/web-app-manifest-512x512.png", sizes: "512x512", type: "image/png" }
       ]
     }
   },
