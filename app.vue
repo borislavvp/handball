@@ -10,10 +10,10 @@ onMounted(async () => {
 
 const endCurrentMatch = (result: "WIN" | "LOST") => {
   store.endCurrentMatch(result);
-  useRouter().push("/matches/")
+  useRouter().push("/matches")
 }
 
-const inGame = computed(() => useRoute().path.includes("matches") && store.currentMatch.value)
+const inGame = computed(() => useRoute().path.includes("matches/active") && store.currentMatch.value)
 
 useHead({
   meta: [
@@ -30,6 +30,8 @@ useHead({
     
   ]
 })
+const goBack = () => useRouter().back();
+
 </script>
 <template>
   <div>
@@ -38,9 +40,9 @@ useHead({
     
     <header v-if="inGame"   class="px-3 py-2 flex justify-between items-center border-b border-gray-200 bg-white ">
       <div class="flex items-center gap-3">
-        <NuxtLink to="/" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">
+        <button @click="goBack()" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">
           <back class="w-5 h-5 text-gray-800"/>
-        </NuxtLink>
+        </button>
       </div>
       <div class="flex items-center space-x-3 ">
         <span class="uppercase text-sm font-semibold">Set result </span>
@@ -50,7 +52,7 @@ useHead({
     </header>
     <header v-else class="px-3 py-2 flex gap-3 items-center border-b border-gray-200 bg-white ">
       <NuxtLink to="/" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Team</NuxtLink>
-      <NuxtLink to="/matches" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Match</NuxtLink>
+      <NuxtLink to="/matches" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Matches</NuxtLink>
     </header>
     <main class="overflow-x-hidden">
         <NuxtPage :keepalive="true"/>

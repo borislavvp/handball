@@ -1,27 +1,33 @@
 <script setup lang="ts">
 import { isEmpty } from '@nuxt/ui/runtime/utils/index.js';
 import { useHandballStore } from '~/composables/useHandballStore';
+import type { Match } from '~/types/handball';
 const store = useHandballStore();
 const newMatchName = ref('');
 
 async function createMatch() {
   const name = newMatchName.value.trim() || 'New Match';
   const match = await store.createMatch(name);
-  if (match) navigateTo(`/matches/${match.id}`);
+  if (match) navigateTo(`/matches/active`);
 }
 const router = useRouter()
+
 onMounted(async () => {
-  await store.initialize();
-  if(store.currentMatch.value){
-    router.push({path:`/matches/${store.currentMatch.value.id}`})
+  if(!store.selectedTeam.value){
+    await store.initialize();
   }
+  // if(store.currentMatch.value){
+  //   router.push({path:`/matches/${store.currentMatch.value.id}`})
+  // }
+  store.fetchMatches();
 })
-onActivated(() => {
-  if(store.currentMatch.value){
-    router.push({path:`/matches/${store.currentMatch.value.id}`})
-  }
-})
+// onActivated(() => {
+//   if(store.currentMatch.value){
+//     router.push({path:`/matches/${store.currentMatch.value.id}`})
+//   }
+// })
 const options = { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" };
+const latestMatches = computed(() => store.matches.value.sort((a,b) => new Date(b.createdat!).getTime() - new Date(a.createdat!).getTime()))
 
 const formatDate = (iso?: string) => {
   if(!iso){
@@ -30,6 +36,14 @@ const formatDate = (iso?: string) => {
   const date = new Date(iso);
   const formatted = date.toLocaleString("en-GB",options as Intl.DateTimeFormatOptions);
   return formatted
+}
+
+const seeMatch = (match: Match) => {
+  if(store.currentMatch.value?.id === match.id){
+    router.push({path:`/matches/active`})
+  }else{
+    router.push({path:`/matches/${match.id}`})
+  }
 }
 </script>
 
@@ -46,14 +60,19 @@ const formatDate = (iso?: string) => {
       <div class="flex flex-col items-start">
         <h3 class="text-lg font-medium text-gray-700 mb-2">Existing Matches</h3>
         <ul v-if="store.matches.value.length > 0" class="space-y-2 w-full">
-          <div v-for="m in (store.matches.value)" :key="m?.id || 'empty'" class="flex w-full items-center justify-between p-4 border border-gray-200 rounded bg-white shadow">
+          <button @click="seeMatch(m)" v-for="m in latestMatches" :key="m?.id || 'empty'" class="flex w-full items-center justify-between p-4 border border-gray-200 rounded bg-white shadow">
             <div class="flex items-center gap-2 ">
               <span class="text-md font-semibold uppercase text-white rounded-full border bg-red-600 px-2 py-1">{{ store.getTeam(m.teamid)?.name || 'Unknown' }}</span>
               <span class="text-gray-900 italic text-sm">vs</span>
               <span class="text-md font-semibold uppercase text-gray-900 rounded-full border border-gray-900 px-2 py-1">{{ m.opponent }}</span>
             </div>
-            <span class="text-sm italic text-gray-600">{{ formatDate(m.createdat) }}</span>
+            <div class="flex flex-col items-center">
+              <span class="text-sm italic text-gray-600">{{ formatDate(m.createdat) }}</span>
+              <p v-if="store.currentMatch.value?.id === m.id"
+               class="text-xs text-white bg-blue-500 font-semibold shadow-inner border border-blue-400 rounded-full px-2 py-1">ONGOING</p>
+           
             </div>
+          </button>
         </ul>
       </div>
     </div>

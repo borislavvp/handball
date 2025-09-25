@@ -5,7 +5,8 @@ import type { CreatePlayerBody, LineupChangeBody } from "../types/dto"
 
     
 export function createHandballStore() {
-  const loading = useState<boolean>('store_loading', () => true);
+  const loading = useState<boolean>('app_loading', () => true);
+  const fetching = useState<boolean>('store_fetching', () => true);
   const teams = useState<Team[]>('teams', () => [] as Team[]);
   const matches = useState<Match[]>('matches', () => []);
   const orientation = useState<Orientation>('orientation', () => 'vertical');
@@ -38,7 +39,7 @@ export function createHandballStore() {
   async function fetchTeams(): Promise<void> {
     const { $supabase } = useNuxtApp()
     try{
-      loading.value = true
+      fetching.value = true
       const { data: teamData, error:err1 } = await $supabase.from('team').select(`
           id,
           name,
@@ -73,7 +74,7 @@ export function createHandballStore() {
       )
       
       if (!teamData || teamData.length == 0 ){
-        loading.value = false;
+        fetching.value = false;
         return;
       }
       const { data: lineupData, error: err2 } = await $supabase.from('lineup').select(`
@@ -98,7 +99,7 @@ export function createHandballStore() {
 
       
       if (err1 || err2) {
-        loading.value = false;
+        fetching.value = false;
         throw createError({ statusCode: 500, message: "error.message" })
       }
 
@@ -133,16 +134,16 @@ export function createHandballStore() {
         }))
       } as Team));
       selectedTeamId.value = teamData[0]?.id;
-      loading.value = false;
+      fetching.value = false;
 
     }catch(err){
-      loading.value = false;
+      fetching.value = false;
     }
   }
 
   async function addTeam(name: string): Promise<Team | null> {
     try{
-      loading.value = true;
+      fetching.value = true;
       const teamId = await $fetch('/api/teams', {
         method: 'POST',
         body: { name: name }
@@ -150,10 +151,10 @@ export function createHandballStore() {
       const team: Team = { id: teamId, name, players: [], lineups: []};
       
       teams.value.push(team);
-      loading.value = false;
+      fetching.value = false;
       return team;
     }catch(err){
-      loading.value = false;
+      fetching.value = false;
       return null;
     }
   }
@@ -168,7 +169,7 @@ export function createHandballStore() {
 
   async function getPlayerStats(playerId: number): Promise<PlayerStats[]>{
     const { $supabase } = useNuxtApp()
-    loading.value = true;
+    fetching.value = true;
     const {data, error} = await $supabase.from('player_stats').select(`
       goal,
       miss,
@@ -195,20 +196,20 @@ export function createHandballStore() {
       return [];
     }
     const p: PlayerStats[] = data;
-    loading.value = false;
+    fetching.value = false;
     return p;
   }
 
   async function addPlayer(name: string, position: Position["key"], number: number): Promise<Player | null> {
     if (!selectedTeam) return null;
-    loading.value = true;
+    fetching.value = true;
     const playerId = await $fetch('/api/player', {
       method: 'POST',
       body: { name, number, position, teamId:selectedTeamId.value } as CreatePlayerBody
     })
     const p: Player = { id: playerId, name, number, position, stats:[] };
     selectedTeam.value?.players.push(p);
-    loading.value = false;
+    fetching.value = false;
     return p;
   }
 
@@ -321,7 +322,7 @@ export function createHandballStore() {
 
   async function fetchMatches() {
     const { $supabase } = useNuxtApp()
-    loading.value = true;
+    fetching.value = true;
     const {data, error} = await $supabase.from('match').select("*").eq('teamid', selectedTeamId.value!)
     if (error){
     }
@@ -335,7 +336,7 @@ export function createHandballStore() {
       }
       return match
   });
-    loading.value = false;
+    fetching.value = false;
   }
   function getMatch(matchId: number) {
     return matches.value.find(m => m.id === matchId) || null;
@@ -365,12 +366,15 @@ export function createHandballStore() {
   }
 
   const initialize = async () => {
+    loading.value = true;
     await fetchTeams();
     await fetchMatches();
+    loading.value = false;
   }
 
   return {
     loading,
+    fetching,
     teams,
     matches,
     orientation,

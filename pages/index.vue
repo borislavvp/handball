@@ -41,11 +41,11 @@ function addPlayer() {
 
 
 // Always keep a team selected when available
-// onMounted(async () => {
-//   await store.initialize();
-// });
+onMounted(() => {
+  store.fetchTeams();
+});
 const goToCurrentMatch = () => {
-  useRouter().push(`/matches/${store.currentMatch.value?.id}`)
+  useRouter().push(`/matches/active`)
 }
 const lineupChanged = async (position:Position["key"], playerID:EventTarget) => {
   await store.changeLineup(position,Number((playerID as HTMLInputElement).value));
@@ -53,7 +53,20 @@ const lineupChanged = async (position:Position["key"], playerID:EventTarget) => 
 
 </script>
 <template>
-  <div class="p-4 max-w-md mx-auto space-y-4 mb-20">
+  <div v-if="store.loading.value">
+   <div class="flex flex-col items-center justify-center min-h-screen bg-white text-center">
+      <div class="relative w-24 h-24 mb-6">
+        <div class="absolute inset-0 rounded-full border-8 border-[#42b883] opacity-20"></div>
+        <div class="absolute inset-0 rounded-full border-8 border-t-[#42b883] border-transparent animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <span class="text-xl font-bold text-[#42b883]">%</span>
+        </div>
+      </div>
+      <h2 class="text-2xl font-semibold text-gray-800">Syncing team stats…</h2>
+      <p class="text-gray-500 mt-2 text-sm">This may take a few seconds</p>
+    </div>
+  </div>
+  <div v-else class="p-4 max-w-md mx-auto space-y-4 mb-20">
     <!-- Team Header -->
     <button @click="goToCurrentMatch()" v-if="store.currentMatch.value" class="shadow-sm flex items-center justify-between p-4 w-full rounded border border-gray-700">
       <span class="font-semibold"> ONGOING </span>
