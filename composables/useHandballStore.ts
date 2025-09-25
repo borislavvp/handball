@@ -225,11 +225,13 @@ export function createHandballStore() {
     })
   }
 
-  function removePlayer(teamId: number, playerId: number) {
-    const t = teams.value.find(t => t.id === teamId);
-    if (!t) return;
-
-    t.players = t.players.filter(p => p.id !== playerId);
+  async function removePlayer(playerId: number) {
+    if (!selectedTeam.value) return;
+    await $fetch(`/api/player/${playerId}`, { method: 'DELETE' })
+    const index = selectedTeam.value.players.findIndex(p => p.id === playerId);
+    if (index !== -1) {
+      selectedTeam.value.players.splice(index, 1); 
+    }
   }
 
   function initPlayerStats(match:Match){

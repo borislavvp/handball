@@ -51,6 +51,13 @@ const lineupChanged = async (position:Position["key"], playerID:EventTarget) => 
   await store.changeLineup(position,Number((playerID as HTMLInputElement).value));
 }
 
+function removePlayer(playerId:number,name:string,number:number) {
+  const res = window.confirm(`Are you sure you want to delete ${name} (${number})`)
+  if(res){
+    store.removePlayer(playerId)
+  }
+}
+
 </script>
 <template>
   <div v-if="store.loading.value">
@@ -149,7 +156,7 @@ const lineupChanged = async (position:Position["key"], playerID:EventTarget) => 
             <NuxtLink :to="`/players/${p.id}`" class="text-blue-600 truncate max-w-xs">{{ p.name }}</NuxtLink>
           </div>
           <button
-            @click="store.removePlayer(store.selectedTeam.value!.id, p.id)"
+            @click="removePlayer(p.id, p.name, p.number)"
             class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm"
           >
             Remove

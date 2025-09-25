@@ -26,8 +26,12 @@ function toggleEdit() {
 }
 
 function removePlayer() {
-  alert(`Remove player ${player.value!.name}`)
+  const res = window.confirm(`Are you sure you want to delete ${player.value?.name} (${player.value?.number})`)
+  if(res){
+    store.removePlayer(player.value!.id)
+  }
 }
+
 async function saveChanges() {
   if(!player.value){
     return
