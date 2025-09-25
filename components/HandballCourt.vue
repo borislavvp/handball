@@ -52,7 +52,7 @@ const activePositions = computed(() => mode.value == "attack" ?
   positions.value.filter(p => (AttackPosValues as readonly string[]).includes(p.key) || p.key == "GK") : 
   positions.value.filter(p => (DefensePosValues as readonly string[]).includes(p.key) || p.key == "GK")
 )
-const teamPlayers = store.teams.value[0]?.players;
+const teamPlayers = computed(() => store.teams.value[0]?.players);
 const showPlayerActionIndication = ref<boolean>(false);
 
 function loadPositions() {
@@ -79,7 +79,7 @@ function getAssigned(lineup: MatchLineup, position: Position) {
 function getAssignedPlayer(position: Position): Player | null {
   const playerId = store.selectedTeam.value?.lineups[0]![position.key];
   if (!playerId) return null;
-  return store.selectedTeam.value?.players.find(p => p.id === playerId) || null;
+  return store.selectedTeam.value?.players[playerId-1] || null;
 }
 
 function onPositionClick(position: Position) {
@@ -87,8 +87,8 @@ function onPositionClick(position: Position) {
   if(wasOpen && position.key === selectedPosition.value?.key){
     closeAllMenus();
   }else{
-    selectedPlayer.value = getAssignedPlayer(position);
     selectedPosition.value = position;
+    selectedPlayer.value = getAssignedPlayer(position);
     if(selectedPlayer.value){
       actionMenuOpen.value = true;
     }else{
@@ -99,7 +99,7 @@ function onPositionClick(position: Position) {
 
 function onPlayerClick(p: Player) {
   const wasOpen = actionMenuOpen.value;
-  if(wasOpen && p.position === selectedPosition.value?.key){
+  if(wasOpen && p.id === selectedPlayer.value?.id){
     closeAllMenus();
   }else{
     selectedPosition.value = {
@@ -270,7 +270,6 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
           :open="actionMenuOpen"
           :selectedPosition="selectedPosition"
           :playerNumber="selectedPlayer?.number"
-          @toggle="actionMenuOpen = !actionMenuOpen"
           @select="(action) => onSelectAction(action)"
         />
       </div>

@@ -124,8 +124,12 @@ async function saveChanges() {
       <div v-for="stat in player.stats" :key="stat.match.id" class="bg-white shadow rounded-xl p-4 space-y-2">
         <!-- Match Info -->
         <div class="flex justify-between items-center">
-          <div>
-            <p class="font-semibold text-gray-900">Match vs {{ stat.match.opponent }}</p>
+          <div class="w-full">
+            <div class="flex items-center justify-between">
+              <p class="font-semibold text-gray-900">Match vs {{ stat.match.opponent }} </p>
+              <p v-if="store.currentMatch.value?.id === stat.match.id"
+               class="text-xs text-white bg-blue-500 font-semibold shadow-inner border border-blue-400 rounded-full px-2 py-1">ONGOING</p>
+            </div>
             <p class="text-xs text-gray-500">{{ new Date(stat.match.createdat!).toLocaleDateString() }}</p>
             <p v-if="stat.match.result" class="text-xs text-green-600 font-medium">{{ stat.match.result }}</p>
           </div>

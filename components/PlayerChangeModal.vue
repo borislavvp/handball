@@ -24,7 +24,7 @@ function onPlayerSelect(playerId: number) {
 }
 
 function getPlayersForPosition(position: Position): Player[] {
-  return props.team.players.filter(p => p.position === position.key);
+  return props.team.players.filter(p => position.key === 'PV2' ? p.position === "PV" : p.position === position.key);
 }
 
 </script>

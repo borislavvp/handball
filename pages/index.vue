@@ -44,7 +44,9 @@ function addPlayer() {
 // onMounted(async () => {
 //   await store.initialize();
 // });
-
+const goToCurrentMatch = () => {
+  useRouter().push(`/matches/${store.currentMatch.value?.id}`)
+}
 const lineupChanged = async (position:Position["key"], playerID:EventTarget) => {
   await store.changeLineup(position,Number((playerID as HTMLInputElement).value));
 }
@@ -53,7 +55,15 @@ const lineupChanged = async (position:Position["key"], playerID:EventTarget) => 
 <template>
   <div class="p-4 max-w-md mx-auto space-y-4 mb-20">
     <!-- Team Header -->
-    <div class="bg-white shadow-md rounded-2xl p-4 flex flex-col justify-between items-center">
+    <button @click="goToCurrentMatch()" v-if="store.currentMatch.value" class="shadow-sm flex items-center justify-between p-4 w-full rounded border border-gray-700">
+      <span class="font-semibold"> ONGOING </span>
+      <div class="flex items-center space-x-2">
+        <span class="text-md font-semibold uppercase text-white rounded-full border border-red-600 bg-red-600 px-2 py-1">{{ store.selectedTeam.value?.name }}</span>
+        <span class="text-gray-900 italic text-sm">vs</span>
+        <span class="text-md font-semibold uppercase text-gray-900 rounded-full border border-gray-900 px-2 py-1">{{store.currentMatch.value.opponent }}</span>
+      </div>
+    </button>
+    <div class="bg-white border border-gray-300 rounded-2xl p-4 flex flex-col justify-between items-center">
       <button
           class="w-full flex justify-between items-center py-3 text-left text-gray-700 font-medium"
           @click="showAddPlayer = !showAddPlayer"
@@ -100,7 +110,7 @@ const lineupChanged = async (position:Position["key"], playerID:EventTarget) => 
     </div>
 
     <!-- Players List Accordion -->
-    <div class="bg-white shadow-md rounded-2xl">
+    <div class="bg-white border border-gray-300 rounded-2xl">
       <button
         class="w-full flex justify-between items-center px-4 py-3 text-left text-gray-700 font-medium"
         @click="showPlayers = !showPlayers"
@@ -136,7 +146,7 @@ const lineupChanged = async (position:Position["key"], playerID:EventTarget) => 
     </div>
 
     <!-- Default Lineup Accordion -->
-    <div class="bg-white shadow-md rounded-2xl">
+    <div class="bg-white border border-gray-300 rounded-2xl">
       <button
         class="w-full flex justify-between items-center px-4 py-3 text-left text-gray-700 font-medium"
         @click="showLineup = !showLineup"
