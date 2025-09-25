@@ -234,11 +234,11 @@ function clamp(n: number, min: number, max: number) { return Math.max(min, Math.
     <div ref="courtRef" class="relative w-full h-full border-4 border-white">
       <!-- <div class="absolute top-0 left-1/2 w- border-3 border-white h-4 -mt-4"></div> -->
       <img :src="upperSideImg" :class="[
-        'w-full object-contain absolute top-0 -mt-1 opacity-70',
+        'w-full object-contain absolute top-0 -mt-1 opacity-70 select-none',
         orientation === 'horizontal' ? 'rotate-90' : ''
       ]" alt="Court" />
       <img :src="lowerSideImg" :class="[
-        'w-full object-contain absolute bottom-0 -mb-1 opacity-70',
+        'w-full object-contain absolute bottom-0 -mb-1 opacity-70 select-none',
         orientation === 'horizontal' ? 'rotate-90' : ''
       ]" alt="Court" />
       <div class="absolute top-1/2 left-0 w-full border-2 border-white z-100"></div>

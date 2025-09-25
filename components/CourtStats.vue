@@ -40,7 +40,7 @@ const passAcc = computed(() => {
 
 </script>
 <template>
-<div class="flex flex-wrap justify-center gap-6">
+<div class="flex flex-wrap justify-center gap-6 select-none">
   <!-- Shots -->
   <div class="flex flex-col items-center">
     <span class="text-gray-100 text-xl font-medium">Shots</span>
