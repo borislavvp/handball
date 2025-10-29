@@ -4,16 +4,11 @@ import back from './components/icons/back.vue'
 const store = createHandballStore()
 provideHandballStore(store)
 
-onMounted(async () => {
-  await store.initialize();
+onMounted(() => {
+  store.initialize();
 })
 
-const endCurrentMatch = (result: "WIN" | "LOST") => {
-  store.endCurrentMatch(result);
-  useRouter().push("/matches")
-}
-
-const inGame = computed(() => useRoute().path.includes("matches/active") && store.currentMatch.value)
+const inGame = computed(() => useRoute().path.includes("matches/active") && store.matches.currentMatch.value)
 
 useHead({
   meta: [
@@ -38,7 +33,7 @@ const goBack = () => useRouter().back();
     <NuxtRouteAnnouncer />
     <NuxtLoadingIndicator />
     
-    <header v-if="inGame"   class="px-3 py-2 flex justify-between items-center border-b border-gray-200 bg-white ">
+    <!-- <header v-if="inGame"   class="px-3 py-2 flex justify-between items-center border-b border-gray-200 bg-white ">
       <div class="flex items-center gap-3">
         <button @click="goBack()" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">
           <back class="w-5 h-5 text-gray-800"/>
@@ -49,12 +44,12 @@ const goBack = () => useRouter().back();
         <button @click="endCurrentMatch('WIN')" class="rounded-full px-2 py-1  font-semibold bg-white border-2 border-green-800 text-green-800">WIN</button>
         <button @click="endCurrentMatch('LOST')" class="rounded-full px-2 py-1  font-semibold text-white bg-gray-800">LOST</button>
       </div>
-    </header>
-    <header v-else class="px-3 py-2 flex gap-3 items-center border-b border-gray-200 bg-white ">
+    </header> -->
+    <header v-if="!inGame" class="px-3 py-2 flex gap-3 items-center border-b border-gray-200 bg-white ">
       <NuxtLink to="/" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Team</NuxtLink>
       <NuxtLink to="/matches" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Matches</NuxtLink>
     </header>
-    <main class="overflow-x-hidden">
+    <main class="overflow-x-hidden ">
         <NuxtPage :keepalive="true"/>
     </main>
   </div>
