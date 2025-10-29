@@ -10,15 +10,19 @@ export default defineEventHandler(async (event): Promise<void> => {
         statusMessage: 'Player id and match id are required'
     })
     }
-    const {data: statsExist} = await supabase.from("player_stats").select("*")
-    .eq("playerid", body.playerId)
-    .eq("matchid", body.matchId)
-
-    if (statsExist?.length){
-        return;
-    }
+    
     const {error} = await supabase.from("player_stats").insert({
         matchid: body.matchId,
+        playerid: body.playerId,
+        [body.statType]: 1,
+    })
+    
+    supabase
+    .from("match_event")
+    .insert({
+        matchid: body.matchId,
+        event: body.statType,
+        time: body.time,
         playerid: body.playerId,
     })
 

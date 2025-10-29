@@ -1,4 +1,4 @@
-import type { Position, Stats } from "./handball"
+import type { MATCH_EVENTS, Position, ShootingArea, ShootingResult, ShootingTarget, Shot, Stats } from "./handball"
 
 // Request bodies
 export interface CreateTeamBody {
@@ -13,7 +13,6 @@ export interface CreatePlayerBody {
 }
   
 export interface UpdateMatchBody {
-    matchId: number
     result: "WIN" | "LOST"
 }
 export interface CreateMatchBody {
@@ -22,14 +21,17 @@ export interface CreateMatchBody {
 }
 
 export interface CreateStatsBody {
-    matchId: number
-    playerId: number
+    matchId: number,
+    playerId: number,
+    statType: Stats,
+    time: string;
 }
 
 export interface IncreaseStatBody {
-    matchId: number
-    playerId: number
-    statType: Stats
+    matchId: number;
+    playerId: number;
+    statType: Stats;
+    time: string;
 }
   
 export type LineupChangeBody = {
@@ -37,4 +39,21 @@ export type LineupChangeBody = {
     teamId: number;
     position: Position["key"] | "PV2";
     playerId: number
+}
+
+export type MatchEventBody = {
+    matchId: number;
+    eventType: MATCH_EVENTS;
+    playerId?: number;
+    time: string;
+    metadata?: any;
+}
+
+export type ShotsBody = {
+    matchId: number;
+    playerId: number;
+    assistId?: number;
+    shot: Shot;
+    hasStats: boolean;
+    assistHasStats: boolean;
 }

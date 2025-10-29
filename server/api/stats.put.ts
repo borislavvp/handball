@@ -19,6 +19,15 @@ export default defineEventHandler(async (event: H3Event): Promise<void> => {
     playerid: body.playerId,
   })
 
+  supabase
+    .from("match_event")
+    .insert({
+      matchid: body.matchId,
+      event: body.statType,
+      time: body.time,
+      playerid: body.playerId,
+    })
+
   
   if (error) {
     throw createError({
