@@ -5,8 +5,8 @@ const route = useRoute();
 const store = useHandballStore();
 const id = Number(route.params.id);
 
-const match = computed(() => store.getMatch(id));
-const team = computed(() => match.value ? store.getTeam(match.value.teamid) : null);
+const match = computed(() => store.matches.getMatch(id));
+const team = computed(() => match.value ? store.teams.getTeam(match.value.teamid) : null);
 
 </script>
 

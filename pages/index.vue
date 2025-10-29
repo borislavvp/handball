@@ -18,7 +18,7 @@ const showLineup = ref(true);
 async function createTeam() {
   const name = newTeamName.value.trim();
   if (!name) return;
-  const team = await store.addTeam(name);
+  const team = await store.teams.addTeam(name);
   newTeamName.value = '';
 }
 
@@ -26,7 +26,7 @@ function addPlayer() {
   const name = newPlayerName.value.trim();
   if (!name) return;
   const number = Number(newPlayerNumber.value ?? 0) || 0;
-  store.addPlayer(name, newPlayerPosition.value, number);
+  store.players.addPlayer(name, newPlayerPosition.value, number);
   newPlayerName.value = '';
   newPlayerNumber.value = null;
 }
@@ -42,19 +42,16 @@ function addPlayer() {
 
 // Always keep a team selected when available
 onMounted(() => {
-  store.fetchTeams();
+  store.teams.fetchTeams();
 });
 const goToCurrentMatch = () => {
   useRouter().push(`/matches/active`)
-}
-const lineupChanged = async (position:Position["key"], playerID:EventTarget) => {
-  await store.changeLineup(position,Number((playerID as HTMLInputElement).value));
 }
 
 function removePlayer(playerId:number,name:string,number:number) {
   const res = window.confirm(`Are you sure you want to delete ${name} (${number})`)
   if(res){
-    store.removePlayer(playerId)
+    store.players.removePlayer(playerId)
   }
 }
 
@@ -75,12 +72,12 @@ function removePlayer(playerId:number,name:string,number:number) {
   </div>
   <div v-else class="p-4 max-w-md mx-auto space-y-4 mb-20">
     <!-- Team Header -->
-    <button @click="goToCurrentMatch()" v-if="store.currentMatch.value" class="shadow-sm flex items-center justify-between p-4 w-full rounded border border-gray-700">
+    <button @click="goToCurrentMatch()" v-if="store.matches.currentMatch.value" class="shadow-sm flex items-center justify-between p-4 w-full rounded border border-gray-700">
       <span class="font-semibold"> ONGOING </span>
       <div class="flex items-center space-x-2">
-        <span class="text-md font-semibold uppercase text-white rounded-full border border-red-600 bg-red-600 px-2 py-1">{{ store.selectedTeam.value?.name }}</span>
+        <span class="text-md font-semibold uppercase text-white rounded-full border border-red-600 bg-red-600 px-2 py-1">{{ store.teams.selectedTeam.value?.name }}</span>
         <span class="text-gray-900 italic text-sm">vs</span>
-        <span class="text-md font-semibold uppercase text-gray-900 rounded-full border border-gray-900 px-2 py-1">{{store.currentMatch.value.opponent }}</span>
+        <span class="text-md font-semibold uppercase text-gray-900 rounded-full border border-gray-900 px-2 py-1">{{store.matches.currentMatch.value.opponent }}</span>
       </div>
     </button>
     <div class="bg-white border border-gray-300 rounded-2xl p-4 flex flex-col justify-between items-center">
@@ -88,7 +85,7 @@ function removePlayer(playerId:number,name:string,number:number) {
           class="w-full flex justify-between items-center py-3 text-left text-gray-700 font-medium"
           @click="showAddPlayer = !showAddPlayer"
         >
-          <span>Add Player to {{ store.selectedTeam.value?.name  }}</span>
+          <span>Add Player to {{ store.teams.selectedTeam.value?.name  }}</span>
           <svg
             :class="{'rotate-180': showAddPlayer}"
             class="h-5 w-5 transition-transform"
@@ -135,7 +132,7 @@ function removePlayer(playerId:number,name:string,number:number) {
         class="w-full flex justify-between items-center px-4 py-3 text-left text-gray-700 font-medium"
         @click="showPlayers = !showPlayers"
       >
-        <span>Players ({{ store.selectedTeam.value?.players.length || 0 }})</span>
+        <span>Players ({{ store.teams.selectedTeam.value?.players.length || 0 }})</span>
         <svg
           :class="{'rotate-180': showPlayers}"
           class="h-5 w-5 transition-transform"
@@ -146,7 +143,7 @@ function removePlayer(playerId:number,name:string,number:number) {
       </button>
       <ul v-if="showPlayers" class="divide-y divide-gray-100 max-h-64 overflow-y-auto p-2">
         <li
-          v-for="p in store.selectedTeam.value?.players || []"
+          v-for="p in store.teams.selectedTeam.value?.players || []"
           :key="p.id"
           class="flex items-center justify-between p-2 bg-gray-50 rounded-lg mb-2"
         >
@@ -163,91 +160,6 @@ function removePlayer(playerId:number,name:string,number:number) {
           </button>
         </li>
       </ul>
-    </div>
-
-    <!-- Default Lineup Accordion -->
-    <div class="bg-white border border-gray-300 rounded-2xl">
-      <button
-        class="w-full flex justify-between items-center px-4 py-3 text-left text-gray-700 font-medium"
-        @click="showLineup = !showLineup"
-      >
-        <span>Default Lineup</span>
-        <svg
-          :class="{'rotate-180': showLineup}"
-          class="h-5 w-5 transition-transform"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      <div v-if="showLineup" class="p-4 space-y-3 border-t border-gray-200">
-        <!-- Attack/Defense Toggle -->
-        <div class="flex gap-3 flex-wrap">
-          <button
-            :class="['px-3 py-1 rounded-md text-sm', !showDefenseDefaults ? 'bg-blue-500 text-white' : 'bg-gray-100']"
-            @click="showDefenseDefaults = false"
-          >
-            Attack
-          </button>
-          <button
-            :class="['px-3 py-1 rounded-md text-sm', showDefenseDefaults ? 'bg-blue-500 text-white' : 'bg-gray-100']"
-            @click="showDefenseDefaults = true"
-          >
-            Defense
-          </button>
-        </div>
-
-        <!-- Lineup Selects -->
-        <!-- Attack Lineup -->
-        <div v-if="!showDefenseDefaults" class="flex flex-col gap-3">
-          <div
-            v-for="pos in positions"
-            :key="pos"
-            class="flex items-center gap-2"
-          >
-            <label class="w-16 text-sm font-medium text-gray-700">{{ pos }}</label>
-            <select
-              @change="(e) => lineupChanged(pos, e.target!)"
-              :value="store.selectedTeam.value?.lineups?.[0]?.[pos] ?? ''"
-              class="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">- None -</option>
-              <option
-                v-for="pl in (store.selectedTeam.value?.players || []).filter(pl => pos==='PV2' ? pl.position === 'PV' : pl.position === pos)"
-                :key="pl.id"
-                :value="pl.id"
-              >
-                #{{ pl.number }} · {{ pl.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Defense Lineup -->
-        <div v-else class="flex flex-col gap-3">
-          <div
-            v-for="slot in ['D1','D2','D3','D4','D5','D6'] as Position['key'][]"
-            :key="slot"
-            class="flex items-center gap-2"
-          >
-            <label class="w-16 text-sm font-medium text-gray-700">{{ slot.slice(1) }}</label>
-            <select
-              @change="(e) => lineupChanged(slot, e.target!)"
-              :value="store.selectedTeam.value?.lineups?.[0]?.[slot] ?? ''"
-              class="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">- None -</option>
-              <option
-                v-for="pl in store.selectedTeam.value?.players || []"
-                :key="pl.id"
-                :value="pl.id"
-              >
-                #{{ pl.number }} · {{ pl.name }} ({{ pl.position }})
-              </option>
-            </select>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>

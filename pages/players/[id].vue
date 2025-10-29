@@ -12,7 +12,7 @@ const player = ref<Player | undefined>(undefined)
 const positions: Position["key"][] = ['LW', 'LB', 'CB', 'RB', 'RW', 'PV', "GK"];
 
 onMounted(() => {
-    const data = store.selectedTeam.value?.players.find(p => p.id === id)
+    const data = store.teams.selectedTeam.value?.players.find(p => p.id === id)
     originalPlayer.value = data
     player.value = {...originalPlayer.value as Player}
 })
@@ -28,7 +28,7 @@ function toggleEdit() {
 function removePlayer() {
   const res = window.confirm(`Are you sure you want to delete ${player.value?.name} (${player.value?.number})`)
   if(res){
-    store.removePlayer(player.value!.id)
+    store.players.removePlayer(player.value!.id)
   }
 }
 
@@ -60,12 +60,12 @@ async function saveChanges() {
   }
 
   try {
-    store.updatePlayer(updatedFields, player.value.id!)
-    const playerIndex = store.selectedTeam.value?.players.findIndex(p => p.id === player.value!.id)
+    store.players.updatePlayer(updatedFields, player.value.id!)
+    const playerIndex = store.teams.selectedTeam.value?.players.findIndex(p => p.id === player.value!.id)
     originalPlayer.value = { ...player.value as Player }
     if (playerIndex !== undefined && playerIndex > -1) {
       // Update each field in place
-      const targetPlayer = store.selectedTeam.value!.players[playerIndex]
+      const targetPlayer = store.teams.selectedTeam.value!.players[playerIndex]
       targetPlayer!.name = player.value.name
       targetPlayer!.number = player.value.number
       targetPlayer!.position = player.value.position
@@ -125,16 +125,16 @@ async function saveChanges() {
         </div>
 
         <!-- Stats per Match -->
-      <div v-for="stat in player.stats" :key="stat.match.id" class="bg-white shadow rounded-xl p-4 space-y-2">
+      <div v-for="stat in player.recentStats" :key="stat.match.id" class="bg-white shadow rounded-xl p-4 space-y-2">
         <!-- Match Info -->
         <div class="flex justify-between items-center">
           <div class="w-full">
             <div class="flex items-center justify-between">
               <p class="font-semibold text-gray-900">Match vs {{ stat.match.opponent }} </p>
-              <p v-if="store.currentMatch.value?.id === stat.match.id"
+              <p v-if="store.matches.currentMatch.value?.id === stat.match.id"
                class="text-xs text-white bg-blue-500 font-semibold shadow-inner border border-blue-400 rounded-full px-2 py-1">ONGOING</p>
             </div>
-            <p class="text-xs text-gray-500">{{ new Date(stat.match.createdat!).toLocaleDateString() }}</p>
+            <p class="text-xs text-gray-500">{{ new Date(stat.match.createdAt!).toLocaleDateString() }}</p>
             <p v-if="stat.match.result" class="text-xs text-green-600 font-medium">{{ stat.match.result }}</p>
           </div>
         </div>
@@ -150,51 +150,47 @@ async function saveChanges() {
             <p class="text-gray-500">Misses</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.goodpass }}</p>
+            <p class="font-semibold">{{ stat.assist }}</p>
             <p class="text-gray-500">Good Pass</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.badpass }}</p>
-            <p class="text-gray-500">Bad Pass</p>
+            <p class="font-semibold">{{ stat['1on1win'] }}</p>
+            <p class="text-gray-500">1-1 Win</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.intercept }}</p>
-            <p class="text-gray-500">Interceptions</p>
+            <p class="font-semibold">{{ stat.steal }}</p>
+            <p class="text-gray-500">Steals</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
             <p class="font-semibold">{{ stat.lostball }}</p>
             <p class="text-gray-500">Lost Ball</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.gooddefense }}</p>
+            <p class="font-semibold">{{ stat.defense }}</p>
             <p class="text-gray-500">Good Defense</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.baddefense }}</p>
-            <p class="text-gray-500">Bad Defense</p>
+            <p class="font-semibold">{{ stat['1on1lost'] }}</p>
+            <p class="text-gray-500">1-1 Lost</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.yellowcard }}</p>
-            <p class="text-gray-500">Yellow</p>
-          </div>
-          <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.redcard }}</p>
-            <p class="text-gray-500">Red</p>
+            <p class="font-semibold">{{ stat.card }}</p>
+            <p class="text-gray-500">Cards</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
             <p class="font-semibold">{{ stat.twominutes }}</p>
             <p class="text-gray-500">2 Min</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.penaltyscored }}</p>
-            <p class="text-gray-500">Penalty Scored</p>
+            <p class="font-semibold">{{ stat.provoke }}</p>
+            <p class="text-gray-500">Provokes</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
             <p class="font-semibold">{{ stat.penaltymade }}</p>
             <p class="text-gray-500">Penalty Made</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.safe }}</p>
+            <p class="font-semibold">{{ stat.gksave }}</p>
             <p class="text-gray-500">Safe</p>
           </div>
         </div>

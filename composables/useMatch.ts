@@ -11,8 +11,11 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
 
     // Start timer
     const timer = ref(null as ReturnType<typeof setInterval> | null);
-
     
+    function getMatch(id:number){
+        return matches.value.find(m => m.id === id)
+    }
+
     async function createMatch(opponent: string): Promise<Match | null> {
         const matchId = await $fetch('/api/matches', {
             method: 'POST',
@@ -249,11 +252,11 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         resumeMatch,
         increaseMatchScore,
         takeTimeout,
+        getMatch,
         startMatchTimer,
         stopMatchTimer,
         changeDefenseSystem,
         changeOpponentDefenseSystem,
         toggleEmptyGoal
     }
-
 }
