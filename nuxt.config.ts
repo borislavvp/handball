@@ -20,6 +20,7 @@ export default defineNuxtConfig({
       short_name: "PWA",
       start_url: "/",
       display: "standalone",
+      orientation: 'landscape',
       background_color: "#ffffff",
       theme_color: "#42b883",
       icons: [

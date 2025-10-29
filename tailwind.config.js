@@ -23,7 +23,7 @@ export default {
           800: '#1e40af',
           900: '#1e3a8a',
         },
-        court: "#0061F9"
+        court: "#0061F9",
       },
       spacing: {
         '18': '4.5rem',
