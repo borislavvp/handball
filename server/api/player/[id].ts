@@ -3,7 +3,7 @@ import { supabase } from '../../utils/databaseClient'
 import { AttackPosKey, DefensePosKey, Position } from "~/types/handball"
 
 export default defineEventHandler(async (event: H3Event) => {
-  const playerId =event.context.params?.id
+  const playerId = event.context.params?.id
   const body = await readBody(event) as { name?: string, number?: number, position?: AttackPosKey | DefensePosKey }
 
   if (!playerId) {

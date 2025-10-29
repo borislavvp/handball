@@ -1,6 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
 import type { CreateTeamBody } from '~/types/dto'
-import { Team } from '../data/Team'
 import { supabase } from '../utils/databaseClient'
 
 export default defineEventHandler(async (event): Promise<number> => {
@@ -14,7 +12,7 @@ export default defineEventHandler(async (event): Promise<number> => {
     .from('team')
     .insert({ name: body.name })
     .select()
-    .single<Team>()
+    .single()
 
   if (error) {
     throw createError({ statusCode: 400, statusMessage: error.message })

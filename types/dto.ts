@@ -9,7 +9,7 @@ export interface CreatePlayerBody {
     name: string
     number: number
     teamId: number
-    position?: Position["key"] 
+    position: Position["key"] 
 }
   
 export interface UpdateMatchBody {
