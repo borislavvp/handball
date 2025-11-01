@@ -79,6 +79,7 @@ export enum ShootingTarget {
   OUT_RIGHT = 11,
 } 
 export type Shot = {
+  playerid: number;
   from: ShootingArea;
   to: ShootingTarget;
   result: ShootingResult;

@@ -98,8 +98,12 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
                 team.value?.players.forEach(p => {
                     const stats = p.recentStats[p.recentStats.length -1]
                     if (stats ){
-                        p.currentShots = stats.match.shots || [];
                         p.currentStats = stats;
+                    }
+                    if(stats?.goal || stats?.miss || stats?.gkmiss || stats?.gksave){
+                        p.currentShots = stats.match.shots.filter(s => s.playerid === p.id);
+                    }else{
+                        p.currentShots = []
                     }
                 });
             }

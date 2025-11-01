@@ -118,7 +118,8 @@
           class="px-10"
           />
           <shooting-position
-          v-if="shootingTarget !== null || (gameMode === 'stats' && (selectedPlayer ? selectedPlayer?.currentStats ? true : false : true))" 
+          v-if="(gameMode !== 'stats' && shootingTarget !== null) || 
+          (gameMode === 'stats' && (selectedPlayer ? selectedPlayer?.currentStats ? true : false : true))" 
           @position-click="onShootingAreaClick" 
           :player="selectedPlayer"
           :stats-mode="gameMode === 'stats'"
@@ -234,7 +235,7 @@ function onPlayerClick(p: Player) {
   if(p.id === selectedPlayer.value?.id){
     selectedPlayer.value = null;
     selectedAssist.value = null;
-  }else if (selectedPlayer.value === null || selectedPlayer.value.position === 'GK' || shootingTarget.value === null) {
+  }else if (gameMode.value === 'stats' || selectedPlayer.value === null || shootingTarget.value === null) {
     selectedPosition.value = {
       key: p.position,
       label: p.position,

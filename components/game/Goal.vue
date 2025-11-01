@@ -151,6 +151,7 @@ const baseX = 240
 const baseY = 225
 const offsetY = 145
 
+
 // calculate X position
 function getX(index:number) {
   if ([0,3,6].includes(index)) return baseX;
@@ -201,7 +202,10 @@ function getScoreColor(score: number){
 function getShootingTargetText (target: ShootingTarget){
   if(props.statsMode){
     if(props.player){
-      const shots = props.player.currentShots?.filter(s => s.to === target).filter(s => props.shootingArea? s.from === props.shootingArea : true);
+      console.log(props.player)
+      const shots = props.player.currentShots?.filter(s => s.to === target)
+      .filter(s => props.shootingArea? s.from === props.shootingArea : true);
+      console.log(shots)
       const type = props.player.position === 'GK' ? "gksaved" : "goal";
       const positive = shots?.filter(s => s.result === type).length ?? 0;
       const score = shots?.length ? (positive/shots.length*100) : 0;
