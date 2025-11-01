@@ -21,10 +21,10 @@
       <game-header />
       <div class="flex flex-1 overflow-hidden">
         <!-- Team Side -->
-        <div class="sticky  flex flex-col pt-8 border-r border-gray-200 w-2/5 h-full justify-between">
+        <div class="flex flex-col pt-8 border-r border-gray-200 w-2/5 h-full justify-between overflow-x-hidden overflow-y-auto">
           <div class="flex flex-col justify-center">
             <!-- timeouts -->
-            <div class="flex justify-between ml-12 mr-10 items-center">
+            <div class="flex top-0 justify-between ml-12 mr-10 items-center">
               <button @click="store.matches.takeTimeout" 
               class="rounded-full select-none w-20 h-20 font-semibold text-4xl border flex justify-center items-center "
               :class="[
@@ -74,7 +74,7 @@
               </button>
             </div>
             <!-- Defense System -->
-            <div class="flex items-center justify-between mb-5 mx-8">
+            <div class="flex sticky items-center justify-between mb-5 mx-8">
               <div class="flex items center text-xl">
                 <span class="font-semibold">Defense:</span>
                 <!-- v-model="store.currentMatch.value.defense" -->
@@ -109,25 +109,26 @@
           <player-headline class="sticky" v-if="gameMode==='stats' && selectedPlayer" :player="selectedPlayer" />
           <goal 
           v-if="!(gameMode === 'stats' && (selectedPlayer ? !selectedPlayer?.currentStats: false))"
-          @position-click="onShootingTargetClick"
-          :goalkeep-selected="selectedPlayer?.position === 'GK'"
-          :shooting-target="shootingTarget"
-          :shooting-area="shootingArea"
-          :player="selectedPlayer"
-          :stats-mode="gameMode === 'stats'"
-          class="px-10"
+            @position-click="onShootingTargetClick"
+            :goalkeep-selected="selectedPlayer?.position === 'GK'"
+            :shooting-target="shootingTarget"
+            :shooting-area="shootingArea"
+            :player="selectedPlayer"
+            :stats-mode="gameMode === 'stats'"
+            class="px-10 bg-gray-100"
+            :class="[!shootingTarget && 'sticky top-0 z-100']"
           />
           <shooting-position
           v-if="(gameMode !== 'stats' && shootingTarget !== null) || 
-          (gameMode === 'stats' && (selectedPlayer ? selectedPlayer?.currentStats ? true : false : true))" 
-          @position-click="onShootingAreaClick" 
-          :player="selectedPlayer"
-          :stats-mode="gameMode === 'stats'"
-          :selected-shooting-target="shootingTarget"
-          class="px-10 " 
+            (gameMode === 'stats' && (selectedPlayer ? selectedPlayer?.currentStats ? true : false : true))" 
+            @position-click="onShootingAreaClick" 
+            :player="selectedPlayer"
+            :stats-mode="gameMode === 'stats'"
+            :selected-shooting-target="shootingTarget"
+            class="px-10 " 
           />
           <!-- <player-performance-chart v-if="gameMode==='stats' && selectedPlayer" :player="selectedPlayer" /> -->
-          <stats-options class="mt-10 overflow-y-auto flex-1" 
+          <stats-options class="mt-10 flex-1" 
             v-if="gameMode !== 'stats'"
             :mode="gameMode"
             :goal-selected="shootingTarget !== null"

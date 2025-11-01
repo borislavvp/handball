@@ -144,7 +144,7 @@ export const usePlayer = (
 
         if(player.position === 'GK'){
             const totalShots = stats.gksave + stats.gkmiss;
-            const savePercentage = totalShots > 0 ? (stats.gksave / totalShots) * 100 : 0;
+            const savePercentage = totalShots > 0 ? Math.floor((stats.gksave / totalShots) * 10) : 0;
             stats.value = (savePercentage) + value;
         }
         stats.value = value;

@@ -80,18 +80,28 @@ const suspensionStatStyle = "flex items-center rounded p-4 bg-gray-200 font-semi
 
 
 const increasePLayerStats = (stat:Stats) => {
-    if(!props.player) return;
+    if(!props.player) {
+        window.alert("Please seelect a player!")
+        return;
+    };
     store.players.increasePlayerStat(props.player, stat);
 }
 const addShotToPlayer = (result: ShootingResult) => {
-    if(!props.player) return;
+    if(!props.player) {
+        window.alert("Please seelect a player!")
+        return;
+    };
 
-    if(props.player.position === 'GK' || (props.shootingTarget === null || !props.shootingArea)) return;
+    if(props.shootingTarget === null || props.shootingArea === null) {
+        window.alert("Please seelect shooting area and target!")
+        return;
+    };
     store.players.addShotToPlayer(props.player, {
         from: props.shootingArea,
         to: props.shootingTarget,
         result: result,
         time: store.matches.currentMatch.value!.time,
+        playerid: props.player.id
     }, props.assist);
     emit('shotAdded')
 }

@@ -1,4 +1,6 @@
 <template>
+<div class="w-full flex flex-col items-center justify-center">
+  <span v-if="!player && statsMode" class="w-full font-semibold text-2xl mb-4 rounded-xl  border border-gray-200  text-gray-800 py-2 px-4 uppercase text-center bg-white mb-2">overview of team {{ store.teams.selectedTeam.value?.name }} shots</span>
   <div class="svg-container">
     <svg
       width="927"
@@ -97,9 +99,11 @@
       </text>
     </svg>
   </div>
+</div>
 </template>
 
 <script setup lang="ts">
+import { pl } from '@nuxt/ui/runtime/locale/index.js';
 import { ref } from 'vue'
 import { ShootingTarget, type Player, type ShootingArea } from '~/types/handball';
 
@@ -206,14 +210,15 @@ function getShootingTargetText (target: ShootingTarget){
       const shots = props.player.currentShots?.filter(s => s.to === target)
       .filter(s => props.shootingArea? s.from === props.shootingArea : true);
       console.log(shots)
-      const type = props.player.position === 'GK' ? "gksaved" : "goal";
+      const type = props.player.position === 'GK' ? "gksave" : "goal";
       const positive = shots?.filter(s => s.result === type).length ?? 0;
       const score = shots?.length ? (positive/shots.length*100) : 0;
       const color = getScoreColor(score) 
       
       return {text:`${positive}/${shots?.length ?? 0}`, color}
     }else{
-      const shots = store.matches.currentMatch.value?.shots.filter(s => s.to === target).filter(s => props.shootingArea? s.from === props.shootingArea : true);
+      const shots = store.matches.currentMatch.value?.shots.filter(s => s.to === target && s.result !== 'gkmiss' && s.result !== 'gksave')
+      .filter(s => props.shootingArea? s.from === props.shootingArea : true);
       const positive = shots?.filter(s => s.result === "goal").length ?? 0;
       const score = shots?.length ? (positive/shots.length*100) : 0
       const color = getScoreColor(score) 
