@@ -70,7 +70,7 @@
                 </div>  
                 <div v-if="goalkeeperSelected" class="flex flex-wrap gap-6">
                     <button @click="addShotToPlayer('goal')" :class="positiveStatStyle">GOAL</button>
-                    <button @click="addShotToPlayer('miss')" :class="negativeStatStyle">EMPTY GOAL</button>
+                    <button @click="addShotToPlayer('goal', true)" :class="negativeStatStyle">EMPTY GOAL</button>
                 </div>
             </div>
             <div v-else>
@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Player, ShootingArea, ShootingResult, ShootingTarget, Stats } from '~/types/handball';
+import { ShootingTarget, type Player, type ShootingArea, type ShootingResult, type Stats } from '~/types/handball';
 import ToggleButton from '../shared/ToggleButton.vue';
 import StatsOverview from './StatsOverview.vue';
 
@@ -134,12 +134,15 @@ const addShotToPlayer = (result: ShootingResult, emptyGoal = false) => {
     let shootingTarget = props.shootingTarget;
 
     if(emptyGoal){
-        shootingArea = null;
-        shootingTarget = null;
+        shootingArea = 'CB9';
+        shootingTarget = ShootingTarget.GOAL_MIDDLE_MIDDLE
     } else if(props.shootingTarget === null || props.shootingArea === null) {
         $dialog.alert( { title:"Please select shooting area and target!"})
         return;
-    };
+    }else{
+        shootingArea = props.shootingArea!;
+        shootingTarget = props.shootingTarget!;
+    }
     if(oneOnOneWin.value){
         increasePlayerStats('1on1win')
     }
@@ -147,8 +150,8 @@ const addShotToPlayer = (result: ShootingResult, emptyGoal = false) => {
         increasePlayerStats('1on1lost',store.selection.mistakePlayer.value!)
     }
     store.players.addShotToPlayer(props.player, {
-        from: props.shootingArea,
-        to: props.shootingTarget,
+        from: shootingArea,
+        to: shootingTarget,
         result: result,
         time: store.matches.currentMatch.value!.time,
         playerid: props.player.id,
@@ -176,7 +179,7 @@ const setPlayerProvokeTwoMinutes = (stat: Stats) => {
     increasePlayerStats(stat)
     const index = store.matches.currentMatch.value!.twoMinutesAway.length > 0 ? 
     store.matches.currentMatch.value!.twoMinutesAway[store.matches.currentMatch.value!.twoMinutesAway.length - 1]! + 1 : 1; 
-    
+
     store.matches.currentMatch.value?.twoMinutesAway.push(index)
 }
 const setPlayerTwoMinutes = () => {

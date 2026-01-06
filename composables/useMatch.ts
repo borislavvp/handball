@@ -51,8 +51,8 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             opponentDefenseSystem: "6:0",
             emptyGoalHome: false,
             emptyGoalAway: false,
-                twoMinutesHome: [2,3],
-                twoMinutesAway: [2,3],
+            twoMinutesHome: [],
+            twoMinutesAway: [],
         };
         
         matches.value.push(match);
@@ -111,8 +111,8 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
                 opponentDefenseSystem: "6:0",
                 emptyGoalHome: false,
                 emptyGoalAway: false,
-                twoMinutesHome: [2,3],
-                twoMinutesAway: [2,3],
+                twoMinutesHome: [],
+                twoMinutesAway: [],
             };
             if(cached.id === lastMatch.id){
                 currentMatch.value = {

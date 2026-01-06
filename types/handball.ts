@@ -92,12 +92,12 @@ export type Shot = {
     mistakePlayer: number | null;
     fastbreak: boolean;
     breakthrough: boolean;
-    from: ShootingArea | null;
+    from: ShootingArea ;
     matchid: number;
     playerid: number;
     result: ShootingResult;
     time: string;
-    to: ShootingTarget | null;
+    to: ShootingTarget;
 }
 export type ShootingResult = 'goal' | 'miss' | 'block' | 'gksave' | 'gkmiss';
 
