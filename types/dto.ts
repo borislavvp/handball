@@ -49,11 +49,12 @@ export type MatchEventBody = {
     metadata?: any;
 }
 
+export type GeneralMatchBody = {
+    matchId: number;
+}
+
 export type ShotsBody = {
     matchId: number;
     playerId: number;
-    assistId?: number;
     shot: Shot;
-    hasStats: boolean;
-    assistHasStats: boolean;
 }

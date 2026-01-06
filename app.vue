@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { createHandballStore,provideHandballStore } from './composables/useHandballStore';
-import back from './components/icons/back.vue'
+import GlobalDialog from './components/shared/GlobalDialog.vue';
 const store = createHandballStore()
 provideHandballStore(store)
 
@@ -32,6 +32,7 @@ const goBack = () => useRouter().back();
   <div>
     <NuxtRouteAnnouncer />
     <NuxtLoadingIndicator />
+    <GlobalDialog />
     
     <!-- <header v-if="inGame"   class="px-3 py-2 flex justify-between items-center border-b border-gray-200 bg-white ">
       <div class="flex items-center gap-3">

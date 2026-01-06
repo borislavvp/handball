@@ -19,7 +19,7 @@ export const useTeam = (loadingState: LoadingState) => {
                 name,
                 number,
                 position,
-                player_stats (*,match (id,result,createdat,opponent, shots(*)))
+                player_stats (*,match (id,result,createdat,opponent,score, opponentScore,timeoutsLeft, shots(*)))
             )`
         )
         
@@ -38,6 +38,8 @@ export const useTeam = (loadingState: LoadingState) => {
             name: t.name,
             players: t.player.map( p => ({
                 ...p,
+                hasTwoMinutes: false,
+                hasCard: null,
                 recentStats: p.player_stats,
             })).sort((a,b) => a.number - b.number),
         } as Team));
@@ -56,7 +58,7 @@ export const useTeam = (loadingState: LoadingState) => {
             method: 'POST',
             body: { name: name }
         })
-        const team: Team = { id: teamId, name, players: [] };
+        const team: Team = { id: teamId as number, name, players: [] };
         
         teams.value.push(team);
         loadingState.fetching.value = false;

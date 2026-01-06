@@ -25,14 +25,18 @@ export type Position = {
   y: number
 }
 
+export type PlayerCurrentStats = {[key in Stats]: number;} & { value: number; };
+
 export interface Player {
   id: number;
   name: string;
   number: number;
   position: Position["key"];
   currentShots?: Shot[];
-  currentStats?: {[key in Stats]: number;} & { value: number; };
-  recentStats:PlayerStats[]
+  currentStats?: PlayerCurrentStats;
+  recentStats:PlayerStats[];
+  hasTwoMinutes: boolean;
+  hasCard: null | "yellow" | "red" | "blue"
 }
 
 export interface Team {
@@ -49,6 +53,7 @@ export interface Match {
   score: number;
   opponentScore: number;
   createdat?: string;
+  timeoutsLeft: number;
   shots: Shot[];
 }
 export type CurrentMatch  = Match & {
@@ -57,7 +62,10 @@ export type CurrentMatch  = Match & {
   timeoutsLeft: number;
   defenseSystem: DefenseSystem;
   opponentDefenseSystem: DefenseSystem;
-  emptyGoal: boolean;
+  emptyGoalHome: boolean;
+  emptyGoalAway: boolean;
+  twoMinutesHome: number[];
+  twoMinutesAway: number[];
 }
 
 export type DefenseSystem = "6:0" | "5:1" | "3:2:1" | "4:2" | "1:1"
@@ -79,21 +87,29 @@ export enum ShootingTarget {
   OUT_RIGHT = 11,
 } 
 export type Shot = {
-  playerid: number;
-  from: ShootingArea;
-  to: ShootingTarget;
-  result: ShootingResult;
-  time: string;
+    assistPrimary: number | null;
+    assistSecondary: number | null;
+    mistakePlayer: number | null;
+    fastbreak: boolean;
+    breakthrough: boolean;
+    from: ShootingArea | null;
+    matchid: number;
+    playerid: number;
+    result: ShootingResult;
+    time: string;
+    to: ShootingTarget | null;
 }
 export type ShootingResult = 'goal' | 'miss' | 'block' | 'gksave' | 'gkmiss';
 
-export type MATCH_EVENTS = 'timeout' | 'defense_change' | "opponent_defense_change" | 'empty_goal' | 'playing' | Stats;
+export type MATCH_EVENTS = 'timeout' | 'defense_change' | "opponent_defense_change" | 'empty_goal_home' | 'empty_goal_away' | 'playing' | Stats;
 
 export type Stats = "goal" |
-"assist"|
+"assistprimary"|
+"assistsecondary"|
 "1on1win"|
-"unbalance"|
-"provoke"|
+"provokePenalty"|
+"provokeTwoMin"|
+"provokeCard"|
 "miss"|
 "block"|
 "1on1lost"|
@@ -105,7 +121,9 @@ export type Stats = "goal" |
 "1on1lost"|
 "penaltymade"|
 "twominutes"|
-"card"|
+"yellowcard"|
+"redcard"|
+"bluecard"|
 "gksave"|
 "gkmiss"
 

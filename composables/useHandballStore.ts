@@ -1,6 +1,8 @@
 import { useState } from 'nuxt/app';
 import { provide, inject } from 'vue';
 import { useLoading } from './useLoading';
+import type { Player } from '~/types/handball';
+import { useSelection } from './useSelection';
 
     
 export function createHandballStore() {
@@ -8,7 +10,9 @@ export function createHandballStore() {
   const teams = useTeam(loadingState);
   const matches = useMatch(loadingState, teams.selectedTeam);
   const players = usePlayer(loadingState, teams.selectedTeam, matches.currentMatch);
-
+  const selection = useSelection();
+  const stats = useStats(selection, teams.selectedTeam, matches.currentMatch);
+  
   const initialize = async () => {
     loadingState.loading.value = true;
     await teams.fetchTeams();
@@ -22,6 +26,8 @@ export function createHandballStore() {
     teams,
     matches,
     players,
+    selection,
+    stats,
     initialize,
   };
 }

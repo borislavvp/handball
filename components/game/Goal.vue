@@ -1,6 +1,9 @@
 <template>
-<div class="w-full flex flex-col items-center justify-center">
-  <span v-if="!player && statsMode" class="w-full font-semibold text-2xl mb-4 rounded-xl  border border-gray-200  text-gray-800 py-2 px-4 uppercase text-center bg-white mb-2">overview of team {{ store.teams.selectedTeam.value?.name }} shots</span>
+<div class="w-full flex flex-col bg-white py-4 rounded items-center justify-center">
+  <span @click="store.selection.stats.value.goal = !store.selection.stats.value.goal"
+   class="absolute top-0 select-none right-0 -mt-2 -mr-1 rounded-full px-3 py-1 text-2xl font-bold" 
+   :class="statsMode ? 'bg-yellow-300 shadow-inner text-gray-900' : 'text-gray-900 bg-white border border-gray-300 shadow-lg'">
+   %</span>
   <div class="svg-container">
     <svg
       width="927"
@@ -55,7 +58,7 @@
         class="select-none"
         :fill="getTextColor(0)"
       >
-        {{ getShootingTargetText(0)['text'] }}
+        {{ getShootingTargetInfo(0)['text'] }}
       </text>
       <text
         pointer-events="none"
@@ -68,7 +71,7 @@
         class="select-none"
         :fill="getTextColor(10)"
       >
-        {{ getShootingTargetText(10)['text'] }}
+        {{ getShootingTargetInfo(10)['text'] }}
       </text>
       <text
         pointer-events="none"
@@ -81,7 +84,7 @@
         class="select-none"
         :fill="getTextColor(11)"
       >
-        {{ getShootingTargetText(11)['text'] }}
+        {{ getShootingTargetInfo(11)['text'] }}
       </text>
       <text
         v-for="(num, index) in shootingTargets"
@@ -95,7 +98,7 @@
         class="select-none"
         :fill="getTextColor(num)"
       >
-        {{ getShootingTargetText(num)['text'] }}
+        {{ getShootingTargetInfo(num)['text'] }}
       </text>
     </svg>
   </div>
@@ -103,9 +106,8 @@
 </template>
 
 <script setup lang="ts">
-import { pl } from '@nuxt/ui/runtime/locale/index.js';
-import { ref } from 'vue'
 import { ShootingTarget, type Player, type ShootingArea } from '~/types/handball';
+import { getScoreColor } from '../utils/getScoreColor';
 
 
 const props = defineProps<{
@@ -181,47 +183,25 @@ function handleRectClick(i:number) {
   emit('positionClick', i);
 }
 
-function getScoreColor(score: number){
-  let boxColor = '';
-  let textColor = '';
-  if (score === 0) {
-    boxColor = '#e5e7eb'; // gray background
-    textColor = '#6b7280'; // medium gray text
-  } else if (score < 30) {
-    boxColor = '#fee2e2'; // soft red
-    textColor = '#b91c1c'; // dark red
-  } else if (score < 60) {
-    boxColor = '#fef3c7'; // soft yellow
-    textColor = '#92400e'; // brownish orange
-  } else if (score < 80) {
-    boxColor = '#dcfce7'; // soft green
-    textColor = '#166534'; // dark green
-  } else {
-    boxColor = '#bbf7d0'; // mint green
-    textColor = '#065f46'; // deep green
-  } 
-  return {boxColor,textColor};
-}
-
-function getShootingTargetText (target: ShootingTarget){
+function getShootingTargetInfo (target: ShootingTarget){
   if(props.statsMode){
     if(props.player){
-      console.log(props.player)
       const shots = props.player.currentShots?.filter(s => s.to === target)
       .filter(s => props.shootingArea? s.from === props.shootingArea : true);
-      console.log(shots)
       const type = props.player.position === 'GK' ? "gksave" : "goal";
       const positive = shots?.filter(s => s.result === type).length ?? 0;
-      const score = shots?.length ? (positive/shots.length*100) : 0;
+      const score = shots?.length ? (positive/shots.length*100) : -1;
       const color = getScoreColor(score) 
       
       return {text:`${positive}/${shots?.length ?? 0}`, color}
     }else{
-      const shots = store.matches.currentMatch.value?.shots.filter(s => s.to === target && s.result !== 'gkmiss' && s.result !== 'gksave')
-      .filter(s => props.shootingArea? s.from === props.shootingArea : true);
+      const shots = store.matches.currentMatch.value?.shots
+      .filter(s => s.to === target && s.result !== 'gkmiss' && s.result !== 'gksave')
+      .filter(s => props.shootingArea ? s.from === props.shootingArea : true);
       const positive = shots?.filter(s => s.result === "goal").length ?? 0;
-      const score = shots?.length ? (positive/shots.length*100) : 0
+      const score = shots?.length ? (positive/shots.length*100) : -1;
       const color = getScoreColor(score) 
+
       return {text:`${positive}/${shots?.length ?? 0}`, color}
     }
   }else{
@@ -234,7 +214,7 @@ function getBoxColor(defaultFill:string, index:number){
     if(props.shootingTarget === index){
       return "#050C58"
     }
-    return getShootingTargetText(index).color?.boxColor
+    return getShootingTargetInfo(index).color?.boxColor
   }else{
     if(props.shootingTarget === index){
       return "#007a55"
@@ -247,7 +227,7 @@ function getTextColor(index:number){
     if(props.shootingTarget === index){
       return "white"
     }
-    return getShootingTargetText(index).color?.textColor
+    return getShootingTargetInfo(index).color?.textColor
   }else{
     if(props.shootingTarget === index){
       return "white"

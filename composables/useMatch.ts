@@ -1,5 +1,7 @@
 import type { CurrentMatch, DefenseSystem, Match, MATCH_EVENTS, Team } from "~/types/handball";
 import type { LoadingState } from "./useLoading";
+import { ca } from "@nuxt/ui/runtime/locale/index.js";
+import { computePlayerValue } from "./usePlayer";
 
 export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | undefined>,  ) => {
 
@@ -16,14 +18,26 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         return matches.value.find(m => m.id === id)
     }
 
+    async function deleteMatch(id:number){
+        await $fetch('/api/match/delete', {
+            method: 'POST',
+            body: { matchId: id }
+        })
+        const index = matches.value.findIndex(m => m.id === id);
+        if(index !== -1) {
+            matches.value.splice(index, 1);
+        }
+    }
+
     async function createMatch(opponent: string): Promise<Match | null> {
         const matchId = await $fetch('/api/matches', {
             method: 'POST',
-            body: { opponent: opponent, teamId: team.value, }
-        })
+            body: { opponent: opponent, teamId: team.value?.id, }
+        });
 
         const match: CurrentMatch = { 
-            id:matchId , opponent,
+            id:matchId as number, 
+            opponent,
             teamid:team.value!.id, 
             createdat: Date.now().toString(), 
             result: null,
@@ -35,7 +49,10 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             shots: [],
             defenseSystem: "6:0",
             opponentDefenseSystem: "6:0",
-            emptyGoal: false,
+            emptyGoalHome: false,
+            emptyGoalAway: false,
+                twoMinutesHome: [2,3],
+                twoMinutesAway: [2,3],
         };
         
         matches.value.push(match);
@@ -45,6 +62,7 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     
 
     const startMatchTimer = () => {
+        console.log("START TIMER")
         timer.value = setInterval(() => {
             if (!currentMatch.value!.playing) return;
 
@@ -58,14 +76,13 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
 
             // Compute minutes and seconds
             const minutes = Math.floor(totalSeconds / 60);
-            if(minutes === 30){
+            const seconds = totalSeconds % 60;
+            if(minutes === 30 && seconds === 0){
                 // Half-time reached
                 currentMatch.value!.playing = false;
-            }else if(minutes === 60){
+            }else if(minutes === 60 && seconds === 0){
                 endMatch(currentMatch.value!.score > currentMatch.value!.opponentScore ? "WIN" : "LOST")
             }
-
-            const seconds = totalSeconds % 60;
 
             // Format as MM:SS
             currentMatch.value!.time = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -76,7 +93,7 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     async function fetchMatches() {
         const { $supabase } = useNuxtApp()
         loadingState.fetching.value = true;
-        const {data, error} = await $supabase.from('match').select("*, shots(*)").eq('teamid', team.value!.id)
+        const {data, error} = await $supabase.from('match').select("*, shots(*)").eq('teamid', team.value!.id).order('id', { ascending: true }); // ascending: false for descending
         if (error){
             console.error("Error fetching matches:", error.message);
             loadingState.fetching.value = false;
@@ -85,10 +102,27 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         matches.value = data!;
         const lastMatch = matches.value[matches.value.length -1];
         if(lastMatch && !lastMatch.result){
+            const cached = loadMatchFromLocalStorage() as CurrentMatch;
             currentMatch.value = {
-                ...loadMatchFromLocalStorage(),
-                ...lastMatch
+                ...lastMatch,
+                time: "47:00",
+                playing: false,
+                defenseSystem: "6:0",
+                opponentDefenseSystem: "6:0",
+                emptyGoalHome: false,
+                emptyGoalAway: false,
+                twoMinutesHome: [2,3],
+                twoMinutesAway: [2,3],
             };
+            if(cached.id === lastMatch.id){
+                currentMatch.value = {
+                    ...currentMatch.value,  
+                    ...cached,
+                    result: lastMatch.result
+                }
+            }else{
+                saveMatchToLocalStorage(currentMatch.value);
+            }
             if(currentMatch.value?.result !== null){
                 currentMatch.value = null;
             }else{
@@ -97,13 +131,14 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
                 }
                 team.value?.players.forEach(p => {
                     const stats = p.recentStats[p.recentStats.length -1]
-                    if (stats ){
+                    if (stats && stats.match.id === currentMatch.value?.id){
                         p.currentStats = stats;
-                    }
-                    if(stats?.goal || stats?.miss || stats?.gkmiss || stats?.gksave){
-                        p.currentShots = stats.match.shots.filter(s => s.playerid === p.id);
-                    }else{
-                        p.currentShots = []
+                        computePlayerValue(p);
+                        if(stats?.goal || stats?.miss || stats?.gkmiss || stats?.gksave){
+                            p.currentShots = stats.match.shots.filter(s => s.playerid === p.id);
+                        }else{
+                            p.currentShots = []
+                        }
                     }
                 });
             }
@@ -123,8 +158,8 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     
     function logMatchEvent(data: {eventType: MATCH_EVENTS, playerId?: number, metadata?: any}) {
         $fetch('/api/match/event', {
-        method: 'POST',
-        body: { matchId: currentMatch.value?.id, eventType:data.eventType, playerId:data.playerId, metadata:data.metadata }
+            method: 'POST',
+            body: { matchId: currentMatch.value?.id, eventType:data.eventType, playerId:data.playerId, metadata:data.metadata }
         })
     }
 
@@ -140,7 +175,8 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             body: { result, score: currentMatch.value?.score, opponentScore: currentMatch.value?.opponentScore }
         })
         clearInterval(timer.value!);
-        saveMatchToLocalStorage(currentMatch.value);logMatchEvent({
+        saveMatchToLocalStorage(currentMatch.value);
+        logMatchEvent({
             eventType: 'playing',
             metadata: false
         })
@@ -188,7 +224,8 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     }
 
     const resumeMatch = () => {
-        console.log(timer.value)
+        console.log("TIMER", timer.value)
+        console.log("RESUME MATCH", currentMatch.value!.playing)
         if (timer.value === null) {
             startMatchTimer();
         }
@@ -238,12 +275,20 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         })
     }
 
-    const toggleEmptyGoal = () => {
-        currentMatch.value!.emptyGoal = !currentMatch.value!.emptyGoal 
-        logMatchEvent({
-            eventType: 'empty_goal',
-            metadata: currentMatch.value!.emptyGoal
-        })
+    const toggleEmptyGoal = (side: "home" | "away") => {
+        if(side === "home"){
+            currentMatch.value!.emptyGoalHome = !currentMatch.value!.emptyGoalHome 
+            logMatchEvent({
+                eventType: `empty_goal_home`,
+                metadata: currentMatch.value!.emptyGoalHome
+            })
+        }else{
+            currentMatch.value!.emptyGoalAway = !currentMatch.value!.emptyGoalAway 
+            logMatchEvent({
+                eventType: `empty_goal_away`,
+                metadata: currentMatch.value!.emptyGoalAway
+            })
+        }
     }
     return {
         matches,
@@ -257,6 +302,7 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         increaseMatchScore,
         takeTimeout,
         getMatch,
+        deleteMatch,
         startMatchTimer,
         stopMatchTimer,
         changeDefenseSystem,

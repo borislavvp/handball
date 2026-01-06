@@ -31,7 +31,7 @@
         text-anchor="middle"
         alignment-baseline="middle"
         font-size="35"
-      >{{ getShootingAreaStyle(zone.key)['text'] }}</text>
+      >{{ getShootingAreaInfo(zone.key)['text'] }}</text>
       
       
       <rect @click="toggleZone('7M')" x="382.5" y="155.5" width="156" height="34" rx="17" :fill="getBoxColor('white','7M')" stroke="black" stroke-width="5"/>
@@ -45,7 +45,7 @@
         text-anchor="middle"
         alignment-baseline="middle"
         font-size="35"
-      >{{ getShootingAreaStyle('7M')['text'] }}</text>
+      >{{ getShootingAreaInfo('7M')['text'] }}</text>
     <path v-else d="M447.825 180L454.011 167.756V167.656H446.831V165.455H456.739V167.706L450.56 180H447.825ZM459.173 165.455H462.397L466.716 175.994H466.886L471.204 165.455H474.429V180H471.9V170.007H471.765L467.745 179.957H465.856L461.836 169.986H461.701V180H459.173V165.455Z":fill="selected === '7M' ? 'white' : 'black'"/>
 
     </svg>
@@ -55,6 +55,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Player, Position, ShootingArea, ShootingTarget } from '~/types/handball';
+import { getScoreColor } from '../utils/getScoreColor';
 
 const props = defineProps<{
   player: Player | null,
@@ -123,42 +124,23 @@ watch(() => props.player?.position, (newPos) => {
 }, { immediate: true });
 
 
-function getScoreColor(score: number){
-  let boxColor = '';
-  let textColor = '';
-  if (score === 0) {
-    boxColor = '#e5e7eb'; // gray background
-    textColor = '#6b7280'; // medium gray text
-  } else if (score < 30) {
-    boxColor = '#fee2e2'; // soft red
-    textColor = '#b91c1c'; // dark red
-  } else if (score < 60) {
-    boxColor = '#fef3c7'; // soft yellow
-    textColor = '#92400e'; // brownish orange
-  } else if (score < 80) {
-    boxColor = '#dcfce7'; // soft green
-    textColor = '#166534'; // dark green
-  } else {
-    boxColor = '#bbf7d0'; // mint green
-    textColor = '#065f46'; // deep green
-  } 
-  return {boxColor,textColor};
-}
-
-function getShootingAreaStyle (target: ShootingArea){
+function getShootingAreaInfo (target: ShootingArea){
   if(props.statsMode){
     if(props.player){
-      const shots = props.player.currentShots?.filter(s => s.from === target).filter(s => props. selectedShootingTarget ? s.to === props.selectedShootingTarget : true);
-      const type = props.player.position === 'GK' ? "gksaved" : "goal";
+      const shots = props.player.currentShots?.filter(s => s.from === target)
+      .filter(s => props.selectedShootingTarget ? s.to === props.selectedShootingTarget : true);
+      const type = props.player.position === 'GK' ? "gksave" : "goal";
       const positive = shots?.filter(s => s.result === type).length ?? 0;
-      const score = shots?.length ? (positive/shots.length*100) : 0;
+      const score = shots?.length ? (positive/shots.length*100) : -1;
       const color = getScoreColor(score) 
       
       return {text:`${positive}/${shots?.length ?? 0}`, color}
     }else{
-      const shots = store.matches.currentMatch.value?.shots.filter(s => s.from === target).filter(s => props. selectedShootingTarget ? s.to === props.selectedShootingTarget : true);
+      const shots = store.matches.currentMatch.value?.shots
+      .filter(s => s.from === target && s.result !== 'gkmiss' && s.result !== 'gksave')
+      .filter(s => props.selectedShootingTarget ? s.to === props.selectedShootingTarget : true);
       const positive = shots?.filter(s => s.result === "goal").length ?? 0;
-      const score = shots?.length ? (positive/shots.length*100) : 0
+      const score = shots?.length ? (positive/shots.length*100) : -1;
       const color = getScoreColor(score) 
       return {text:`${positive}/${shots?.length ?? 0}`, color}
     }
@@ -172,7 +154,7 @@ function getBoxColor(defaultFill:string, index:ShootingArea){
     if(selected.value === index){
       return "#050C58"
     }
-    return getShootingAreaStyle(index).color?.boxColor
+    return getShootingAreaInfo(index).color?.boxColor
   }else{
     if(selected.value === index){
       return "#007a55"
@@ -185,7 +167,7 @@ function getTextColor(index:ShootingArea){
     if(selected.value === index){
       return "white"
     }
-    return getShootingAreaStyle(index).color?.textColor
+    return getShootingAreaInfo(index).color?.textColor
   }else{
     if(selected.value === index){
       return "white"

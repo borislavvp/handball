@@ -12,7 +12,6 @@ export default defineEventHandler(async (event): Promise<number> => {
       statusMessage: 'Player opponent and teamId are required'
     })
   }
-
   const { data, error } = await supabase
     .from('match')
     .insert({
@@ -24,7 +23,9 @@ export default defineEventHandler(async (event): Promise<number> => {
     })
     .select()
     .single()
-  
+  if (error || !data) {
+    throw createError({ statusCode: 400, statusMessage: "ERROR creating match"})
+  }
   return data!.id
 }catch{
   throw createError({ statusCode: 400, statusMessage: "ERROR"})
