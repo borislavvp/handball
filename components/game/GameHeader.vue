@@ -14,9 +14,9 @@
         <span class="w-19  flex items-center justify-center h-full bg-blue-400  text-white select-none">
             {{ store.matches.currentMatch.value?.score }}
         </span>
-        <div class="relative" v-if="store.matches.currentMatch.value!.twoMinutesHome.length > 0" >
+        <div class="relative"  >
             <span class="mx-4 select-none text-white ">{{ team?.name }}</span>
-            <div class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
+            <div v-if="store.matches.currentMatch.value!.twoMinutesHome.length > 0" class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
                 <span>{{ store.matches.currentMatch.value?.twoMinutesHome.length  }}</span>
                 <header-two-minutes-tag v-show="value === store.matches.currentMatch.value?.twoMinutesHome[0]"
                  v-for="value in store.matches.currentMatch.value?.twoMinutesHome" :player-id="value" />
@@ -30,9 +30,9 @@
                 <play v-else class="h-12 w-12 text-gray-900" />
             </button>
         </div>
-        <div class="relative" v-if="store.matches.currentMatch.value!.twoMinutesAway.length > 0" >
+        <div class="relative"  >
             <span class="mx-4 select-none text-white ">{{ match?.opponent }}</span>
-            <div class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
+            <div v-if="store.matches.currentMatch.value!.twoMinutesAway.length > 0" class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
                 <span>{{ store.matches.currentMatch.value?.twoMinutesAway.length  }}</span>
                 <header-two-minutes-tag  v-show="value === store.matches.currentMatch.value?.twoMinutesAway[0]" 
                 v-for="value in store.matches.currentMatch.value?.twoMinutesAway":player-id="value" />
