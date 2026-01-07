@@ -14,7 +14,7 @@ export const usePlayer = (
         loadingState.fetching.value = true;
         const {data, error} = await $supabase
             .from('player_stats')
-            .select(`*,match (id,result,createdat,opponent,score, opponentScore, timeoutsLeft, shots(*))`)
+            .select(`*,match (id,result,createdat,opponent,score, opponentScore, timeoutsLeftHome, timeoutsLeftAway, shots(*))`)
             .eq('playerid', playerId)
 
         if (error){

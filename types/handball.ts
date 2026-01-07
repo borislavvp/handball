@@ -53,13 +53,15 @@ export interface Match {
   score: number;
   opponentScore: number;
   createdat?: string;
-  timeoutsLeft: number;
+  timeoutsLeftHome: number;
+  timeoutsLeftAway: number;
   shots: Shot[];
 }
 export type CurrentMatch  = Match & {
   time: string;
   playing: boolean;
-  timeoutsLeft: number;
+  timeoutsLeftHome: number;
+  timeoutsLeftAway: number;
   defenseSystem: DefenseSystem;
   opponentDefenseSystem: DefenseSystem;
   emptyGoalHome: boolean;
@@ -101,7 +103,7 @@ export type Shot = {
 }
 export type ShootingResult = 'goal' | 'miss' | 'block' | 'gksave' | 'gkmiss';
 
-export type MATCH_EVENTS = 'timeout' | 'defense_change' | "opponent_defense_change" | 'empty_goal_home' | 'empty_goal_away' | 'playing' | Stats;
+export type MATCH_EVENTS = 'timeout_home' | 'timeout_away' | 'defense_change' | "opponent_defense_change" | 'empty_goal_home' | 'empty_goal_away' | 'playing' | Stats;
 
 export type Stats = "goal" |
 "assistprimary"|
@@ -140,7 +142,8 @@ export type PlayerStats = {
     result: string | null;
     score: number;
     opponentScore: number;
-    timeoutsLeft: number;
+    timeoutsLeftHome: number;
+    timeoutsLeftAway: number;
     createdAt?: string;
     shots: Shot[];
   };

@@ -43,7 +43,8 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             result: null,
             score: 0,
             opponentScore: 0,
-            timeoutsLeft: 3,
+            timeoutsLeftHome: 3,
+            timeoutsLeftAway: 3,
             time: "00:00",
             playing: false,
             shots: [],
@@ -246,13 +247,20 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         saveMatchToLocalStorage(currentMatch.value);
     }
 
-    const takeTimeout = () => {
-        if (currentMatch.value!.timeoutsLeft > 0) {
-            currentMatch.value!.timeoutsLeft -= 1;
+    const takeTimeout = (side: 'home' | 'away') => {
+        if (side === 'home' && currentMatch.value!.timeoutsLeftHome > 0) {
+            currentMatch.value!.timeoutsLeftHome -= 1;
             saveMatchToLocalStorage(currentMatch.value);
             logMatchEvent({
-                eventType: 'timeout',
-                metadata: currentMatch.value!.timeoutsLeft
+                eventType: 'timeout_home',
+                metadata: currentMatch.value!.timeoutsLeftHome
+            })
+        } else if (side === 'away' && currentMatch.value!.timeoutsLeftAway > 0) {
+            currentMatch.value!.timeoutsLeftAway -= 1;
+            saveMatchToLocalStorage(currentMatch.value);
+            logMatchEvent({
+                eventType: 'timeout_away',
+                metadata: currentMatch.value!.timeoutsLeftAway
             })
         }
     }

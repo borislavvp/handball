@@ -19,7 +19,7 @@ export const useTeam = (loadingState: LoadingState) => {
                 name,
                 number,
                 position,
-                player_stats (*,match (id,result,createdat,opponent,score, opponentScore,timeoutsLeft, shots(*)))
+                player_stats (*,match (id,result,createdat,opponent,score, opponentScore, timeoutsLeftHome, timeoutsLeftAway, shots(*)))
             )`
         )
         

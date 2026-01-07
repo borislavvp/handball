@@ -4,13 +4,13 @@
         <back class="w-8 h-8 text-white"/>
     </button>
     <div class="flex items-center h-full uppercase font-semibold text-4xl">
-        <span @click="store.matches.takeTimeout" 
+        <span @click="store.matches.takeTimeout('home')" 
               class="select-none h-full w-19  flex justify-center items-center "
               :class="[
-                store.matches.currentMatch.value?.timeoutsLeft ? 'text-gray-900 focus:bg-gray-100 bg-white  ' : 'bg-gray-200 text-gray-400  '
+                store.matches.currentMatch.value?.timeoutsLeftHome ? 'text-gray-900 focus:bg-gray-100 bg-white  ' : 'bg-gray-200 text-gray-400  '
               ]"
               >
-                T{{store.matches.currentMatch.value?.timeoutsLeft}}</span>
+                T{{store.matches.currentMatch.value?.timeoutsLeftHome}}</span>
         <span class="w-19  flex items-center justify-center h-full bg-blue-400  text-white select-none">
             {{ store.matches.currentMatch.value?.score }}
         </span>
@@ -41,13 +41,13 @@
         <span class="w-19 flex items-center justify-center h-full bg-blue-400  text-white select-none">
             {{ match?.opponentScore }}
         </span>
-        <span @click="store.matches.takeTimeout" 
+        <span @click="store.matches.takeTimeout('away')" 
               class="select-none h-full w-19 flex justify-center items-center "
               :class="[
-                store.matches.currentMatch.value?.timeoutsLeft ? 'text-gray-900 focus:bg-gray-100 bg-white  ' : 'bg-gray-200 text-gray-400'
+                store.matches.currentMatch.value?.timeoutsLeftAway ? 'text-gray-900 focus:bg-gray-100 bg-white  ' : 'bg-gray-200 text-gray-400'
               ]"
               >
-                T{{store.matches.currentMatch.value?.timeoutsLeft}}</span>
+                T{{store.matches.currentMatch.value?.timeoutsLeftAway}}</span>
     </div> 
 </div>
 </template>
