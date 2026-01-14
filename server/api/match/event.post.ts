@@ -13,7 +13,7 @@ export default defineEventHandler(async (event): Promise<void> => {
       })
     }
   
-    await supabase
+    const {error} = await supabase
       .from("match_event")
       .insert({
         matchid: body.matchId,
@@ -22,9 +22,11 @@ export default defineEventHandler(async (event): Promise<void> => {
         playerid: body.playerId ?? null,
         metadata: body.metadata 
       })
-
-  }catch{
-    throw createError({ statusCode: 400, statusMessage: "ERROR"})
+    if(error){
+      throw createError(error)
+    }
+  }catch (error: any) {
+    throw createError({ statusCode: 400, statusMessage: error.message } )
   }
 
 })

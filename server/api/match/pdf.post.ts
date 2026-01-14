@@ -2,15 +2,17 @@
 import PDFDocument from "pdfkit";
 import { defineEventHandler, readBody, createError } from "h3";
 import { supabase } from "../../utils/databaseClient";
-import { Match, MATCH_EVENTS, Player, PlayerStats, ShootingArea, ShootingTarget, Shot } from "~/types/handball";
+import { PlayerStats, } from "~/types/handball";
 import { GeneralMatchBody } from "~/types/dto";
-import { AreaStats, DefenseBucket, DefenseTypeBucket, GoalkeeperRow, MatchEvents, PDF_CONFIG, PlayerRow, ScoreAtMinute, ScoreEvent, SHOOTING_AREAS, ShootingGrid } from "./pdf/types";
-import { calculateEfficiency, drawPlayerGrid, drawTableRow, getAreaMapping, labelShootingArea, parseTimeToSeconds, secondsToMinutes } from "./pdf/utils";
-import { calculateScoreProgression, drawScoreChartPage } from "./pdf/chart";
+import { AreaStats, DefenseBucket, DefenseTypeBucket, GoalkeeperRow, PDF_CONFIG, PlayerRow,ShootingGrid } from "~/types/pdf";
+import { drawPlayerGrid, drawTableRow, } from "./pdf/utils";
+import {  drawScoreChartPage } from "./pdf/chart";
 import { Database } from "~/types/database.types";
-import { computeAttackDefenseStatsByPosition, drawHalfFieldAttackDefenseStats } from "./pdf/shooting";
-
-// ==================== DATA FETCHING & PROCESSING ====================
+import { drawHalfFieldAttackDefenseStats } from "./pdf/shooting";
+import { computeAttackDefenseStatsByPosition } from "~/shared/pdf/pdfShooting";
+import { buildAttackByDefenseStats, buildAttackDefenseSuperiorityStats, buildDefenseByTypeStats, calculateAreaStats, calculateShootingTargets, 
+  processGoalkeeperStats, processPlayerStats, SuperiortyResult } from "~/shared/pdf/pdf";
+import { calculateScoreProgression } from "~/shared/pdf/pdfChart";
 
 async function fetchMatchData(matchId: number) {
   const { data: matchData, error: matchError } = await supabase
@@ -43,522 +45,6 @@ async function fetchMatchData(matchId: number) {
     events: events.data || [],
   };
 }
-
-function processPlayerStats(
-  players: Database["public"]['Tables']['player']['Row'][],
-  playerStatsMap: Map<number, Partial<PlayerStats>>,
-  shots: Shot[]
-): PlayerRow[] {
-  return players
-    .filter(p => p.position !== 'GK')
-    .map(player => {
-      const playerShots = shots.filter(s => s.playerid === player.id);
-      const playerStat = playerStatsMap.get(player.id) || {};
-      
-      return calculatePlayerRow(player, playerShots, playerStat);
-    });
-}
-
-function calculatePlayerRow(
-  player: Database["public"]['Tables']['player']['Row'],
-  playerShots: Shot[],
-  playerStat: Partial<PlayerStats>
-): PlayerRow {
-  const attempts = playerShots.length;
-  const goalsTotal = playerShots.filter(s => s.result === 'goal').length;
-  const efficiency = calculateEfficiency(goalsTotal, attempts);
-  
-  // Initialize position counters
-  const counters = {
-    by9m: { scored: 0, total: 0 },
-    by6m: { scored: 0, total: 0 },
-    byWing: { scored: 0, total: 0 },
-    by7m: { scored: 0, total: 0 },
-    fastbreak: { scored: 0, total: 0 },
-  };
-  
-  // Count shots by position
-  playerShots.forEach(shot => {
-    const area = labelShootingArea(shot.from);
-    const scored = shot.result === 'goal';
-    
-    switch (area) {
-      case "9M":
-        counters.by9m.total++;
-        if (scored) counters.by9m.scored++;
-        break;
-      case "6M":
-        counters.by6m.total++;
-        if (scored) counters.by6m.scored++;
-        break;
-      case "Wing":
-        counters.byWing.total++;
-        if (scored) counters.byWing.scored++;
-        break;
-      case "7M":
-        counters.by7m.total++;
-        if (scored) counters.by7m.scored++;
-        break;
-    }
-    
-    if (shot.fastbreak) {
-      counters.fastbreak.total++;
-      if (scored) counters.fastbreak.scored++;
-    }
-  });
-  
-  const oneOnOneTotal = (playerStat["1on1win"] ?? 0) + (playerStat["1on1lost"] ?? 0);
-  
-  return {
-    id: player.id,
-    number: player.number,
-    name: player.name,
-    value: playerStat.value ?? 0,
-    goalsTotal,
-    attempts,
-    efficiency,
-    ...counters,
-    oneOnOne: { 
-      scored: playerStat["1on1win"] ?? 0, 
-      total: oneOnOneTotal 
-    },
-    assistsPrimary: playerStat.assistprimary ?? 0,
-    assistsSecondary: playerStat.assistsecondary ?? 0,
-    provoked7m: playerStat.provokePenalty ?? 0,
-    provoked2m: playerStat.provokeTwoMin ?? 0,
-    lostballs: playerStat.lostball ?? 0,
-    steals: playerStat.steal ?? 0,
-    blocks: playerStat.block ?? 0,
-    norebounds: playerStat.norebound ?? 0,
-    penaltiesMade: playerStat.penaltymade ?? 0,
-    oneOnOneLost: playerStat["1on1lost"] ?? 0,
-    defense: playerStat.defense ?? 0,
-    defenseAndSteal: playerStat.defensex2 ?? 0,
-    yellow: playerStat.yellowcard ?? 0,
-    twoMinutes: playerStat.twominutes ?? 0,
-    red: playerStat.redcard ?? 0,
-    blue: playerStat.bluecard ?? 0,
-  };
-}
-
-function processGoalkeeperStats(
-  goalkeepers: Database["public"]['Tables']['player']['Row'][],
-  playerStatsMap: Map<number, Partial<PlayerStats>>,
-  shots: Shot[]
-): GoalkeeperRow[] {
-  return goalkeepers.map(gk => {
-    const gkShots = shots.filter(s => s.playerid === gk.id);
-    const gkStat = playerStatsMap.get(gk.id) || {};
-    
-    return calculateGoalkeeperRow(gk, gkShots, gkStat);
-  });
-}
-function calculateGoalkeeperTotals(goalkeepers: GoalkeeperRow[]): GoalkeeperRow {
-  return goalkeepers.reduce((acc, gk) => ({
-    id: 0,
-    name: "Total",
-    number: 0,
-    value: Math.floor((acc.value + gk.value) / 2),
-    totalSaves: acc.totalSaves + gk.totalSaves,
-    attempts: acc.attempts + gk.attempts,
-    efficiency: Math.floor((acc.efficiency + gk.efficiency) / 2),
-    by9m: { saved: acc.by9m.saved + gk.by9m.saved, total: acc.by9m.total + gk.by9m.total },
-    by6m: { saved: acc.by6m.saved + gk.by6m.saved, total: acc.by6m.total + gk.by6m.total },
-    by7m: { saved: acc.by7m.saved + gk.by7m.saved, total: acc.by7m.total + gk.by7m.total },
-    byWing: { saved: acc.byWing.saved + gk.byWing.saved, total: acc.byWing.total + gk.byWing.total },
-    fastbreak: { saved: acc.fastbreak.saved + gk.fastbreak.saved, total: acc.fastbreak.total + gk.fastbreak.total },
-  }), {
-    id: 0,
-    name: "",
-    number: 0,
-    value: 0,
-    totalSaves: 0,
-    attempts: 0,
-    efficiency: 0,
-    by9m: { saved: 0, total: 0 },
-    by6m: { saved: 0, total: 0 },
-    by7m: { saved: 0, total: 0 },
-    byWing: { saved: 0, total: 0 },
-    fastbreak: { saved: 0, total: 0 },
-  });
-}
-
-function calculateTotalShootingDistribution(
-  shootingTargets: Map<string, ShootingGrid>,
-  isGoalkeeper: boolean
-): ShootingGrid {
-  const result: ShootingGrid = {
-    squares: Array.from({ length: 9 }, () => ({ scored: 0, total: 0 })),
-    missed: isGoalkeeper ? undefined : { left: 0, top: 0, right: 0 }
-  };
-  
-  for (const grid of shootingTargets.values()) {
-    grid.squares.forEach((square, i) => {
-      result.squares[i].scored += square.scored;
-      result.squares[i].total += square.total;
-    });
-    
-    if (!isGoalkeeper && grid.missed) {
-      result.missed!.left += grid.missed.left;
-      result.missed!.top += grid.missed.top;
-      result.missed!.right += grid.missed.right;
-    }
-  }
-  
-  return result;
-}
-
-function calculateGoalkeeperRow(
-  goalkeeper: Database["public"]['Tables']['player']['Row'],
-  goalkeeperShots:Shot[],
-  goalkeeperStat: Partial<PlayerStats>
-): GoalkeeperRow {
-  const attempts = goalkeeperShots.length;
-  const totalSaves = goalkeeperShots.filter(s => s.result === 'gksave').length;
-  const efficiency = calculateEfficiency(totalSaves, attempts);
-  
-  const counters = {
-    by9m: { saved: 0, total: 0 },
-    by6m: { saved: 0, total: 0 },
-    byWing: { saved: 0, total: 0 },
-    by7m: { saved: 0, total: 0 },
-    fastbreak: { saved: 0, total: 0 },
-  };
-  
-  goalkeeperShots.forEach(shot => {
-    const area = labelShootingArea(shot.from);
-    const saved = shot.result === 'gksave';
-    
-    switch (area) {
-      case "9M":
-        counters.by9m.total++;
-        if (saved) counters.by9m.saved++;
-        break;
-      case "6M":
-        counters.by6m.total++;
-        if (saved) counters.by6m.saved++;
-        break;
-      case "Wing":
-        counters.byWing.total++;
-        if (saved) counters.byWing.saved++;
-        break;
-      case "7M":
-        counters.by7m.total++;
-        if (saved) counters.by7m.saved++;
-        break;
-    }
-    
-    if (shot.fastbreak) {
-      counters.fastbreak.total++;
-      if (saved) counters.fastbreak.saved++;
-    }
-  });
-  
-  return {
-    id: goalkeeper.id,
-    number: goalkeeper.number,
-    name: goalkeeper.name,
-    value: goalkeeperStat.value ?? 0,
-    totalSaves,
-    attempts,
-    efficiency,
-    ...counters,
-  };
-}
-
-function calculateShootingTargets(
-  players: Database["public"]['Tables']['player']['Row'][],
-  shots: Shot[],
-  isGoalkeeper = false
-): Map<string, ShootingGrid> {
-  const result = new Map<string, ShootingGrid>();
-  
-  players.forEach(player => {
-    const playerShots = shots.filter(s => s.playerid === player.id);
-    const name = `${player.number} ${player.name}`.trim();
-    
-    const grid: ShootingGrid = {
-      squares: Array.from({ length: 9 }, () => ({ scored: 0, total: 0 })),
-      missed: isGoalkeeper ? undefined : { left: 0, top: 0, right: 0 }
-    };
-    
-    playerShots.forEach(shot => {
-      if (!isGoalkeeper) {
-        if (shot.to === ShootingTarget.OUT_LEFT) {
-          grid.missed!.left++;
-          return;
-        }
-        if (shot.to === ShootingTarget.OUT_TOP) {
-          grid.missed!.top++;
-          return;
-        }
-        if (shot.to === ShootingTarget.OUT_RIGHT) {
-          grid.missed!.right++;
-          return;
-        }
-      }
-      
-      const targetIndex = shot.to - 1;
-      if (targetIndex >= 0 && targetIndex < 9) {
-        grid.squares[targetIndex].total++;
-        if (shot.result === 'goal') {
-          grid.squares[targetIndex].scored++;
-        }
-      }
-    });
-    
-    result.set(name, grid);
-  });
-  
-  return result;
-}
-
-function calculateAreaStats(shots: Shot[]): Map<string, AreaStats> {
-  const stats = new Map<string, AreaStats>();
-  
-  SHOOTING_AREAS.forEach(area => {
-    stats.set(area, { goals: 0, saved: 0, out: 0, block: 0, total: 0, percent: 0 });
-  });
-  
-  shots.forEach(shot => {
-    if (shot.result === 'gkmiss' || shot.result === 'gksave') return;
-    
-    const area = shot.fastbreak ? 'Fastbreak' : getAreaMapping(shot.from);
-    const stat = stats.get(area) || { goals: 0, saved: 0, out: 0, block: 0, total: 0, percent: 0 };
-    
-    if (shot.result === 'goal') stat.goals++;
-    else if (shot.result === 'miss') {
-      if ([ShootingTarget.OUT_TOP, ShootingTarget.OUT_LEFT, ShootingTarget.OUT_RIGHT].includes(shot.to)) {
-        stat.out++;
-      } else {
-        stat.saved++;
-      }
-    } else if (shot.result === 'block') stat.block++;
-    
-    stat.total++;
-    stats.set(area, stat);
-  });
-  
-  // Calculate percentages
-  const totalShots = shots.filter(s => s.result !== 'gkmiss' && s.result !== 'gksave').length || 1;
-  stats.forEach(stat => {
-    stat.percent = Math.round((stat.total / totalShots) * 1000) / 10;
-  });
-  
-  return stats;
-}
-
-function findDefenseAt(
-  shotTime: string, 
-  events: MatchEvents, 
-  oppositeDefense = true
-): string {
-  if (!events) return "6-0";
-  
-  const defenseEventType = oppositeDefense ? 'opponent_defense_change' : 'defense_change';
-  let chosen: any = null;
-  
-  for (const ev of events) {
-    if (!ev.event) continue;
-    if (ev.event !== defenseEventType) continue;
-    if (ev.time <= shotTime) {
-      if (!chosen || ev.time > chosen.time) {
-        chosen = ev;
-      }
-    }
-  }
-  
-  return chosen?.metadata || "6-0";
-}
-
-function buildAttackByDefenseStats(
-  shots: Shot[],
-  events: MatchEvents
-): {
-  attackByOppDefense: Map<string, DefenseBucket>;
-  fastBreaks: { total: number; scored: number; provoked7m: number; provoked2m: number };
-} {
-  const defenseTypes = new Set<string>();
-  
-  // Extract defense types from events
-  if (events) {
-    for (const ev of events) {
-      if (!ev.event) continue;
-      if (ev.event === 'opponent_defense_change') {
-        defenseTypes.add(ev.metadata!);
-      }
-    }
-  }
-  
-  if (defenseTypes.size === 0) defenseTypes.add("6-0");
-  
-  // Initialize maps
-  const attackByOppDefense = new Map<string, DefenseBucket>();
-  const fastBreaks = { total: 0, scored: 0, provoked7m: 0, provoked2m: 0 };
-  
-  for (const dt of Array.from(defenseTypes)) {
-    attackByOppDefense.set(dt, {
-      shots: { total: 0, scored: 0 },
-      by9m: { total: 0, scored: 0 },
-      by6m: { total: 0, scored: 0 },
-      by7m: { total: 0, scored: 0 },
-      byWing: { total: 0, scored: 0 },
-      provoked7m: 0,
-      provoked2m: 0,
-    });
-  }
-  
-  // Process shots for attack by defense
-  const attackShots = shots.filter(s => s.result === 'goal' || s.result === 'miss');
-  
-  for (const shot of attackShots) {
-    const defenseType = findDefenseAt(shot.time, events, true);
-    const bucket = attackByOppDefense.get(defenseType) || attackByOppDefense.get("6-0")!;
-    
-    bucket.shots.total++;
-    const scored = shot.result === 'goal';
-    if (scored) bucket.shots.scored++;
-    
-    const area = labelShootingArea(shot.from);
-    switch (area) {
-      case "9M":
-        bucket.by9m.total++;
-        if (scored) bucket.by9m.scored++;
-        break;
-      case "6M":
-        bucket.by6m.total++;
-        if (scored) bucket.by6m.scored++;
-        break;
-      case "7M":
-        bucket.by7m.total++;
-        if (scored) bucket.by7m.scored++;
-        break;
-      case "Wing":
-        bucket.byWing.total++;
-        if (scored) bucket.byWing.scored++;
-        break;
-    }
-    
-    if (shot.fastbreak) {
-      fastBreaks.total++;
-      if (scored) fastBreaks.scored++;
-    }
-  }
-  
-  // Process events for provoked penalties
-  if (events) {
-    events.forEach(event => {
-      if (!event.event) return;
-      
-      const defenseType = findDefenseAt(event.time, events, true);
-      const bucket = attackByOppDefense.get(defenseType) || attackByOppDefense.get("6-0")!;
-      
-      if (event.event === 'provokePenalty') {
-        bucket.provoked7m++;
-      } else if (event.event === 'provokeTwoMin') {
-        bucket.provoked2m++;
-      }
-    });
-  }
-  
-  return { attackByOppDefense, fastBreaks };
-}
-
-function buildDefenseByTypeStats(
-  shots: Shot[],
-  events: MatchEvents
-): {
-  defenseByType: Map<string, DefenseTypeBucket>;
-  defensedFastBreaks: { total: number; saved: number; commitedSeven: number; twoMinutesCommited: number };
-} {
-  const defenseTypes = new Set<string>();
-  
-  // Extract defense types from events
-  if (events) {
-    for (const ev of events) {
-      if (!ev.event) continue;
-      if (ev.event === 'opponent_defense_change') {
-        defenseTypes.add(ev.metadata!);
-      }
-    }
-  }
-  
-  if (defenseTypes.size === 0) defenseTypes.add("6-0");
-  
-  // Initialize maps
-  const defenseByType = new Map<string, DefenseTypeBucket>();
-  const defensedFastBreaks = { total: 0, saved: 0, commitedSeven: 0, twoMinutesCommited: 0 };
-  
-  for (const dt of Array.from(defenseTypes)) {
-    defenseByType.set(dt, {
-      shots: { total: 0, saved: 0 },
-      by9m: { total: 0, saved: 0 },
-      by6m: { total: 0, saved: 0 },
-      byWing: { total: 0, saved: 0 },
-      steals: 0,
-      commitedSeven: 0,
-      twoMinutesCommitted: 0,
-    });
-  }
-  
-  // Process shots for defense by type
-  const defenseShots = shots.filter(s => s.result === 'gkmiss' || s.result === 'gksave');
-  
-  for (const shot of defenseShots) {
-    const defenseType = findDefenseAt(shot.time, events, true);
-    const bucket = defenseByType.get(defenseType) || defenseByType.get("6-0")!;
-    
-    const saved = shot.result === 'gksave';
-    bucket.shots.total++;
-    if (saved) bucket.shots.saved++;
-    
-    const area = labelShootingArea(shot.from);
-    switch (area) {
-      case "9M":
-        bucket.by9m.total++;
-        if (saved) bucket.by9m.saved++;
-        break;
-      case "6M":
-        bucket.by6m.total++;
-        if (saved) bucket.by6m.saved++;
-        break;
-      case "Wing":
-        bucket.byWing.total++;
-        if (saved) bucket.byWing.saved++;
-        break;
-    }
-    
-    if (shot.fastbreak) {
-      defensedFastBreaks.total++;
-      if (saved) defensedFastBreaks.saved++;
-    }
-  }
-  
-  // Process events for defense statistics
-  if (events) {
-    events.forEach(event => {
-      if (!event.event) return;
-      
-      const defenseType = findDefenseAt(event.time, events, true);
-      const bucket = defenseByType.get(defenseType) || defenseByType.get("6-0")!;
-      
-      switch (event.event) {
-        case 'steal':
-          bucket.steals++;
-          break;
-        case 'penaltymade':
-          bucket.commitedSeven++;
-          break;
-        case 'twominutes':
-          bucket.twoMinutesCommitted++;
-          break;
-      }
-    });
-  }
-  
-  return { defenseByType, defensedFastBreaks };
-}
-
 
 // ==================== PDF GENERATION SECTIONS ====================
 
@@ -657,11 +143,11 @@ function drawGoalkeepersTable(
   let y = startY;
   
   y += 12;
-  drawTableRow(doc, startX, y, ["Goalkeepers", "Saves/Shots"], [105, 175], 12, true);
+  drawTableRow(doc, startX, y, ["Goalkeepers", "Saves/Shots"], [105, 200], 12, true);
   y += 12;
   
-  const gkWidths = [15, 75, 15, 25, 25, 25, 25, 25, 25, 25];
-  const gkCols = ["#", "Name", 'V', "Tot", "%", "9M", "6M", "Wing", "7M", "FB"];
+  const gkWidths = [15, 75, 15, 25, 25, 25, 25, 25, 25, 25, 25];
+  const gkCols = ["#", "Name", 'V', "Tot", "%", "9M", "6M", "Wing", "7M", "FB", "BT"];
   
   drawTableRow(doc, startX, y, gkCols, gkWidths, 12, true);
   y += 12;
@@ -684,6 +170,7 @@ function drawGoalkeepersTable(
       `${gk.byWing.saved}/${gk.byWing.total}`,
       `${gk.by7m.saved}/${gk.by7m.total}`,
       `${gk.fastbreak.saved}/${gk.fastbreak.total}`,
+      `${gk.breakthrough.saved}/${gk.breakthrough.total}`
     ];
     
     y = drawTableRow(doc, startX, y, row, gkWidths, 12);
@@ -704,7 +191,7 @@ function drawGoalkeepersTable(
   ];
   
   y = drawTableRow(doc, startX, y, totalRow, gkWidths, 12);
-  y += 12;
+  y += 24;
   
   return y;
 }
@@ -725,7 +212,7 @@ function drawAttackDefenseTables(
   doc.font('Helvetica-Bold', PDF_CONFIG.fontSizes.header)
     .text("Attack by type of defense", startX, y);
   
-  y += 24;
+  y += 12;
   
   const attackWidths = [50, 30, 25, 25, 25, 25, 25, 25];
   const attackCols = ["", "Shots", "9M", "6M", "Wing", "7M", "E7", "E2"];
@@ -769,7 +256,7 @@ function drawAttackDefenseTables(
   doc.font('Helvetica-Bold', PDF_CONFIG.fontSizes.header)
     .text("Defense by type", startX, y);
   
-  y += 24;
+  y += 12;
   
   const defenseWidths = [50, 30, 25, 25, 25, 25, 25, 25];
   const defenseCols = ["", "Total", "9M", "6M", "Wing", "Stl.", "C7", "2M"];
@@ -805,9 +292,110 @@ function drawAttackDefenseTables(
     "-", "-", "-", "-", "-", "-"
   ], defenseWidths, 12);
   
-  return y + 12;
+  return y + 24;
 }
 
+function drawAttackDefenseSuperiorityTables(
+  doc: PDFKit.PDFDocument,
+  attackSuperiority: Map<string, SuperiortyResult>,
+  defenseSuperiority: Map<string, SuperiortyResult>,
+  startX: number,
+  startY: number
+): number {
+  let y = startY;
+  const savedX = startX;
+  
+  // Attack table
+  doc.font('Helvetica-Bold', PDF_CONFIG.fontSizes.header)
+    .text("Attack with superiority", startX, y);
+  
+  y += 12;
+  
+  const mainWidths = [80,90,75];
+  const mainCols = ["", "Attack", "Reaction"];
+  drawTableRow(doc, startX, y, mainCols, mainWidths, 12, true);
+  y += 12;
+
+  const widths = [80, 30, 30, 30, 25, 25, 25];
+  const widths_base = [80, 30, 30, 30,];
+  const cols = ["", "Att.", "Eff.", "Shots", "FB", "LD", "Tot."];
+  drawTableRow(doc, startX, y, cols, widths, 12, true);
+  y += 12;
+  
+  for (const [defenseType, stats] of attackSuperiority.entries()) {
+    if(defenseType === "6 on 6") continue; // Skip 6_6 as it's shown in base row
+    if (y + 12 > doc.page.height - doc.page.margins.bottom) {
+      doc.addPage();
+      startX = savedX;
+      y = doc.y + 6;
+    }
+    
+    const row = [
+      defenseType,
+      `${stats.attacks}`,
+      `${stats.eff}%`,
+      `${stats.scored}/${stats.scored + stats.missed}`,
+      `${stats.reactions.fb}`,
+      `${stats.reactions.ld}`,
+      `${stats.reactions.ld + stats.reactions.fb}`,
+    ];
+    
+    y = drawTableRow(doc, startX, y, row, widths, 12);
+  }
+  
+  const base_attack = attackSuperiority.get("6 on 6")!;
+  y = drawTableRow(doc, startX, y, [
+    '6 on 6', 
+    `${base_attack.attacks}`,
+    `${base_attack.eff}%`,
+    `${base_attack.scored}/${base_attack.scored + base_attack.missed}`, 
+  ], widths_base, 12);
+  
+  // Reset for defense table
+  y = startY;
+  startX += 320;
+  
+  // Defense table
+  doc.font('Helvetica-Bold', PDF_CONFIG.fontSizes.header)
+    .text("Defense with superiority", startX, y);
+  
+  y += 12;
+  
+  drawTableRow(doc, startX, y, mainCols, mainWidths, 12, true);
+  y += 12;
+  drawTableRow(doc, startX, y, cols, widths, 12, true);
+  y += 12;
+  
+  for (const [defenseType, stats] of defenseSuperiority.entries()) {
+    if(defenseType === "6 on 6") continue; // Skip 6_6 as it's shown in base row
+    if (y + 12 > doc.page.height - doc.page.margins.bottom) {
+      doc.addPage();
+      startX = savedX;
+      y = doc.y + 6;
+    }
+    
+    const row = [
+      defenseType,
+      `${stats.attacks}`,
+      `${stats.eff}%`,
+      `${stats.scored}/${stats.scored + stats.missed}`,
+      `${stats.reactions.fb}`,
+      `${stats.reactions.ld}`,
+      `${stats.reactions.ld + stats.reactions.fb}`,
+    ];
+    
+    y = drawTableRow(doc, startX, y, row, widths, 12);
+  }
+  const base_defense = defenseSuperiority.get("6 on 6")!;
+  y = drawTableRow(doc, startX, y, [
+    '6 on 6', 
+    `${base_defense.attacks}`,
+    `${base_defense.eff}%`,
+    `${base_defense.scored}/${base_defense.scored + base_defense.missed}`,
+  ], widths_base, 12);
+  
+  return y + 12;
+}
 function drawShootingDistribution(
   doc: PDFKit.PDFDocument,
   playerGrids: Map<string, ShootingGrid>,
@@ -947,7 +535,8 @@ export default defineEventHandler(async (event) => {
     // Calculate attack by defense and defense by type statistics
     const { attackByOppDefense, fastBreaks } = buildAttackByDefenseStats(shots, events);
     const { defenseByType, defensedFastBreaks } = buildDefenseByTypeStats(shots, events);
-
+    const { attackSuperiority, defenseSuperiority } = buildAttackDefenseSuperiorityStats(shots, events);
+    
     // Calculate goalkeeper totals
     const gkTotals = goalkeepersTable.reduce((acc, gk) => ({
       id: 0,
@@ -962,6 +551,7 @@ export default defineEventHandler(async (event) => {
       by7m: { saved: acc.by7m.saved + gk.by7m.saved, total: acc.by7m.total + gk.by7m.total },
       byWing: { saved: acc.byWing.saved + gk.byWing.saved, total: acc.byWing.total + gk.byWing.total },
       fastbreak: { saved: acc.fastbreak.saved + gk.fastbreak.saved, total: acc.fastbreak.total + gk.fastbreak.total },
+      breakthrough: { saved: acc.breakthrough.saved + gk.breakthrough.saved, total: acc.breakthrough.total + gk.breakthrough.total }
     }), {
       id: 0,
       name: "",
@@ -975,6 +565,7 @@ export default defineEventHandler(async (event) => {
       by7m: { saved: 0, total: 0 },
       byWing: { saved: 0, total: 0 },
       fastbreak: { saved: 0, total: 0 },
+      breakthrough: { saved: 0, total: 0 }
     });
     
     // Calculate shooting distributions
@@ -1057,6 +648,13 @@ export default defineEventHandler(async (event) => {
       startX,
       currentY
     );
+    currentY = drawAttackDefenseSuperiorityTables(
+      doc,
+      attackSuperiority,
+      defenseSuperiority,
+      startX,
+      currentY
+    );
     
     // Page 2: Shooting distributions
     doc.addPage();
@@ -1075,7 +673,6 @@ export default defineEventHandler(async (event) => {
       'server/assets/court.png'
     )
     drawHalfFieldAttackDefenseStats(doc, FIELD_IMAGE_PATH ,attackDefenseStatsByPosition, startX, currentY + 12);
-    console.log(areaStats)
     drawShootingStatistics(doc, areaStats, startX + 320, currentY);
     
 

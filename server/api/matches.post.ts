@@ -19,16 +19,17 @@ export default defineEventHandler(async (event): Promise<number> => {
       teamid: body.teamId,
       opponentScore: 0,
       score: 0,
-      timeoutsLeft: 3,
+      timeoutsLeftHome: 3,
+      timeoutsLeftAway: 3,
     })
     .select()
     .single()
   if (error || !data) {
-    throw createError({ statusCode: 400, statusMessage: "ERROR creating match"})
+    throw createError({ statusCode: 400, statusMessage: error.message } )
   }
   return data!.id
-}catch{
-  throw createError({ statusCode: 400, statusMessage: "ERROR"})
+}catch (error: any) {
+  throw createError({ statusCode: 400, statusMessage: error.message } )
 }
 
 })

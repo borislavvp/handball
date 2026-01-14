@@ -6,8 +6,10 @@ const incrementOrCreateStat = async (matchId:number, playerId:number, stat:Stats
     const {data,error} = await supabase
         .from("player_stats").select()
         .eq('playerid', playerId)
+        .eq('matchid', matchId)
+        .single()
 
-    if(data && data.length > 0){
+    if(data){
         await supabase.rpc('increment_stat', {
             column_name: stat,
             matchid: matchId,
@@ -73,6 +75,7 @@ export default defineEventHandler(async (event): Promise<void> => {
         time: body.shot.time,
         metadata: `${data?.id}`
     })
+    
     incrementOrCreateStat(body.matchId, body.playerId, body.shot.result as Stats);
     if(body.shot.assistPrimary){
         incrementOrCreateStat(body.matchId, body.shot.assistPrimary, "assistprimary");

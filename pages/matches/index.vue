@@ -32,21 +32,21 @@
 
               <dropdown-item
                 v-if="m.result"
-                action-id="edit-item-42"
+                action-id="pdf-item-42"
                 :on-action="() => getPdf(m)"
               >
                 PDF
               </dropdown-item>
               <dropdown-item
                 action-id="edit-item-42"
-                :on-action="console.log.bind(null, 'edit', m.id!)"
+                :on-action="() => console.log('edit', m.id)"
               >
                 Edit
               </dropdown-item>
 
               <dropdown-item
                 action-id="delete-item-42"
-                :on-action="store.matches.deleteMatch.bind(null, m.id!)"
+                :on-action="() => store.matches.deleteMatch(m.id!)"
                 class="text-red-700"
               >
                 Delete

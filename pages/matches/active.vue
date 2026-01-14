@@ -188,7 +188,7 @@ onMounted(async () => {
 })
 
 onActivated(() => {
-  if(store.matches.currentMatch.value && store.matches.currentMatch.value.result){
+  if(store.matches.currentMatch.value && (store.matches.currentMatch.value.result)){
     $dialog.alert({
       title: 'Match Ended',
       message: 'This match has already ended. Please go back to matches overview.',
@@ -198,6 +198,8 @@ onActivated(() => {
     });
   }
 })
+
+
 
 const store = useHandballStore();
 
@@ -225,28 +227,22 @@ const selectedMistakePlayer = computed<Player | null>(() => {
   return store.selection.mistakePlayer.value;
 });
 
-const toggleGameMode = () => {
-  if(store.selection.gameMode.value === 'stats'){
-    store.selection.changeGameMode('attack');
-  }else{
-    store.selection.changeGameMode('stats');
-  }
-  const mode = store.selection.gameMode.value
-  if(mode === 'stats' && (selectedPlayer.value && !selectedPlayer.value?.currentStats)){
-    store.selection.player.value = null;
-  }
+// const toggleGameMode = () => {
+//   if(store.selection.gameMode.value === 'stats'){
+//     store.selection.changeGameMode('attack');
+//   }else{
+//     store.selection.changeGameMode('stats');
+//   }
+//   const mode = store.selection.gameMode.value
+//   if(mode === 'stats' && (selectedPlayer.value && !selectedPlayer.value?.currentStats)){
+//     store.selection.player.value = null;
+//   }
   
-  shootingTarget.value = null;
-  shootingArea.value = null;
-  store.selection.clearSelection();
-}
+//   shootingTarget.value = null;
+//   shootingArea.value = null;
+//   store.selection.clearSelection();
+// }
 
-const endCurrentMatch = (result: "WIN" | "LOST") => {
-  store.matches.endMatch(result);
-  useRouter().push("/matches")
-}
-
-const goBack = () => useRouter().back();
 
 function onShotAdded(){
   shootingTarget.value = null;

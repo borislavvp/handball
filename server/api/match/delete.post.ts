@@ -14,12 +14,12 @@ export default defineEventHandler(async (event): Promise<void> => {
     }
   
     const{error} = await supabase
-      .from("match_event")
+      .from("match")
       .delete()
       .eq('id', body.matchId)
 
     if (error) {
-        throw createError({ statusCode: 400, statusMessage: "ERROR creating match"})
+        throw createError({ statusCode: 400, statusMessage: "ERROR deleting match"})
     }
   }catch{
     throw createError({ statusCode: 400, statusMessage: "ERROR"})

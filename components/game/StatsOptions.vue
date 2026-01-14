@@ -25,7 +25,7 @@
             class="absolute top-0 select-none right-0 -mt-2 -mr-1 rounded-full px-3 py-1 text-2xl font-bold" 
             :class="store.selection.stats.value.general ? 'bg-yellow-300 shadow-inner text-gray-900' : 'text-gray-900 bg-white border border-gray-300 shadow-lg'">
             %</span>
-            <div v-if="provokesOpenned" class="absolute flex flex-wrap gap-5 bg-white text-white rounded p-4 -mt-1 -ml-2">
+            <div v-if="provokesOpenned" class="absolute flex flex-wrap gap-5 bg-white text-white font-semibold rounded p-4 -mt-1 -ml-2">
                 <button @click="increasePlayerStats('provokeTwoMin')" class="bg-emerald-700 p-1 rounded-full px-2 shadow-lg border border-emerald-900">2 MIN</button>
                 <button @click="setPlayerProvokeTwoMinutes('provokePenalty')" class="bg-emerald-700 p-1 rounded-full px-2 shadow-lg border border-emerald-900">Penalty</button>
                 <button @click="increasePlayerStats('provokeCard')" class="bg-emerald-700 p-1 rounded-full px-2 shadow-lg border border-emerald-900 flex items-center space-x-4">
@@ -47,6 +47,7 @@
                         <button @click="increasePlayerStats('defense')" :class="positiveStatStyle">DEFENSE</button>
                         <button @click="increasePlayerStats('defensex2')" :class="positiveStatStyle">DEFENSE + STEAL</button>
                         <button @click="toggleProvokes()" :class="[positiveStatStyle, provokesOpenned && 'bg-emerald-900']">PROVOKE</button>
+                        <button @click="addShotToPlayer('goal_empty')" :class="positiveStatStyle">GOAL LONG DISTANCE</button>
                     </div>
                     <div class="flex flex-wrap gap-6">
                         <button @click="increasePlayerStats('lostball')" :class="negativeStatStyle">LOST BALL</button>
@@ -69,8 +70,9 @@
                     
                 </div>  
                 <div v-if="goalkeeperSelected" class="flex flex-wrap gap-6">
-                    <button @click="addShotToPlayer('goal')" :class="positiveStatStyle">GOAL</button>
-                    <button @click="addShotToPlayer('goal', true)" :class="negativeStatStyle">EMPTY GOAL</button>
+                    <button @click="addShotToPlayer('goal_empty')" :class="positiveStatStyle">GOAL</button>
+                    <button @click="addShotToPlayer('gkmiss_empty')" :class="negativeStatStyle">EMPTY GOAL</button>
+                    <button @click="increasePlayerStats('lostball')" :class="negativeStatStyle">LOST BALL</button>
                 </div>
             </div>
             <div v-else>
@@ -124,7 +126,7 @@ const increasePlayerStats = (stat:Stats,player:Player = props.player!) => {
     store.players.increasePlayerStat(player, stat);
 }
 
-const addShotToPlayer = (result: ShootingResult, emptyGoal = false) => {
+const addShotToPlayer = (result: ShootingResult,) => {
     if(!props.player) {
         $dialog.alert({ title:"Please select a player!" })
         return;
@@ -133,7 +135,7 @@ const addShotToPlayer = (result: ShootingResult, emptyGoal = false) => {
     let shootingArea = props.shootingArea;
     let shootingTarget = props.shootingTarget;
 
-    if(emptyGoal){
+    if(result === 'gkmiss_empty' || result === 'goal_empty') {
         shootingArea = 'CB9';
         shootingTarget = ShootingTarget.GOAL_MIDDLE_MIDDLE
     } else if(props.shootingTarget === null || props.shootingArea === null) {

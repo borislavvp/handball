@@ -47,7 +47,7 @@ const loading = computed(() => isLoading(props.actionId))
 const handleClick = async () => {
   if (loading.value) return
 
-  start(props.actionId)
+  start(props.actionId) 
 
   try {
     await props.onAction()

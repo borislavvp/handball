@@ -13,7 +13,6 @@ export const useStats = (
         if(selection.player.value){
             return computeAttackValue(selection.player.value.currentStats!);
         }else{
-            console.log("COMPUTE TEAM ATTACK VALUE", computeTeamStats(computeAttackValue));
             return computeTeamStats(computeAttackValue);
         }
     })

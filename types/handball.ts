@@ -101,11 +101,11 @@ export type Shot = {
     time: string;
     to: ShootingTarget;
 }
-export type ShootingResult = 'goal' | 'miss' | 'block' | 'gksave' | 'gkmiss';
+export type ShootingResult = 'goal' | 'miss' | 'block' | 'gksave' | 'gkmiss' | 'goal_empty' | 'gkmiss_empty';
 
 export type MATCH_EVENTS = 'timeout_home' | 'timeout_away' | 'defense_change' | "opponent_defense_change" | 'empty_goal_home' | 'empty_goal_away' | 'playing' | Stats;
 
-export type Stats = "goal" |
+export type Stats = "goal" | 'goal_empty' | 'gkmiss_empty' |
 "assistprimary"|
 "assistsecondary"|
 "1on1win"|
@@ -136,6 +136,7 @@ export type PlayerStats = {
   // // Defense: (Steals + Blocks + Defense + Defenese x2) - 1-1 Lost - Penalty Made - No Rebound - Suspensions
   // Goalkeeper: (Saves/Total)*100 ,  Field Player Value
   value: number;
+  playerid: number;
   match: {
     id: number;
     opponent: string;

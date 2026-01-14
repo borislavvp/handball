@@ -1,4 +1,4 @@
-import { MATCH_EVENTS, ShootingTarget } from "~/types/handball";
+import type { MATCH_EVENTS } from "./handball";
 
 export interface PlayerRow {
   id: number;
@@ -45,6 +45,7 @@ export interface GoalkeeperRow {
   byWing: { saved: number; total: number };
   by7m: { saved: number; total: number };
   fastbreak: { saved: number; total: number };
+  breakthrough: { saved: number; total: number };
 }
 
 export interface DefenseBucket {
