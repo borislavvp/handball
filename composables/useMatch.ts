@@ -1,8 +1,6 @@
 import type { CurrentMatch, DefenseSystem, Match, MATCH_EVENTS, Team } from "~/types/handball";
 import type { LoadingState } from "./useLoading";
-import { ca } from "@nuxt/ui/runtime/locale/index.js";
 import { computePlayerValue } from "./usePlayer";
-import { clear } from "console";
 
 export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | undefined>,  ) => {
 
