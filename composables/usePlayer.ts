@@ -67,6 +67,8 @@ export const usePlayer = (
             "1on1lost": 0,
             "1on1win": 0,
             goal: 0,
+            gkmiss_empty: 0,
+            goal_empty: 0,
             defense: 0,
             assistprimary: 0,
             assistsecondary: 0,
@@ -144,7 +146,7 @@ export const usePlayer = (
             computePlayerValue(player);
             $fetch('/api/stats', {
                 method: 'POST',
-                body: { matchId: currentMatch.value?.id, playerId: player.id, statType: stat }
+                body: { matchId: currentMatch.value?.id, playerId: player.id, statType: stat, time: currentMatch.value?.time }
             })
             return;
         }
@@ -157,7 +159,7 @@ export const usePlayer = (
         computePlayerValue(player);
         $fetch('/api/stats', {
             method: 'PUT',
-            body: { matchId: currentMatch.value?.id, playerId: player.id, statType: stat  }
+            body: { matchId: currentMatch.value?.id, playerId: player.id, statType: stat, time: currentMatch.value?.time   }
         })
     }
 
@@ -188,12 +190,13 @@ export function computePlayerValue(player:Player) {
         - stats["1on1lost"] - stats.penaltymade - stats.norebound - stats.twominutes - stats.redcard - stats.bluecard;
         value = attackValue + defenseValue;
 
-        // if(player.position === 'GK'){
+        if(player.position === 'GK'){
         //     const totalShots = stats.gksave + stats.gkmiss;
         //     const savePercentage = totalShots > 0 ? Math.floor((stats.gksave / totalShots) * 10) : 0;
         //     stats.value = (savePercentage) + value;
         // }else{
         //     stats.value = value;
-        // }
+        console.log("Player Value Computed:", value);
+        }
         stats.value = value;
     }

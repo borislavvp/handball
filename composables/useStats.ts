@@ -13,6 +13,7 @@ export const useStats = (
         if(selection.player.value){
             return computeAttackValue(selection.player.value.currentStats!);
         }else{
+            console.log("COMPUTE TEAM ATTACK VALUE", computeTeamStats(computeAttackValue));
             return computeTeamStats(computeAttackValue);
         }
     })
@@ -36,14 +37,16 @@ export const useStats = (
        
     })
     function computeTeamStats(computeFn: (stats: PlayerCurrentStats) => number) {
+        let playersWithStats = team.value?.players.length || 0;
         const value = team.value!.players.reduce((acc, player) => {
             const stats = player.currentStats;
             if (stats) {
                 return acc + computeFn(stats);
             } else {
+                playersWithStats--;
                 return acc;
             }
-        }, 0) / (team.value?.players.length || 1);
+        }, 0) / (playersWithStats > 0 ? playersWithStats : 1);
 
         return Math.round(value);
     }
@@ -63,7 +66,6 @@ export const useStats = (
         }
         const positive = stats.steal + stats.block + stats.defense + stats.defensex2;
         const negative = stats["1on1lost"] + stats.penaltymade + stats.norebound + stats.twominutes + stats.redcard + stats.bluecard;
-
         const value = positive/(positive + negative);
         const final = (value ? value : 0) * 100
         return Math.round(final);

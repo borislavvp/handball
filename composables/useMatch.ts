@@ -2,6 +2,7 @@ import type { CurrentMatch, DefenseSystem, Match, MATCH_EVENTS, Team } from "~/t
 import type { LoadingState } from "./useLoading";
 import { ca } from "@nuxt/ui/runtime/locale/index.js";
 import { computePlayerValue } from "./usePlayer";
+import { clear } from "console";
 
 export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | undefined>,  ) => {
 
@@ -9,7 +10,7 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     const currentMatch = ref<CurrentMatch | null>(null);
 
     // Initialize total seconds
-    let totalSeconds = 0;
+    const totalSeconds = useState<number>('totalSeconds', () => 0);
 
     // Start timer
     const timer = ref(null as ReturnType<typeof setInterval> | null);
@@ -23,10 +24,18 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             method: 'POST',
             body: { matchId: id }
         })
+        if(currentMatch.value?.id === id){
+            currentMatch.value = null;
+            stopMatchTimer();
+            totalSeconds.value = 0;
+            localStorage.removeItem('currentMatch');
+        }
+
         const index = matches.value.findIndex(m => m.id === id);
         if(index !== -1) {
             matches.value.splice(index, 1);
         }
+        
     }
 
     async function createMatch(opponent: string): Promise<Match | null> {
@@ -67,17 +76,17 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         timer.value = setInterval(() => {
             if (!currentMatch.value!.playing) return;
 
-            totalSeconds++;
+            totalSeconds.value++;
 
             // Stop at 60 minutes
-            if (totalSeconds >= 60 * 60) {
-                totalSeconds = 60 * 60;
+            if (totalSeconds.value >= 60 * 60) {
+                totalSeconds.value = 60 * 60;
                 clearInterval(timer.value!);
             }
 
             // Compute minutes and seconds
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
+            const minutes = Math.floor(totalSeconds.value / 60);
+            const seconds = totalSeconds.value % 60;
             if(minutes === 30 && seconds === 0){
                 // Half-time reached
                 currentMatch.value!.playing = false;
@@ -160,12 +169,13 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     function logMatchEvent(data: {eventType: MATCH_EVENTS, playerId?: number, metadata?: any}) {
         $fetch('/api/match/event', {
             method: 'POST',
-            body: { matchId: currentMatch.value?.id, eventType:data.eventType, playerId:data.playerId, metadata:data.metadata }
+            body: { matchId: currentMatch.value?.id, eventType:data.eventType, playerId:data.playerId, metadata:data.metadata, time: currentMatch.value?.time }
         })
     }
 
     const stopMatchTimer = () => {  
         clearInterval(timer.value!);
+        totalSeconds.value = 0;
     }
 
     const endMatch = (result: "WIN" | "LOST") => {
@@ -175,7 +185,7 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             method: 'PUT',
             body: { result, score: currentMatch.value?.score, opponentScore: currentMatch.value?.opponentScore }
         })
-        clearInterval(timer.value!);
+        stopMatchTimer();
         saveMatchToLocalStorage(currentMatch.value);
         logMatchEvent({
             eventType: 'playing',
@@ -190,9 +200,9 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             const seconds = Number(data.match.time.split(":")[1]);
             const minutes = Number(data.match.time.split(":")[0]);
             if(minutes){
-                totalSeconds = seconds  + minutes * 60
+                totalSeconds.value = seconds  + minutes * 60
             }else{
-                totalSeconds = seconds
+                totalSeconds.value = seconds
             }
             console.log("Last updated:", data.lastUpdated);
             if (data.match.playing){
@@ -301,6 +311,7 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     return {
         matches,
         currentMatch,
+        currentMatchTime: computed(() => Math.floor(totalSeconds.value / 60)),
         fetchMatches,
         createMatch,
         logMatchEvent,
@@ -312,7 +323,6 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         getMatch,
         deleteMatch,
         startMatchTimer,
-        stopMatchTimer,
         changeDefenseSystem,
         changeOpponentDefenseSystem,
         toggleEmptyGoal
