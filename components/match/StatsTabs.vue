@@ -1,14 +1,14 @@
 <template>
   <div>
-    <div class="flex gap-4 border-b mb-6">
+    <div class="flex items-center justify-center text-lg font-semibold border-b border-gray-400 mb-6">
       <button
         v-for="tab in tabs"
         :key="tab"
         @click="active = tab"
-        class="pb-2 text-sm font-medium"
+        class="p-4"
         :class="active === tab
-          ? 'border-b-2 border-blue-500 text-blue-600'
-          : 'text-gray-400 hover:text-gray-600'"
+          ? 'border-b-2 border-blue-800 text-blue-800'
+          : 'text-gray-500 '"
       >
         {{ tab }}
       </button>

@@ -8,16 +8,8 @@ defineProps<{
 </script>
 
 <template>
-  <div class="mini-stat">
+  <div class="flex text-md w-14 text-center">
+    <span class="mr-2">{{ stat.value }}</span>
     <span class="label">{{ stat.label }}</span>
-    <span class="value">{{ stat.value }}</span>
   </div>
 </template>
-
-<style scoped>
-.mini-stat {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-}
-</style>

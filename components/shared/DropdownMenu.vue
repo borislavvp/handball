@@ -24,8 +24,9 @@
   </Teleport>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts">  
 const { $dropdown } = useNuxtApp()
+
 const {
   open,
   referenceEl,

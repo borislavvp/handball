@@ -6,7 +6,11 @@ export const useTeam = (loadingState: LoadingState) => {
     const teams = useState<Team[]>('teams', () => []);
     const selectedTeamId = ref<number | undefined | null>(0);
     const selectedTeam = computed(() => teams.value?.find(t => t.id === selectedTeamId.value));
-   
+    
+    const selectTeam = (teamId: number) => {   
+        selectedTeamId.value = teamId;
+    }
+
     async function fetchTeams(): Promise<void> {
         const { $supabase } = useNuxtApp()
         try{
@@ -43,7 +47,7 @@ export const useTeam = (loadingState: LoadingState) => {
                 recentStats: p.player_stats,
             })).sort((a,b) => a.number - b.number),
         } as Team));
-        selectedTeamId.value = teamData[0]?.id;
+        selectTeam(teamData[0]!.id);
         loadingState.fetching.value = false;
 
         }catch(err){
@@ -53,19 +57,22 @@ export const useTeam = (loadingState: LoadingState) => {
 
     async function addTeam(name: string): Promise<Team | null> {
         try{
-        loadingState.fetching.value = true;
-        const teamId = await $fetch('/api/teams', {
-            method: 'POST',
-            body: { name: name }
-        })
-        const team: Team = { id: teamId as number, name, players: [] };
-        
-        teams.value.push(team);
-        loadingState.fetching.value = false;
-        return team;
+            if (!name || name.trim() === '') {
+                return null;
+            }
+            loadingState.loading.value = true;
+            const teamId = await $fetch('/api/teams', {
+                method: 'POST',
+                body: { name: name }
+            })
+            const team: Team = { id: teamId as number, name, players: [] };
+            
+            teams.value.push(team);
+            loadingState.loading.value = false;
+            return team;
         }catch(err){
-        loadingState.fetching.value = false;
-        return null;
+            loadingState.loading.value = false;
+            return null;
         }
     }
     
@@ -85,5 +92,6 @@ export const useTeam = (loadingState: LoadingState) => {
         addTeam,
         removeTeam,
         getTeam,
+        selectTeam
     }
 }

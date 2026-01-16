@@ -115,6 +115,7 @@ export function calculatePlayerRow(
     byWing: { scored: 0, total: 0 },
     by7m: { scored: 0, total: 0 },
     fastbreak: { scored: 0, total: 0 },
+    breakthrough: { scored: 0, total: 0 },
   };
   
   // Count shots by position
@@ -145,9 +146,12 @@ export function calculatePlayerRow(
       counters.fastbreak.total++;
       if (scored) counters.fastbreak.scored++;
     }
+
+    if (shot.breakthrough) {  
+      counters.breakthrough.total++;
+      if (scored) counters.breakthrough.scored++;
+    }
   });
-  
-  const oneOnOneTotal = (playerStat["1on1win"] ?? 0) + (playerStat["1on1lost"] ?? 0);
   
   return {
     id: player.id,
@@ -158,14 +162,11 @@ export function calculatePlayerRow(
     attempts,
     efficiency,
     ...counters,
-    oneOnOne: { 
-      scored: playerStat["1on1win"] ?? 0, 
-      total: oneOnOneTotal 
-    },
     assistsPrimary: playerStat.assistprimary ?? 0,
     assistsSecondary: playerStat.assistsecondary ?? 0,
     provoked7m: playerStat.provokePenalty ?? 0,
     provoked2m: playerStat.provokeTwoMin ?? 0,
+    provokedCard: playerStat.provokeCard ?? 0,
     lostballs: playerStat.lostball ?? 0,
     steals: playerStat.steal ?? 0,
     blocks: playerStat.block ?? 0,
@@ -199,6 +200,9 @@ export function calculateGoalkeeperTotals(goalkeepers: GoalkeeperRow[]): Goalkee
     name: "Total",
     number: 0,
     value: Math.floor((acc.value + gk.value) / 2),
+    assistsPrimary: acc.assistsPrimary + gk.assistsPrimary,
+    assistsSecondary: acc.assistsSecondary + gk.assistsSecondary,
+    lostball: acc.lostball + gk.lostball,
     totalSaves: acc.totalSaves + gk.totalSaves,
     attempts: acc.attempts + gk.attempts,
     efficiency: Math.floor((acc.efficiency + gk.efficiency) / 2),
@@ -212,7 +216,7 @@ export function calculateGoalkeeperTotals(goalkeepers: GoalkeeperRow[]): Goalkee
     id: 0,
     name: "",
     number: 0,
-    value: 0,
+    value: 0,assistsPrimary: 0, assistsSecondary:0, lostball:0,
     totalSaves: 0,
     attempts: 0,
     efficiency: 0,
@@ -307,6 +311,9 @@ export function calculateGoalkeeperRow(
     number: goalkeeper.number,
     name: goalkeeper.name,
     value: goalkeeperStat.value ?? 0,
+    assistsPrimary: goalkeeperStat.assistprimary ?? 0,
+    assistsSecondary: goalkeeperStat.assistsecondary ?? 0,
+    lostball: goalkeeperStat.lostball ?? 0,
     totalSaves,
     attempts,
     efficiency,

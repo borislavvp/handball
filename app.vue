@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { createHandballStore,provideHandballStore } from './composables/useHandballStore';
 import GlobalDialog from './components/shared/GlobalDialog.vue';
+import Header from '~/components/layout/Header.vue'
+
+
 const store = createHandballStore()
 provideHandballStore(store)
 
@@ -8,7 +11,6 @@ onMounted(() => {
   store.initialize();
 })
 
-const inGame = computed(() => useRoute().path.includes("matches/active") && store.matches.currentMatch.value)
 
 useHead({
   meta: [
@@ -46,11 +48,13 @@ const goBack = () => useRouter().back();
         <button @click="endCurrentMatch('LOST')" class="rounded-full px-2 py-1  font-semibold text-white bg-gray-800">LOST</button>
       </div>
     </header> -->
-    <header v-if="!inGame" class="px-3 py-2 flex gap-3 items-center border-b border-gray-200 bg-white ">
+    <!-- <header v-if="!inGame" class="px-3 py-2 flex gap-3 items-center border-b border-gray-200 bg-white ">
       <NuxtLink to="/" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Team</NuxtLink>
       <NuxtLink to="/matches" class="text-gray-700 hover:bg-gray-200 px-3 py-2 rounded transition-colors">Matches</NuxtLink>
-    </header>
-    <main class="overflow-x-hidden ">
+    </header> -->
+    <!-- <Header /> -->
+
+    <main class="overflow-x-hidden select-none">
         <NuxtPage :keepalive="true"/>
     </main>
   </div>

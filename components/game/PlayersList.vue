@@ -39,7 +39,7 @@
         : 'bg-gradient-to-r from-gray-200 from-10%  border to-white text-gray-900 border-gray-300',
       ]"
       >
-      <p class="-ml-1">{{ p.currentStats.value > 0 ? `+${p.currentStats.value}` : p.currentStats.value }}</p>
+      <p :class="p.currentStats.value !== 0 && '-ml-1'">{{ p.currentStats.value > 0 ? `+${p.currentStats.value}` : p.currentStats.value }}</p>
     </span>
     <div class="flex flex-col items-center">
       <div class="flex items-center space-x-1">

@@ -13,11 +13,12 @@ export interface PlayerRow {
   byWing: { scored: number; total: number };
   by7m: { scored: number; total: number };
   fastbreak: { scored: number; total: number };
-  oneOnOne: { scored: number; total: number };
+  breakthrough: { scored: number; total: number };
   assistsPrimary: number;
   assistsSecondary: number;
   provoked7m: number;
   provoked2m: number;
+  provokedCard: number;
   lostballs: number;
   steals: number;
   blocks: number;
@@ -37,6 +38,9 @@ export interface GoalkeeperRow {
   number: number;
   name: string;
   value: number;
+  assistsPrimary: number;
+  assistsSecondary: number;
+  lostball:number;
   totalSaves: number;
   attempts: number;
   efficiency: number;

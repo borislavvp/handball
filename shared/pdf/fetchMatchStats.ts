@@ -33,30 +33,35 @@ const computeStats = (players: Database["public"]['Tables']['player']['Row'][], 
     const playerRows: PlayerRow[] = processPlayerStats(fieldPlayers, playerStatsMap, shots);
     const goalkeeperRows: GoalkeeperRow[] = processGoalkeeperStats(goalkeepers, playerStatsMap, shots);
     const totalGoalkeeperRow: GoalkeeperRow = goalkeeperRows.reduce((acc, gk) => {
-    return {
-        id: 0,
-        name: "Total",
-        number: 0,
-        value: Math.floor((acc.value + gk.value) / 2),
-        totalSaves: acc.totalSaves + gk.totalSaves,
-        attempts: acc.attempts + gk.attempts,
-        efficiency: Math.floor((acc.efficiency + gk.efficiency) / 2),
-        by9m: { saved: acc.by9m.saved + gk.by9m.saved, total: acc.by9m.total + gk.by9m.total },
-        by6m: { saved: acc.by6m.saved + gk.by6m.saved, total: acc.by6m.total + gk.by6m.total },
-        by7m: { saved: acc.by7m.saved + gk.by7m.saved, total: acc.by7m.total + gk.by7m.total },
-        byWing: { saved: acc.byWing.saved + gk.byWing.saved, total: acc.byWing.total + gk.byWing.total },
-        fastbreak: { saved: acc.fastbreak.saved + gk.fastbreak.saved, total: acc.fastbreak.total + gk.fastbreak.total },
-        breakthrough: { saved: acc.breakthrough.saved + gk.breakthrough.saved, total: acc.breakthrough.total + gk.breakthrough.total }
-    };
-    }, {
-        id: 0, name: "", number: 0, value: 0, totalSaves: 0, attempts: 0, efficiency: 0,
-        by9m: { saved: 0, total: 0 },
-        by6m: { saved: 0, total: 0 },
-        by7m: { saved: 0, total: 0 },
-        byWing: { saved: 0, total: 0 },
-        fastbreak: { saved: 0, total: 0 },
-        breakthrough: { saved: 0, total: 0 }
-    });
+        return {
+            id: 0,
+            name: "Total",
+            number: 0,
+            value: Math.floor((acc.value + gk.value) / 2),
+            assistsPrimary: acc.assistsPrimary + gk.assistsPrimary,
+            assistsSecondary: acc.assistsSecondary + gk.assistsSecondary,
+            lostball: acc.lostball + gk.lostball,
+            totalSaves: acc.totalSaves + gk.totalSaves,
+            attempts: acc.attempts + gk.attempts,
+            efficiency: Math.floor((acc.efficiency + gk.efficiency) / 2),
+            by9m: { saved: acc.by9m.saved + gk.by9m.saved, total: acc.by9m.total + gk.by9m.total },
+            by6m: { saved: acc.by6m.saved + gk.by6m.saved, total: acc.by6m.total + gk.by6m.total },
+            by7m: { saved: acc.by7m.saved + gk.by7m.saved, total: acc.by7m.total + gk.by7m.total },
+            byWing: { saved: acc.byWing.saved + gk.byWing.saved, total: acc.byWing.total + gk.byWing.total },
+            fastbreak: { saved: acc.fastbreak.saved + gk.fastbreak.saved, total: acc.fastbreak.total + gk.fastbreak.total },
+            breakthrough: { saved: acc.breakthrough.saved + gk.breakthrough.saved, total: acc.breakthrough.total + gk.breakthrough.total }
+        };
+
+        }, {
+            id: 0, name: "", number: 0, value: 0, assistsPrimary: 0, assistsSecondary:0, lostball:0,
+             totalSaves: 0, attempts: 0, efficiency: 0,
+            by9m: { saved: 0, total: 0 },
+            by6m: { saved: 0, total: 0 },
+            by7m: { saved: 0, total: 0 },
+            byWing: { saved: 0, total: 0 },
+            fastbreak: { saved: 0, total: 0 },
+            breakthrough: { saved: 0, total: 0 }
+        });
 
     // 5️⃣ Shooting heatmap
     const playerShootingTargets = calculateShootingTargets(fieldPlayers, shots, false);

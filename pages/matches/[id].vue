@@ -17,6 +17,7 @@
         <p class="text-lg text-gray-600"> Match not found. </p>
       </div>
       <div v-else class="flex-1 flex flex-col">
+        <StatsHeader :match="match"/>
         <StatsTabs :stats="stats" />
       </div>
     </div>
@@ -26,6 +27,7 @@
 <script setup lang="ts">
 import { useHandballStore } from '~/composables/useHandballStore';
 import StatsTabs from '@/components/match/StatsTabs.vue'
+import StatsHeader from '@/components/match/StatsHeader.vue'
 import { fetchMatchStats } from '~/shared/pdf/fetchMatchStats';
 
 const route = useRoute();
@@ -36,6 +38,7 @@ const match = computed(() => store.matches.getMatch(id));
 const team = computed(() => match.value ? store.teams.getTeam(match.value.teamid) : null);
 
 const stats = ref<any>(null)
+
 onMounted(async () => {
   stats.value = await fetchMatchStats(id)
   console.log('Fetched stats:', stats.value);
