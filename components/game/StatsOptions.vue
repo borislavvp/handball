@@ -107,7 +107,7 @@ const suspensionStatStyle = "flex items-center rounded p-4 bg-gray-200 font-semi
 const oneOnOneWin = ref(false)
 const oneOnOneLost = ref(false)
 const fastBreak = ref(false)
-
+const activeMatch = computed(() => store.matches.match.value!)
 const { $dialog } = useNuxtApp();
 
 const provokesOpenned = ref(false)
@@ -151,18 +151,23 @@ const addShotToPlayer = (result: ShootingResult,) => {
     if(oneOnOneLost.value){
         increasePlayerStats('1on1lost',store.selection.mistakePlayer.value!)
     }
+    if(result === 'gkmiss'){
+        activeMatch.value.increaseMatchScore("away")
+    } else if(result === 'goal'){
+        activeMatch.value.increaseMatchScore("home")
+    }
     store.players.addShotToPlayer(props.player, {
         from: shootingArea,
         to: shootingTarget,
         result: result,
-        time: store.matches.currentMatch.value!.time,
+        time: activeMatch.value.data.value.time,
         playerid: props.player.id,
         fastbreak: fastBreak.value,
         breakthrough: props.goalkeeperSelected ? oneOnOneLost.value : oneOnOneWin.value,
         assistPrimary: store.selection.primaryAssist.value?.id || null,
         assistSecondary: store.selection.secondaryAssist.value?.id || null,
         mistakePlayer: store.selection.mistakePlayer.value?.id || null,
-        matchid: store.matches.currentMatch.value!.id,
+        matchid: activeMatch.value.data.value!.id,
     });
 
     oneOnOneWin.value = false;
@@ -179,14 +184,14 @@ const updateOneOnOneLost = (val:boolean) => {
 
 const setPlayerProvokeTwoMinutes = (stat: Stats) => {
     increasePlayerStats(stat)
-    const index = store.matches.currentMatch.value!.twoMinutesAway.length > 0 ? 
-    store.matches.currentMatch.value!.twoMinutesAway[store.matches.currentMatch.value!.twoMinutesAway.length - 1]! + 1 : 1; 
+    const index = activeMatch.value.data.value.twoMinutesAway.length > 0 ? 
+    activeMatch.value.data.value.twoMinutesAway[activeMatch.value.data.value.twoMinutesAway.length - 1]! + 1 : 1; 
 
-    store.matches.currentMatch.value?.twoMinutesAway.push(index)
+    activeMatch.value.data.value.twoMinutesAway.push(index)
 }
 const setPlayerTwoMinutes = () => {
     increasePlayerStats('twominutes')
-    store.matches.currentMatch.value?.twoMinutesHome.push(props.player!.id)
+    activeMatch.value.data.value.twoMinutesHome.push(props.player!.id)
 }
 
 </script>

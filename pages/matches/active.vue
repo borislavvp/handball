@@ -23,16 +23,6 @@
         <!-- Team Side -->
         <div class="flex flex-col pt-4 border-r border-gray-200 w-2/5 h-full justify-between overflow-x-hidden overflow-y-auto">
           <div class="flex flex-col justify-center">
-            <!-- timeouts -->
-            <!-- <div class="flex justify-between ml-12 mr-10 items-center">
-             
-              <button @click="store.matches.toggleEmptyGoal" 
-              class="rounded-md select-none w-20 h-20 font-semibold text-lg flex text-gray-900 text-center items-center "
-              :class="[
-                store.matches.currentMatch.value?.emptyGoal ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md ' 
-              ]"
-              >EMPTY GOAL</button>
-            </div> -->
             <!-- Players -->
             <div class="h-20 w-full px-4">
               <div v-if="selectedPlayer" class="h-full w-full rounded bg-emerald-900 flex items-center justify-between px-8 text-white select-none">
@@ -67,10 +57,8 @@
             <div class="flex items-center justify-between mb-5 mx-8">
               <div class="flex items center text-xl">
                 <span class="font-semibold">Defense:</span>
-                <!-- v-model="store.currentMatch.value.defense" -->
-                 <!-- {{ store.matches.currentMatch.value?.defenseSystem }} -->
                 <select @input="changeDefenseSystem" 
-                :value="store.matches.currentMatch.value?.defenseSystem" class="font-semibold underline ml-2">
+                :value="match.data.value.defenseSystem" class="font-semibold underline ml-2">
                   <option value="6:0">6:0</option>
                   <option value="5:1">5:1</option>
                   <option value="3:2:1">3:2:1</option>
@@ -80,9 +68,8 @@
               </div>
               <div class="flex items-center text-xl">
                 <span class="font-semibold">Opposite Defense:</span>
-                <!-- v-model="store.currentMatch.value.oppositeDefense" -->
                 <select @input="changeOppositeDefenseSystem" 
-                :value="store.matches.currentMatch.value?.opponentDefenseSystem" class="font-semibold underline ml-2">
+                :value="match.data.value.opponentDefenseSystem" class="font-semibold underline ml-2">
                   <option value="6:0">6:0</option>
                   <option value="5:1">5:1</option>
                   <option value="3:2:1">3:2:1</option>
@@ -93,16 +80,16 @@
             </div>
             <div class="flex items-center justify-between mb-5 mx-8">
              
-              <button @click="store.matches.toggleEmptyGoal('home')" 
+              <button @click="match.toggleEmptyGoal('home')" 
                 class="rounded-md select-none px-4 py-2 font-semibold text-lg flex text-gray-900 text-center items-center "
                 :class="[
-                  store.matches.currentMatch.value?.emptyGoalHome ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md ' 
+                  match.data.value.emptyGoalHome ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md ' 
                 ]"
               >EMPTY GOAL</button>
-              <button @click="store.matches.toggleEmptyGoal('away')" 
+              <button @click="match.toggleEmptyGoal('away')" 
                 class="rounded-md select-none px-4 py-2 font-semibold text-lg flex text-gray-900 text-center items-center "
                 :class="[
-                  store.matches.currentMatch.value?.emptyGoalAway ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md ' 
+                  match.data.value.emptyGoalAway ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md ' 
                 ]"
               >OPPOSITE EMPTY GOAL</button>
 
@@ -112,9 +99,6 @@
         </div>
         <!-- Stats Side -->
         <div class="w-3/5 h-full flex flex-col px-10 py-10 bg-gray-100 overflow-x-hidden overflow-y-auto">
-          <!-- <stats-headline class="sticky" v-if="gameMode==='stats'" :player="selectedPlayer" />
-          <stats-overview v-if="gameMode==='stats'" :player="selectedPlayer"
-            :is-stats-mode="gameMode === 'stats'" class="mb-5 mt-2"/> -->
           <goal 
             @position-click="onShootingTargetClick"
             :goalkeep-selected="selectedPlayer?.position === 'GK'"
@@ -132,7 +116,6 @@
             :selected-shooting-target="shootingTarget"
             class="px-10 -mt-4 z-100" 
           />
-          <!-- <player-performance-chart v-if="gameMode==='stats' && selectedPlayer" :player="selectedPlayer" /> -->
           <stats-options class="mt-5 flex-1" 
             :mode="gameMode"
             :goal-selected="shootingTarget !== null"
@@ -146,22 +129,9 @@
             @shot-added="onShotAdded"
           />
         </div>
-        <!-- <div class="relative w-19 h-full bg-gray-800 flex flex-col items-center justify-center ">
-          <stats-icon 
-          @click="toggleGameMode()" class="rounded-full w-16 h-16 transition-transform p-1 absolute shadow-lg border border-gray-400 text-center  -mt-40"
-            :class="[  gameMode === 'stats' ? 'scale-125 -ml-8 bg-white text-gray-900' : 'bg-gray-300 text-gray-800 -ml-4']"
-          />
-          <attack @click="changeGameMode('attack')" class="rounded-full w-16 h-16 p-1 transition-transform absolute shadow-lg border border-gray-400 text-center "
-            :class="gameMode === 'attack' ? 'scale-125 -ml-8 bg-white text-gray-900' : '-ml-4 bg-gray-300 text-gray-800'"
-          />
-          <defense @click="changeGameMode('defense')" class="rounded-full w-16 h-16 p-1 transition-transform absolute shadow-lg border border-gray-400 text-center  mt-40"
-            :class="gameMode === 'defense' ? 'scale-125 -ml-8 bg-white text-gray-900' : 'bg-gray-300 text-gray-800 -ml-4'"
-          /> 
-        </div> -->
+        
       </div>
     </div>
-  <!-- </div> -->
-  <!-- </div> -->
 </template>
 
 <script setup lang="ts">
@@ -178,33 +148,14 @@ import StatsOverview from '~/components/game/StatsOverview.vue';
 import GameHeader from '~/components/game/GameHeader.vue';
 import ShootingPosition from '~/components/game/ShootingPosition.vue';
 import StatsOptions from '~/components/game/StatsOptions.vue';
-import type { GameMode } from '~/composables/useSelection';
 
 const { $dialog } = useNuxtApp()
-onMounted(async () => {
-  if(!store.teams.selectedTeam.value){
-    await store.initialize();
-  }
-})
-
-onActivated(() => {
-  if(store.matches.currentMatch.value && (store.matches.currentMatch.value.result)){
-    $dialog.alert({
-      title: 'Match Ended',
-      message: 'This match has already ended. Please go back to matches overview.',
-      okText: 'View Analysis',
-    }).then(() => {
-      useRouter().push('/matches');
-    });
-  }
-})
-
-
 
 const store = useHandballStore();
 
-const match = computed(() => store.matches.currentMatch.value || null);
-const team = computed(() => match.value ? store.teams.getTeam(match.value.teamid) : null);
+const match = computed(() => store.matches.match.value || null);
+
+const team = computed(() => match.value ? store.teams.getTeam(match.value.data.value.teamid) : null);
 
 const shootingTarget = ref<ShootingTarget | null>(null);
 const shootingArea = ref<ShootingArea | null>(null);
@@ -226,6 +177,25 @@ const selectedSecondaryAssist = computed<Player | null>(() => {
 const selectedMistakePlayer = computed<Player | null>(() => {
   return store.selection.mistakePlayer.value;
 });
+
+onMounted(async () => {
+  if(!store.teams.selectedTeam.value){
+    await store.initialize();
+  }
+})
+
+onActivated(() => {
+  if(match.value && (match.value.data.value.result)){
+    $dialog.alert({
+      title: 'Match Ended',
+      message: 'This match has already ended. Please go back to matches overview.',
+      okText: 'View Analysis',
+    }).then(() => {
+      useRouter().push('/matches');
+    });
+  }
+})
+
 
 // const toggleGameMode = () => {
 //   if(store.selection.gameMode.value === 'stats'){
@@ -264,11 +234,11 @@ function onShootingAreaClick(index: ShootingArea | null){
 }
 
 function changeDefenseSystem(e:Event) {
- store.matches.changeDefenseSystem((e.target as HTMLInputElement).value as DefenseSystem)
+ match.value?.changeDefenseSystem((e.target as HTMLInputElement).value as DefenseSystem)
 }
 
 function changeOppositeDefenseSystem(e:Event) {
- store.matches.changeOpponentDefenseSystem((e.target as HTMLInputElement).value as DefenseSystem)
+ match.value?.changeOpponentDefenseSystem((e.target as HTMLInputElement).value as DefenseSystem)
 }
 
 </script>

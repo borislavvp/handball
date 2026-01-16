@@ -4,50 +4,50 @@
         <back class="w-8 h-8 text-white"/>
     </button>
     <div class="flex items-center h-full uppercase font-semibold text-4xl">
-        <span @click="store.matches.takeTimeout('home')" 
+        <span @click="match.takeTimeout('home')" 
               class="select-none h-full w-19  flex justify-center items-center "
               :class="[
-                store.matches.currentMatch.value?.timeoutsLeftHome ? 'text-gray-900 focus:bg-gray-100 bg-white  ' : 'bg-gray-200 text-gray-400  '
+                match.data.value.timeoutsLeftHome ? 'text-gray-900 focus:bg-gray-100 bg-white  ' : 'bg-gray-200 text-gray-400  '
               ]"
               >
-                T{{store.matches.currentMatch.value?.timeoutsLeftHome}}</span>
+                T{{match.data.value.timeoutsLeftHome}}</span>
         <span class="w-19  flex items-center justify-center h-full bg-blue-400  text-white select-none">
-            {{ store.matches.currentMatch.value?.score }}
+            {{ match.data.value.score }}
         </span>
         <div class="relative"  >
             <span class="mx-4 select-none text-white ">{{ team?.name }}</span>
-            <div v-if="store.matches.currentMatch.value!.twoMinutesHome.length > 0" class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
-                <span>{{ store.matches.currentMatch.value?.twoMinutesHome.length  }}</span>
-                <header-two-minutes-tag v-show="value === store.matches.currentMatch.value?.twoMinutesHome[0]"
-                 v-for="value in store.matches.currentMatch.value?.twoMinutesHome" :player-id="value" />
+            <div v-if="match.data.value.twoMinutesHome.length > 0" class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
+                <span>{{ match.data.value.twoMinutesHome.length  }}</span>
+                <header-two-minutes-tag v-show="value === match.data.value.twoMinutesHome[0]"
+                 v-for="value in match.data.value.twoMinutesHome" :player-id="value" />
             </div>
         </div>
         <div class="flex items-center justify-center h-full">
             <span class="bg-yellow-300 text-black px-5 flex items-center font-bold justify-center h-full select-none">
-                {{match?.time}}</span>
+                {{match.data.value.time}}</span>
             <button @click="toggleMatchTimer()" class="bg-white px-5 flex items-center justify-center h-full">
-                <pause v-if="match?.playing" class="h-12 w-12 text-gray-900" />
+                <pause v-if="match.data.value.playing" class="h-12 w-12 text-gray-900" />
                 <play v-else class="h-12 w-12 text-gray-900" />
             </button>
         </div>
         <div class="relative"  >
-            <span class="mx-4 select-none text-white ">{{ match?.opponent }}</span>
-            <div v-if="store.matches.currentMatch.value!.twoMinutesAway.length > 0" class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
-                <span>{{ store.matches.currentMatch.value?.twoMinutesAway.length  }}</span>
-                <header-two-minutes-tag  v-show="value === store.matches.currentMatch.value?.twoMinutesAway[0]" 
-                v-for="value in store.matches.currentMatch.value?.twoMinutesAway":player-id="value" />
+            <span class="mx-4 select-none text-white ">{{ match.data.value.opponent }}</span>
+            <div v-if="match.data.value.twoMinutesAway.length > 0" class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
+                <span>{{ match.data.value.twoMinutesAway.length  }}</span>
+                <header-two-minutes-tag  v-show="value === match.data.value.twoMinutesAway[0]" 
+                v-for="value in match.data.value.twoMinutesAway":player-id="value" />
             </div>
         </div>
         <span class="w-19 flex items-center justify-center h-full bg-blue-400  text-white select-none">
-            {{ match?.opponentScore }}
+            {{ match.data.value.opponentScore }}
         </span>
-        <span @click="store.matches.takeTimeout('away')" 
+        <span @click="match.takeTimeout('away')" 
               class="select-none h-full w-19 flex justify-center items-center "
               :class="[
-                store.matches.currentMatch.value?.timeoutsLeftAway ? 'text-gray-900 focus:bg-gray-100 bg-white  ' : 'bg-gray-200 text-gray-400'
+                match.data.value.timeoutsLeftAway ? 'text-gray-900 focus:bg-gray-100 bg-white  ' : 'bg-gray-200 text-gray-400'
               ]"
               >
-                T{{store.matches.currentMatch.value?.timeoutsLeftAway}}</span>
+                T{{match.data.value.timeoutsLeftAway}}</span>
     </div> 
 </div>
 </template>
@@ -60,15 +60,16 @@ import play from '~/components/icons/play.vue';
 import HeaderTwoMinutesTag from './HeaderTwoMinutesTag.vue';
 
 const store = useHandballStore();
-const team = computed(() =>  store.teams.getTeam(store.matches.currentMatch.value!.teamid));
-const match = computed(() => store.matches.currentMatch.value);
+const match = computed(() => store.matches.match.value!);
+const team = computed(() =>  store.teams.getTeam(match.value.data.value.teamid));
 const goBack = () => useRouter().back();
+console.log(match.value.data)
 const toggleMatchTimer = () => {
-    if(!store.matches.currentMatch.value) return;
-    if(store.matches.currentMatch.value.playing){
-        store.matches.pauseMatch();
+    if(!match.value) return;
+    if(match.value.data.value.playing){
+        match.value.pauseMatch();
     }else{
-        store.matches.resumeMatch();
+        match.value.resumeMatch();
     }
 }
 

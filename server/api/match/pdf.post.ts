@@ -76,7 +76,7 @@ function drawPlayersTable(
   
   const colWidths = [15, 75, 15, 25, 25, 25, 25, 25, 25, 25, 25, 20, 20, 15, 15, 15, 20, 15, 15, 15, 15, 20, 15, 15, 15, 15];
   const header = [
-    "No", "Name", "V", "Tot", "%", "9m", "6m", "Wing", "7m", "FB", "1-1",
+    "No", "Name", "V", "Tot", "%", "9m", "6m", "Wing", "7m", "FB", "Brk.",
     "P.As.", 'S.As.', 'E7', 'E2', 'LB', 'Def', 'St.', 'BL', 'NR', 'C7', '1-1L',
     'YC', '2M', 'RC', 'BC'
   ];
@@ -109,7 +109,7 @@ function drawPlayersTable(
       `${player.byWing.scored}/${player.byWing.total}`,
       `${player.by7m.scored}/${player.by7m.total}`,
       `${player.fastbreak.scored}/${player.fastbreak.total}`,
-      `${player.oneOnOne.scored}/${player.oneOnOne.total}`,
+      `${player.breakthrough.scored}/${player.breakthrough.total}`,
       `${player.assistsPrimary}`,
       `${player.assistsSecondary}`,
       `${player.provoked7m}`,
@@ -543,6 +543,9 @@ export default defineEventHandler(async (event) => {
       name: "Total",
       number: 0,
       value: Math.floor((acc.value + gk.value) / 2),
+      assistsPrimary: acc.assistsPrimary + gk.assistsPrimary,
+      assistsSecondary: acc.assistsSecondary + gk.assistsSecondary,
+      lostball: acc.lostball + gk.lostball,
       totalSaves: acc.totalSaves + gk.totalSaves,
       attempts: acc.attempts + gk.attempts,
       efficiency: Math.floor((acc.efficiency + gk.efficiency) / 2),
@@ -557,6 +560,9 @@ export default defineEventHandler(async (event) => {
       name: "",
       number: 0,
       value: 0,
+      assistsPrimary:0,
+      assistsSecondary:0,
+      lostball:0,
       totalSaves: 0,
       attempts: 0,
       efficiency: 0,

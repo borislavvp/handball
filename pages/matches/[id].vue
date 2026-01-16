@@ -18,7 +18,7 @@
       </div>
       <div v-else class="flex-1 flex flex-col">
         <StatsHeader :match="match"/>
-        <StatsTabs :stats="stats" />
+        <StatsTabs :stats="stats" :match="match" />
       </div>
     </div>
   </div>

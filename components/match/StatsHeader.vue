@@ -4,6 +4,7 @@
         <back class="w-8 h-8 text-white"/>
     </button>
     <div class="flex items-center h-full uppercase font-semibold text-4xl">
+        
         <span  
               class="select-none h-full w-19  flex justify-center items-center "
               :class="[

@@ -83,8 +83,6 @@ onMounted(async () => {
   if(!store.teams.selectedTeam.value){
     await store.initialize();
   }
-
-  store.matches.fetchMatches();
 })
 
 const options = { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" };
@@ -100,7 +98,7 @@ const formatDate = (iso?: string) => {
 }
 
 const seeMatch = (match: Match) => {
-  if(store.matches.currentMatch.value?.id === match.id){
+  if(store.matches.match.value?.data.value?.id === match.id){
     router.push({path:`/matches/active`})
   }else{
     router.push({path:`/matches/${match.id}`})

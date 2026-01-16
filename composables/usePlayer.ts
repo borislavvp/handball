@@ -1,11 +1,12 @@
 import type { CreatePlayerBody } from "~/types/dto";
-import type { CurrentMatch, Player, PlayerStats, Position, Shot, Stats, Team } from "~/types/handball";
+import type { Player, PlayerStats, Position, Shot, Stats, Team } from "~/types/handball";
 import type { LoadingState } from "./useLoading";
+import type { ActiveMatch } from "./useActiveMatch";
 
 export const usePlayer = (
     loadingState: LoadingState,
     team: ComputedRef<Team | undefined>,
-    currentMatch:Ref<CurrentMatch | null>) => {
+    currentMatch:ComputedRef<ActiveMatch | null> ) => {
     function getPlayer(playerId:number): Player | undefined {
         return team.value?.players.find(p => p.id === playerId);
     }
@@ -101,7 +102,7 @@ export const usePlayer = (
         player.currentShots.push(shot);
         $fetch('/api/shots', {
             method: 'POST',
-            body: { matchId: currentMatch.value?.id, playerId: player.id, shot }
+            body: { matchId: currentMatch.value?.data.value.id, playerId: player.id, shot }
         })
         if(!player.currentStats){
             player.currentStats = initPlayerStats();
@@ -130,12 +131,8 @@ export const usePlayer = (
                 player.currentStats.assistsecondary += 1;
             }
         }
-        currentMatch.value?.shots.push(shot)
-        if(shot.result === 'gkmiss'){
-            currentMatch.value!.opponentScore++;
-        } else if(shot.result === 'goal'){
-            currentMatch.value!.score++;
-        }
+        currentMatch.value?.data.value.shots.push(shot)
+        
         computePlayerValue(player);
     }
 
@@ -146,7 +143,7 @@ export const usePlayer = (
             computePlayerValue(player);
             $fetch('/api/stats', {
                 method: 'POST',
-                body: { matchId: currentMatch.value?.id, playerId: player.id, statType: stat, time: currentMatch.value?.time }
+                body: { matchId: currentMatch.value?.data.value.id, playerId: player.id, statType: stat, time: currentMatch.value?.data.value.time }
             })
             return;
         }
@@ -159,7 +156,7 @@ export const usePlayer = (
         computePlayerValue(player);
         $fetch('/api/stats', {
             method: 'PUT',
-            body: { matchId: currentMatch.value?.id, playerId: player.id, statType: stat, time: currentMatch.value?.time   }
+            body: { matchId: currentMatch.value?.data.value.id, playerId: player.id, statType: stat, time: currentMatch.value?.data.value.time   }
         })
     }
 

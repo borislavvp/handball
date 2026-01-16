@@ -45,10 +45,11 @@ const saveEfficiency = computed(() => {
             value = getData(props.player.currentShots ?? []);
         }
     }else{
-        if(!store.matches.currentMatch.value?.shots || store.matches.currentMatch.value?.shots.length === 0){
+        if(!store.matches.match.value?.data.value?.shots || 
+        store.matches.match.value?.data.value?.shots.length === 0){
             available = false;
         }else{
-            value = getData(store.matches.currentMatch.value?.shots ?? []);
+            value = getData(store.matches.match.value?.data.value?.shots ?? []);
         }
     }
 

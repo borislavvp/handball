@@ -27,7 +27,7 @@ const formattedTime = computed(() => {
 
 onMounted(() => {
   interval = setInterval(() => {
-    if(store.matches.currentMatch.value?.playing === false){
+    if(store.matches.match.value?.data.value?.playing === false){
       return;
     }
     
@@ -35,8 +35,8 @@ onMounted(() => {
       timeLeft.value--
     } else {
       clearInterval(interval)
-      store.matches.currentMatch.value?.twoMinutesHome.splice(
-        store.matches.currentMatch.value.twoMinutesHome.indexOf(props.playerId), 1
+      store.matches.match.value?.data.value?.twoMinutesHome.splice(
+        store.matches.match.value?.data.value.twoMinutesHome.indexOf(props.playerId), 1
       )
     }
   }, 1000)

@@ -57,7 +57,7 @@ export interface Match {
   timeoutsLeftAway: number;
   shots: Shot[];
 }
-export type CurrentMatch  = Match & {
+export type ActiveMatchData  = Match & {
   time: string;
   playing: boolean;
   timeoutsLeftHome: number;

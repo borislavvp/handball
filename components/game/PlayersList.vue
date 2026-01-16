@@ -15,7 +15,7 @@
     (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p)) && 'animate-border border-white',
   ]">
     <two-minutes-tag 
-      v-if="store.matches.currentMatch.value?.twoMinutesHome.includes(p.id)" 
+      v-if="store.matches.match.value?.data.value.twoMinutesHome.includes(p.id)" 
       class="absolute bottom-0 left-0 -mb-4 -ml-4"
       :player-id="p.id"
     />
