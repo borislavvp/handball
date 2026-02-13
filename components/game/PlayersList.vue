@@ -68,7 +68,7 @@ const emits = defineEmits<{
 const store = useHandballStore();
 
 const teamPlayers = computed(() => {
-  const players = store.teams.teams.value[0]?.players;
+  const players = store.teams.selectedTeam.value?.players;
   if (!players) {
     return [];
   }

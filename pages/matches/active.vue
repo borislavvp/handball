@@ -196,6 +196,11 @@ onActivated(() => {
   }
 })
 
+watch(() => match.value?.data.value.id, () => {
+  shootingTarget.value = null;
+  shootingArea.value = null;
+  store.selection.resetAll();
+});
 
 // const toggleGameMode = () => {
 //   if(store.selection.gameMode.value === 'stats'){

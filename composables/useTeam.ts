@@ -42,6 +42,9 @@ export const useTeam = (loadingState: LoadingState) => {
             name: t.name,
             players: t.player.map( p => ({
                 ...p,
+                liveByMatch: {},
+                currentStats: undefined,
+                currentShots: [],
                 hasTwoMinutes: false,
                 hasCard: null,
                 recentStats: p.player_stats,
