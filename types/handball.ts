@@ -34,6 +34,7 @@ export interface Player {
   position: Position["key"];
   currentShots?: Shot[];
   currentStats?: PlayerCurrentStats;
+  liveByMatch?: Record<number, { stats: PlayerCurrentStats; shots: Shot[] }>;
   recentStats:PlayerStats[];
   hasTwoMinutes: boolean;
   hasCard: null | "yellow" | "red" | "blue"
@@ -149,5 +150,4 @@ export type PlayerStats = {
     shots: Shot[];
   };
 };
-
 

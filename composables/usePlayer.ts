@@ -1,69 +1,21 @@
 import type { CreatePlayerBody } from "~/types/dto";
-import type { Player, PlayerStats, Position, Shot, Stats, Team } from "~/types/handball";
+import type { Player, PlayerCurrentStats, PlayerStats, Position, Shot, Stats, Team } from "~/types/handball";
 import type { LoadingState } from "./useLoading";
 import type { ActiveMatch } from "./useActiveMatch";
 
 export const usePlayer = (
     loadingState: LoadingState,
     team: ComputedRef<Team | undefined>,
-    currentMatch:ComputedRef<ActiveMatch | null> ) => {
+    currentMatch: ComputedRef<ActiveMatch | null>) => {
     function getPlayer(playerId:number): Player | undefined {
         return team.value?.players.find(p => p.id === playerId);
     }
-    async function getPlayerStats(playerId: number): Promise<PlayerStats[]>{
-        const { $supabase } = useNuxtApp()
-        loadingState.fetching.value = true;
-        const {data, error} = await $supabase
-            .from('player_stats')
-            .select(`*,match (id,result,createdat,opponent,score, opponentScore, timeoutsLeftHome, timeoutsLeftAway, shots(*))`)
-            .eq('playerid', playerId)
 
-        if (error){
-            return [];
-        }
-        const p: PlayerStats[] = data;
-        loadingState.fetching.value = false;
-        return p;
+    function getActiveMatchId() {
+        return currentMatch.value?.data.value.id;
     }
 
-        async function addPlayer(name: string, position: Position["key"], number: number): Promise<Player | null> {
-        if (!team.value) return null;
-        loadingState.fetching.value = true;
-        const playerId = await $fetch('/api/player', {
-            method: 'POST',
-            body: { name, number, position, teamId:team.value.id } as CreatePlayerBody
-        })
-        const p: Player = { 
-            id: playerId as number,
-            name, number, position, 
-            currentShots:[],
-            recentStats:[],
-            hasTwoMinutes: false,
-            hasCard: null,
-        };
-        team.value?.players.push(p);
-        loadingState.fetching.value = false;
-        return p;
-    }
-
-
-    async function updatePlayer(data:Record<string, any>,playerId:number){
-        await $fetch(`/api/player/${playerId}`, {
-            method: 'PUT',
-            body: data
-        })
-        }
-
-        async function removePlayer(playerId: number) {
-        if (!team.value) return;
-        await $fetch(`/api/player/${playerId}`, { method: 'DELETE' })
-        const index = team.value.players.findIndex(p => p.id === playerId);
-        if (index !== -1) {
-            team.value.players.splice(index, 1); 
-        }
-    }
-
-    function initPlayerStats(){
+    function initPlayerStats(): PlayerCurrentStats {
         return {
             "1on1lost": 0,
             "1on1win": 0,
@@ -91,73 +43,142 @@ export const usePlayer = (
             provokeCard: 0,
             block: 0,
             norebound: 0,
-            value:0,
-        } 
+            value: 0,
+        };
     }
 
-    function addShotToPlayer(player: Player, shot: Shot, ) {
-        if(!player.currentShots){
-            player.currentShots = [];
+    function getMatchState(player: Player, matchId: number) {
+        if (!player.liveByMatch) {
+            player.liveByMatch = {};
         }
-        player.currentShots.push(shot);
+        if (!player.liveByMatch[matchId]) {
+            player.liveByMatch[matchId] = {
+                stats: initPlayerStats(),
+                shots: [],
+            };
+        }
+        return player.liveByMatch[matchId]!;
+    }
+
+    function syncCurrentPlayerView(player: Player, matchId: number) {
+        const state = getMatchState(player, matchId);
+        player.currentStats = state.stats;
+        player.currentShots = state.shots;
+    }
+
+    async function getPlayerStats(playerId: number): Promise<PlayerStats[]>{
+        const { $supabase } = useNuxtApp();
+        loadingState.fetching.value = true;
+        const {data, error} = await $supabase
+            .from('player_stats')
+            .select(`*,match (id,result,createdat,opponent,score, opponentScore, timeoutsLeftHome, timeoutsLeftAway, shots(*))`)
+            .eq('playerid', playerId);
+
+        if (error){
+            return [];
+        }
+        const p: PlayerStats[] = data;
+        loadingState.fetching.value = false;
+        return p;
+    }
+
+    async function addPlayer(name: string, position: Position["key"], number: number): Promise<Player | null> {
+        if (!team.value) return null;
+        loadingState.fetching.value = true;
+        const playerId = await $fetch('/api/player', {
+            method: 'POST',
+            body: { name, number, position, teamId:team.value.id } as CreatePlayerBody,
+        });
+        const p: Player = {
+            id: playerId as number,
+            name,
+            number,
+            position,
+            currentShots: [],
+            currentStats: undefined,
+            liveByMatch: {},
+            recentStats: [],
+            hasTwoMinutes: false,
+            hasCard: null,
+        };
+        team.value?.players.push(p);
+        loadingState.fetching.value = false;
+        return p;
+    }
+
+    async function updatePlayer(data:Record<string, any>,playerId:number){
+        await $fetch(`/api/player/${playerId}`, {
+            method: 'PUT',
+            body: data,
+        });
+    }
+
+    async function removePlayer(playerId: number) {
+        if (!team.value) return;
+        await $fetch(`/api/player/${playerId}`, { method: 'DELETE' });
+        const index = team.value.players.findIndex(p => p.id === playerId);
+        if (index !== -1) {
+            team.value.players.splice(index, 1);
+        }
+    }
+
+    function addShotToPlayer(player: Player, shot: Shot) {
+        const matchId = getActiveMatchId();
+        if (!matchId) return;
+
+        const playerState = getMatchState(player, matchId);
+        playerState.shots.push(shot);
+        playerState.stats[shot.result] += 1;
+
+        if (shot.assistPrimary) {
+            const assistPlayer = getPlayer(shot.assistPrimary);
+            if (assistPlayer) {
+                const assistState = getMatchState(assistPlayer, matchId);
+                assistState.stats.assistprimary += 1;
+                computePlayerValue(assistPlayer, assistState.stats);
+                syncCurrentPlayerView(assistPlayer, matchId);
+            }
+        }
+
+        if (shot.assistSecondary) {
+            const assistPlayer = getPlayer(shot.assistSecondary);
+            if (assistPlayer) {
+                const assistState = getMatchState(assistPlayer, matchId);
+                assistState.stats.assistsecondary += 1;
+                computePlayerValue(assistPlayer, assistState.stats);
+                syncCurrentPlayerView(assistPlayer, matchId);
+            }
+        }
+
+        currentMatch.value?.data.value.shots.push(shot);
+        computePlayerValue(player, playerState.stats);
+        syncCurrentPlayerView(player, matchId);
+
         $fetch('/api/shots', {
             method: 'POST',
-            body: { matchId: currentMatch.value?.data.value.id, playerId: player.id, shot }
-        })
-        if(!player.currentStats){
-            player.currentStats = initPlayerStats();
-        }
-        player.currentStats[shot.result] += 1;
-        console.log("increment");
-        if(shot.assistPrimary){
-            console.log("increment assist primary");
-            const player = getPlayer(shot.assistPrimary); 
-            if(player){
-                if(!player.currentStats){
-                    console.log("init assist primary stats");
-                    player.currentStats = initPlayerStats();
-                }
-                console.log("increment assist primary stats", player.currentStats.assistprimary);
-                player.currentStats.assistprimary += 1;
-                console.log("increment assist primary stats after", player.currentStats.assistprimary);
-            }
-        }
-        if(shot.assistSecondary){
-            const player = getPlayer(shot.assistSecondary); 
-            if(player){
-                if(!player.currentStats){
-                    player.currentStats = initPlayerStats();
-                }
-                player.currentStats.assistsecondary += 1;
-            }
-        }
-        currentMatch.value?.data.value.shots.push(shot)
-        
-        computePlayerValue(player);
+            body: { matchId, playerId: player.id, shot },
+        });
     }
 
     function increasePlayerStat(player: Player, stat:Stats) {
-        if(!player.currentStats){
-            player.currentStats = initPlayerStats();
-            player.currentStats[stat] += 1;
-            computePlayerValue(player);
-            $fetch('/api/stats', {
-                method: 'POST',
-                body: { matchId: currentMatch.value?.data.value.id, playerId: player.id, statType: stat, time: currentMatch.value?.data.value.time }
-            })
-            return;
+        const matchId = getActiveMatchId();
+        if (!matchId) return;
+
+        const hasExistingState = Boolean(player.liveByMatch && player.liveByMatch[matchId]);
+        const state = getMatchState(player, matchId);
+        state.stats[stat] += 1;
+
+        if (stat === 'twominutes') {
+            player.hasTwoMinutes = true;
         }
-        player.currentStats[stat] += 1;
-        if(stat === 'twominutes'){
-            if (player.currentStats.twominutes > 1){
-            }
-            player.hasTwoMinutes = true
-        }
-        computePlayerValue(player);
+
+        computePlayerValue(player, state.stats);
+        syncCurrentPlayerView(player, matchId);
+
         $fetch('/api/stats', {
-            method: 'PUT',
-            body: { matchId: currentMatch.value?.data.value.id, playerId: player.id, statType: stat, time: currentMatch.value?.data.value.time   }
-        })
+            method: hasExistingState ? 'PUT' : 'POST',
+            body: { matchId, playerId: player.id, statType: stat, time: currentMatch.value?.data.value.time },
+        });
     }
 
     return {
@@ -167,33 +188,24 @@ export const usePlayer = (
         removePlayer,
         addShotToPlayer,
         increasePlayerStat,
-    }
-}
+        initPlayerStats,
+        getMatchState,
+        syncCurrentPlayerView,
+    };
+};
 
-export function computePlayerValue(player:Player) {
-        const stats = player.currentStats;
-        if(!stats) return 0;
-        let value = 0;
-        let attackValue = 0;
-        let defenseValue = 0;
-        
-        // Field player: Goals - Misses + ((Assist + Unbalance + Provokes + 1-1 Win) - Lost balls) + Defense)
-        // // Defense: (Steals + Blocks + Defense + Defenese x2) - 1-1 Lost - Penalty Made - No Rebound - Suspensions
-        // Goalkeeper: (Saves/Total)*100 ,  Field Player Value
-        attackValue = (stats.goal - stats.miss) + 
-            ((stats.assistprimary + stats.assistsecondary + stats.provokeCard +
-            stats.provokePenalty + stats.provokeTwoMin + stats["1on1win"]) - stats.lostball) 
-        defenseValue = (stats.steal + stats.block + stats.defense + stats.defensex2) 
+export function computePlayerValue(player: Player, statsInput?: PlayerCurrentStats) {
+    const stats = statsInput ?? player.currentStats;
+    if(!stats) return 0;
+
+    const attackValue = (stats.goal - stats.miss) +
+        ((stats.assistprimary + stats.assistsecondary + stats.provokeCard +
+        stats.provokePenalty + stats.provokeTwoMin + stats["1on1win"]) - stats.lostball);
+
+    const defenseValue = (stats.steal + stats.block + stats.defense + stats.defensex2)
         - stats["1on1lost"] - stats.penaltymade - stats.norebound - stats.twominutes - stats.redcard - stats.bluecard;
-        value = attackValue + defenseValue;
 
-        if(player.position === 'GK'){
-        //     const totalShots = stats.gksave + stats.gkmiss;
-        //     const savePercentage = totalShots > 0 ? Math.floor((stats.gksave / totalShots) * 10) : 0;
-        //     stats.value = (savePercentage) + value;
-        // }else{
-        //     stats.value = value;
-        console.log("Player Value Computed:", value);
-        }
-        stats.value = value;
-    }
+    stats.value = attackValue + defenseValue;
+
+    return stats.value;
+}
