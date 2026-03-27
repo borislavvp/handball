@@ -49,16 +49,81 @@ async function fetchMatchData(matchId: number) {
 // ==================== PDF GENERATION SECTIONS ====================
 
 function drawTitleSection(doc: PDFKit.PDFDocument, matchData: Database["public"]['Tables']['match']['Row'], homeName:string): void {
-  doc.fontSize(PDF_CONFIG.fontSizes.title)
-    .text(`Match Statistics — ${homeName.toUpperCase()} vs ${matchData.opponent.toUpperCase()}`, { align: "center" });
-  
-  doc.moveDown(0.25);
-  doc.fontSize(PDF_CONFIG.fontSizes.small)
-    .text(
-      `Match ID: ${matchData.id}   Score: ${matchData.score} - ${matchData.opponentScore}   Result: ${matchData.result || ""}`,
-      { align: "center" }
-    );
-  doc.moveDown(0.5);
+  const pageWidth = doc.page.width;
+  const { left, right } = doc.page.margins;
+  const contentWidth = pageWidth - left - right;
+  const startX = left;
+  const topY = doc.y;
+  const createdAt = new Date(matchData.createdat);
+  const generatedAt = new Date();
+
+  const formatDate = (date: Date): string =>
+    Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+  const formatTime = (date: Date): string =>
+    Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  doc.save();
+  doc.roundedRect(startX, topY, contentWidth, 82, 8)
+    .fillAndStroke("#f3f6fb", "#d6deeb");
+  doc.restore();
+
+  doc.save();
+  doc.rect(startX, topY, contentWidth, 24).fill("#1f3a63");
+  doc.restore();
+
+  doc.fillColor("#ffffff")
+    .font("Helvetica-Bold", 12)
+    .text("HANDBALL MATCH REPORT", startX + 12, topY + 7);
+
+  doc.fillColor("#0f172a")
+    .font("Helvetica-Bold", PDF_CONFIG.fontSizes.title)
+    .text(`${homeName.toUpperCase()} vs ${matchData.opponent.toUpperCase()}`, startX + 12, topY + 31, {
+      width: contentWidth - 24,
+      align: "left",
+    });
+
+  doc.font("Helvetica", PDF_CONFIG.fontSizes.small)
+    .fillColor("#334155")
+    .text(`Final Score: ${matchData.score} - ${matchData.opponentScore}   •   Result: ${matchData.result || "N/A"}`, startX + 12, topY + 51, {
+      width: contentWidth - 24,
+      align: "left",
+    });
+
+  const infoY = topY + 90;
+  const colWidth = Math.floor(contentWidth / 4);
+  const metaEntries = [
+    { label: "Match ID", value: String(matchData.id) },
+    { label: "Match Date", value: formatDate(createdAt) },
+    { label: "Report Date", value: formatDate(generatedAt) },
+    { label: "Report Time", value: formatTime(generatedAt) },
+  ];
+
+  metaEntries.forEach((entry, idx) => {
+    const x = startX + idx * colWidth;
+    doc.font("Helvetica", 8)
+      .fillColor("#64748b")
+      .text(entry.label.toUpperCase(), x, infoY, { width: colWidth - 6 });
+    doc.font("Helvetica-Bold", 10)
+      .fillColor("#0f172a")
+      .text(entry.value, x, infoY + 11, { width: colWidth - 6 });
+  });
+
+  const lineY = infoY + 28;
+  doc.moveTo(startX, lineY)
+    .lineTo(startX + contentWidth, lineY)
+    .lineWidth(1)
+    .strokeColor("#cbd5e1")
+    .stroke();
+
+  doc.y = lineY + 8;
 }
 
 function drawPlayersTable(
