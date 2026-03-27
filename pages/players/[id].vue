@@ -131,7 +131,7 @@ async function saveChanges() {
           <div class="w-full">
             <div class="flex items-center justify-between">
               <p class="font-semibold text-gray-900">Match vs {{ stat.match.opponent }} </p>
-              <p v-if="store.matches.currentMatch.value?.id === stat.match.id"
+              <p v-if="store.matches.activeMatches.has(stat.match.id)"
                class="text-xs text-white bg-blue-500 font-semibold shadow-inner border border-blue-400 rounded-full px-2 py-1">ONGOING</p>
             </div>
             <p class="text-xs text-gray-500">{{ new Date(stat.match.createdAt!).toLocaleDateString() }}</p>
@@ -150,7 +150,7 @@ async function saveChanges() {
             <p class="text-gray-500">Misses</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.assist }}</p>
+            <p class="font-semibold">{{ stat.assistprimary + stat.assistsecondary }}</p>
             <p class="text-gray-500">Good Pass</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
@@ -174,7 +174,7 @@ async function saveChanges() {
             <p class="text-gray-500">1-1 Lost</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.card }}</p>
+            <p class="font-semibold">{{ stat.redcard + stat.bluecard + stat.redcard }}</p>
             <p class="text-gray-500">Cards</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
@@ -182,7 +182,7 @@ async function saveChanges() {
             <p class="text-gray-500">2 Min</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">
-            <p class="font-semibold">{{ stat.provoke }}</p>
+            <p class="font-semibold">{{ stat.provokeCard + stat.provokePenalty + stat.provokeTwoMin }}</p>
             <p class="text-gray-500">Provokes</p>
           </div>
           <div class="bg-gray-50 rounded-lg p-2">

@@ -12,7 +12,6 @@ export function createHandballStore() {
   const players = usePlayer(loadingState, teams.selectedTeam, matches.match);
   const selection = useSelection();
   const stats = useStats(selection, teams.selectedTeam);
-  
   const initialize = async () => {
     loadingState.loading.value = true;
     await teams.fetchTeams();
