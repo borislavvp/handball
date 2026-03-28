@@ -44,7 +44,7 @@ BEGIN
     (v_match_id, 'timeout_home', '47:52', NULL, 'china timeout #2'),
     (v_match_id, 'timeout_away', '54:10', NULL, 'france timeout #2'),
     (v_match_id, 'playing', '60:00', NULL, 'false');
-
+  
   -- Full shot-by-shot log for both teams.
   -- Use a temp table because we need to fan out the same inserted shot rows
   -- into multiple match_event inserts in separate SQL statements.

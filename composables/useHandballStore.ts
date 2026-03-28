@@ -20,7 +20,8 @@ export function createHandballStore() {
   }
 
   return {
-    loading: computed(() => loadingState.fetching.value),
+    loadingState,
+    loading: computed(() => loadingState.loading.value),
     fetching: computed(() => loadingState.fetching.value),
     teams,
     matches,

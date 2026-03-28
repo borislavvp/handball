@@ -41,7 +41,6 @@ import type { Match } from '~/types/handball'
 const store = useHandballStore()
 const router = useRouter()
 const newMatchName = ref('')
-console.log(store.matches.activeMatches)
 
 // const latestActiveMatches = computed(() =>
 //   store.matches.activeMatches.values().filter(m => m.data.teamid === store.teams.selectedTeam.value?.id)
@@ -49,13 +48,14 @@ console.log(store.matches.activeMatches)
 //     .slice(0,10)
 // )
 const latestActiveMatches = computed(() =>
-  Array.from(store.matches.activeMatches.values()).filter(m => m.data.value.teamid === store.teams.selectedTeam.value?.id)
+  Array.from(store.matches.activeMatches.values())
     .sort((a,b) => new Date(b.data.value.createdat!).getTime() - new Date(a.data.value.createdat!).getTime())
     .slice(0,10)
 )
 
 const latestMatches = computed(() =>
-  store.matches.matches.value.filter(m => m.teamid === store.teams.selectedTeam.value?.id && m.result)
+  store.matches.matches.value
+    .filter((m) => m.result)
     .sort((a,b) => new Date(b.createdat!).getTime() - new Date(a.createdat!).getTime())
     .slice(0,10)
 )

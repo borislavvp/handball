@@ -99,16 +99,16 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     }
 
     async function createMatch(opponent: string): Promise<Match | null> {
-        const matchId = await $fetch('/api/matches', {
+        const data = await $fetch('/api/matches', {
             method: 'POST',
             body: { opponent: opponent, teamId: team.value?.id },
         });
 
         const match: ActiveMatchData = {
-            id: matchId as number,
+            id: data.id as number,
             opponent,
             teamid: team.value!.id,
-            createdat: Date.now().toLocaleString(),
+            createdat: data.createdat,
             result: null,
             score: 0,
             opponentScore: 0,
@@ -135,7 +135,7 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
     async function fetchMatches() {
         const { $supabase } = useNuxtApp();
         loadingState.fetching.value = true;
-        const {data, error} = await $supabase.from('match').select("*, shots(*)").eq('teamid', team.value!.id).order('id', { ascending: true });
+        const {data, error} = await $supabase.from('match').select("*, shots(*)").order('id', { ascending: true });
         if (error){
             console.error("Error fetching matches:", error.message);
             loadingState.fetching.value = false;

@@ -11,11 +11,11 @@
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <p class="text-xs uppercase text-gray-500">Fastbreaks</p>
-        <p class="text-2xl font-semibold text-gray-900">{{ stats.fastBreaks.shots.total }}</p>
+        <p class="text-2xl font-semibold text-gray-900">{{ stats.fastBreaks.total }}</p>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <p class="text-xs uppercase text-gray-500">Opp. Fastbreaks</p>
-        <p class="text-2xl font-semibold text-gray-900">{{ stats.defensedFastBreaks.shots.total }}</p>
+        <p class="text-2xl font-semibold text-gray-900">{{ stats.defensedFastBreaks.total }}</p>
       </div>
     </div>
 

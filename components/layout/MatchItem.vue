@@ -40,6 +40,6 @@ const props = defineProps<{
 const formatDate = (iso?: string) =>
   iso ? new Date(iso).toLocaleDateString('en-GB') : ''
 
-const isActive = (props.m as ActiveMatchData).time !== null
+const isActive = (props.m as ActiveMatchData).result === null
 
 </script>
