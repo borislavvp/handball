@@ -146,17 +146,20 @@ BEGIN
     SELECT * FROM china_shots_data
     UNION ALL
     SELECT * FROM france_shots_data
+  ),
+  inserted_shots_data AS (
+    INSERT INTO public.shots (
+      matchid, playerid, "from", "to", result, time,
+      "assistPrimary", "assistSecondary", fastbreak, breakthrough, "mistakePlayer"
+    )
+    SELECT
+      v_match_id, playerid, "from", "to", result, time,
+      "assistPrimary", "assistSecondary", fastbreak, breakthrough, "mistakePlayer"
+    FROM shots_data
+    ORDER BY time
+    RETURNING id, matchid, playerid, result, time
   )
-  INSERT INTO public.shots (
-    matchid, playerid, "from", "to", result, time,
-    "assistPrimary", "assistSecondary", fastbreak, breakthrough, "mistakePlayer"
-  )
-  SELECT
-    v_match_id, playerid, "from", "to", result, time,
-    "assistPrimary", "assistSecondary", fastbreak, breakthrough, "mistakePlayer"
-  FROM shots_data
-  ORDER BY time
-  RETURNING id, matchid, playerid, result, time;
+  SELECT * FROM inserted_shots_data;
 
   -- Persist shot outcomes into match_event as well.
   -- Keep GK outcomes explicit so gkmiss/gksave are always present in the event timeline.
