@@ -17,12 +17,17 @@ export function calculateScoreProgression(events: MatchEvents): ScoreAtMinute[] 
   let homeScore = 0;
   let awayScore = 0;
 
-  // Only use goal/gkmiss events
+  // Count every scoring event from both teams
   const scoreEvents = events
-    .filter(e => e.event === "goal" || e.event === "gkmiss")
+    .filter(e =>
+      e.event === "goal"
+      || e.event === "goal_empty"
+      || e.event === "gkmiss"
+      || e.event === "gkmiss_empty"
+    )
     .map(e => ({
       time: parseTimeToSeconds(e.time),
-      team: e.event === "goal" ? "home" : "away"
+      team: (e.event === "goal" || e.event === "goal_empty") ? "home" : "away"
     }))
     .sort((a, b) => a.time - b.time);
 

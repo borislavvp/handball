@@ -75,12 +75,19 @@ export async  function fetchMatchData(matchId: number) {
     $supabase.from("match_event").select("*").eq("matchid", matchId).order("time", { ascending: true }),
   ]);
   
+  const shotsSorted = (shotsRaw.data || []).sort(
+    (a, b) => parseTimeToSeconds(a.time) - parseTimeToSeconds(b.time)
+  );
+  const eventsSorted = (events.data || []).sort(
+    (a, b) => parseTimeToSeconds(a.time) - parseTimeToSeconds(b.time)
+  );
+
   return {
     match: matchData,
     players: players.data || [],
     playerStats: playerStats.data || [],
-    shots: shotsRaw.data || [],
-    events: events.data || [],
+    shots: shotsSorted,
+    events: eventsSorted,
   };
 }
 
@@ -474,9 +481,10 @@ export type SuperiortyResult = { attacks:number, eff:number, scored: number, mis
 
 export const findNextShotAfter = (shots: Shot[], shot:Shot) => {
   let nextShot = null;
+  const shotSeconds = parseTimeToSeconds(shot.time);
   for(let i = 0; i < shots.length; i++){
     const s = shots[i];
-    if(s!.time > shot.time){
+    if(parseTimeToSeconds(s!.time) > shotSeconds){
       nextShot = s;
       break;
     }
@@ -571,12 +579,14 @@ export function findDefenseAt(
   
   const defenseEventType = oppositeDefense ? 'opponent_defense_change' : 'defense_change';
   let chosen: any = null;
+  const shotSeconds = parseTimeToSeconds(shotTime);
   
   for (const ev of events) {
     if (!ev.event) continue;
     if (ev.event !== defenseEventType) continue;
-    if (ev.time <= shotTime) {
-      if (!chosen || ev.time > chosen.time) {
+    const eventSeconds = parseTimeToSeconds(ev.time);
+    if (eventSeconds <= shotSeconds) {
+      if (!chosen || eventSeconds > parseTimeToSeconds(chosen.time)) {
         chosen = ev;
       }
     }
