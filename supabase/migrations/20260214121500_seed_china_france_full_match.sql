@@ -46,6 +46,11 @@ BEGIN
     (v_match_id, 'playing', '60:00', NULL, 'false');
 
   -- Full shot-by-shot log for both teams.
+  -- Use a temp table because we need to fan out the same inserted shot rows
+  -- into multiple match_event inserts in separate SQL statements.
+  DROP TABLE IF EXISTS inserted_shots;
+
+  CREATE TEMP TABLE inserted_shots ON COMMIT DROP AS
   WITH china_shots_data AS (
     SELECT *
     FROM (VALUES
@@ -141,25 +146,29 @@ BEGIN
     SELECT * FROM china_shots_data
     UNION ALL
     SELECT * FROM france_shots_data
-  ),
-  inserted_shots AS (
-    INSERT INTO public.shots (
-      matchid, playerid, "from", "to", result, time,
-      "assistPrimary", "assistSecondary", fastbreak, breakthrough, "mistakePlayer"
-    )
-    SELECT
-      v_match_id, playerid, "from", "to", result, time,
-      "assistPrimary", "assistSecondary", fastbreak, breakthrough, "mistakePlayer"
-    FROM shots_data
-    ORDER BY time
-    RETURNING id, matchid, playerid, result, time
   )
+  INSERT INTO public.shots (
+    matchid, playerid, "from", "to", result, time,
+    "assistPrimary", "assistSecondary", fastbreak, breakthrough, "mistakePlayer"
+  )
+  SELECT
+    v_match_id, playerid, "from", "to", result, time,
+    "assistPrimary", "assistSecondary", fastbreak, breakthrough, "mistakePlayer"
+  FROM shots_data
+  ORDER BY time
+  RETURNING id, matchid, playerid, result, time;
+
   -- Persist shot outcomes into match_event as well.
   -- Keep GK outcomes explicit so gkmiss/gksave are always present in the event timeline.
   INSERT INTO public.match_event (matchid, event, time, playerid, metadata)
   SELECT matchid, result, time, playerid, id::text
   FROM inserted_shots
-  WHERE result IN ('goal', 'miss', 'block', 'goal_empty', 'gksave', 'gkmiss', 'gkmiss_empty');
+  WHERE result IN ('goal', 'miss', 'block', 'goal_empty');
+
+  INSERT INTO public.match_event (matchid, event, time, playerid, metadata)
+  SELECT matchid, result, time, playerid, id::text
+  FROM inserted_shots
+  WHERE result IN ('gksave', 'gkmiss', 'gkmiss_empty');
 
   -- Non-shot player stats, one row per stat increment.
   INSERT INTO public.match_event (matchid, event, time, playerid, metadata)
