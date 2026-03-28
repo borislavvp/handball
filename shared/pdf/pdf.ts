@@ -71,8 +71,8 @@ export async  function fetchMatchData(matchId: number) {
   const [players, playerStats, shotsRaw, events] = await Promise.all([
     $supabase.from("player").select("*").eq("teamid", teamId),
     $supabase.from("player_stats").select("*").eq("matchid", matchId),
-    $supabase.from("shots").select("*").eq("matchid", matchId),
-    $supabase.from("match_event").select("*").eq("matchid", matchId),
+    $supabase.from("shots").select("*").eq("matchid", matchId).order("time", { ascending: true }),
+    $supabase.from("match_event").select("*").eq("matchid", matchId).order("time", { ascending: true }),
   ]);
   
   return {
@@ -432,7 +432,7 @@ export function findSuperiorityAt(
     if (evSec > shotSec) break;
 
     if (ev.event === gkOutEvent) {
-      gkOutActive = ev.metadata === 'True';
+      gkOutActive = (ev.metadata ?? '').toLowerCase() === 'true';
     }
   }
 
@@ -446,11 +446,11 @@ export function findSuperiorityAt(
     if (evSec > shotSec) break;
 
     if (context === 'attack' && ev.event === 'provokeTwoMin') {
-      twoMinActive = true;
+      twoMinActive = shotSec >= evSec && shotSec <= evSec + 120;
     }
 
     if (context === 'defense' && ev.event === 'twominutes') {
-      twoMinActive = true;
+      twoMinActive = shotSec >= evSec && shotSec <= evSec + 120;
     }
   }
 
@@ -692,7 +692,7 @@ export function buildDefenseByTypeStats(
   if (events) {
     for (const ev of events) {
       if (!ev.event) continue;
-      if (ev.event === 'opponent_defense_change') {
+      if (ev.event === 'defense_change') {
         defenseTypes.add(ev.metadata!);
       }
     }
@@ -720,7 +720,7 @@ export function buildDefenseByTypeStats(
   const defenseShots = shots.filter(s => s.result === 'gkmiss' || s.result === 'gksave');
   
   for (const shot of defenseShots) {
-    const defenseType = findDefenseAt(shot.time, events, true);
+    const defenseType = findDefenseAt(shot.time, events, false);
     const bucket = defenseByType.get(defenseType) || defenseByType.get("6-0")!;
     
     const saved = shot.result === 'gksave';
@@ -754,7 +754,7 @@ export function buildDefenseByTypeStats(
     events.forEach(event => {
       if (!event.event) return;
       
-      const defenseType = findDefenseAt(event.time, events, true);
+      const defenseType = findDefenseAt(event.time, events, false);
       const bucket = defenseByType.get(defenseType) || defenseByType.get("6-0")!;
       
       switch (event.event) {
