@@ -159,12 +159,7 @@ BEGIN
   INSERT INTO public.match_event (matchid, event, time, playerid, metadata)
   SELECT matchid, result, time, playerid, id::text
   FROM inserted_shots
-  WHERE result IN ('goal', 'miss', 'block', 'goal_empty');
-
-  INSERT INTO public.match_event (matchid, event, time, playerid, metadata)
-  SELECT matchid, result, time, playerid, id::text
-  FROM inserted_shots
-  WHERE result IN ('gksave', 'gkmiss', 'gkmiss_empty');
+  WHERE result IN ('goal', 'miss', 'block', 'goal_empty', 'gksave', 'gkmiss', 'gkmiss_empty');
 
   -- Non-shot player stats, one row per stat increment.
   INSERT INTO public.match_event (matchid, event, time, playerid, metadata)
