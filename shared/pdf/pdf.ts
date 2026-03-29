@@ -480,10 +480,14 @@ export function findSuperiorityAt(
 export type SuperiortyResult = { attacks:number, eff:number, scored: number, missed: number, reactions: {fb:number, ld: number, total: number}};
 
 export const findNextShotAfter = (shots: Shot[], shot:Shot) => {
+  const currentIndex = shots.indexOf(shot);
+  if (currentIndex >= 0 && currentIndex + 1 < shots.length) {
+    return shots[currentIndex + 1]!;
+  }
+
   let nextShot = null;
   const shotSeconds = parseTimeToSeconds(shot.time);
-  for(let i = 0; i < shots.length; i++){
-    const s = shots[i];
+  for (const s of shots) {
     if(parseTimeToSeconds(s!.time) > shotSeconds){
       nextShot = s;
       break;
@@ -520,12 +524,12 @@ export function buildAttackDefenseSuperiorityStats(
       reactions: {fb:0, ld:0, total:0}
     });
   }
-  const attackShots = shots.filter(s => s.result === 'goal' || s.result === 'miss');
+  const attackShots = shots.filter(s => s.result === 'goal' || s.result === 'goal_empty' || s.result === 'miss');
   for (const shot of attackShots) {
     const attackType = findSuperiorityAt(shot.time, events, 'attack');
     const bucket = attackSuperiority.get(attackType)!;
     bucket.attacks++;
-    if(shot.result === 'goal'){ 
+    if(shot.result === 'goal' || shot.result === 'goal_empty'){ 
       bucket.scored++;
     }else{
       bucket.missed++;
@@ -542,12 +546,12 @@ export function buildAttackDefenseSuperiorityStats(
       }
     } 
   }
-  const defenseShots = shots.filter(s => s.result === 'gksave' || s.result === 'gkmiss');
+  const defenseShots = shots.filter(s => s.result === 'gksave' || s.result === 'gkmiss' || s.result === 'gkmiss_empty');
   for (const shot of defenseShots) {
     const defenseType = findSuperiorityAt(shot.time, events, 'defense');
     const bucket = defenseSuperiority.get(defenseType)!;
     bucket.attacks++;
-    if(shot.result === 'gkmiss'){ 
+    if(shot.result === 'gkmiss' || shot.result === 'gkmiss_empty'){ 
       bucket.scored++;
     }else{
       bucket.missed++;
@@ -634,14 +638,14 @@ export function buildAttackByDefenseStats(
   }
   
   // Process shots for attack by defense
-  const attackShots = shots.filter(s => s.result === 'goal' || s.result === 'miss');
+  const attackShots = shots.filter(s => s.result === 'goal' || s.result === 'goal_empty' || s.result === 'miss');
   
   for (const shot of attackShots) {
     const defenseType = findDefenseAt(shot.time, events, true);
     const bucket = attackByOppDefense.get(defenseType) || attackByOppDefense.get("6-0")!;
     
     bucket.shots.total++;
-    const scored = shot.result === 'goal';
+    const scored = shot.result === 'goal' || shot.result === 'goal_empty';
     if (scored) bucket.shots.scored++;
     
     const area = labelShootingArea(shot.from);
@@ -727,7 +731,7 @@ export function buildDefenseByTypeStats(
   }
   
   // Process shots for defense by type
-  const defenseShots = shots.filter(s => s.result === 'gkmiss' || s.result === 'gksave');
+  const defenseShots = shots.filter(s => s.result === 'gkmiss' || s.result === 'gkmiss_empty' || s.result === 'gksave');
   
   for (const shot of defenseShots) {
     const defenseType = findDefenseAt(shot.time, events, false);
