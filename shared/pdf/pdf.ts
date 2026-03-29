@@ -537,11 +537,11 @@ export function buildAttackDefenseSuperiorityStats(
     bucket.eff = Math.round((bucket.scored / bucket.attacks) * 1000) /10;
     const nextShot = findNextShotAfter(shots, shot);
     if(nextShot && (nextShot.result === 'gkmiss' || nextShot.result === 'gkmiss_empty')){
-      if(nextShot.fastbreak){
-        bucket.reactions.fb++;
-        bucket.reactions.total++;
-      }else if(nextShot.result === 'gkmiss_empty'){
+      if(nextShot.result === 'gkmiss_empty'){
         bucket.reactions.ld++;
+        bucket.reactions.total++;
+      }else if(nextShot.fastbreak){
+        bucket.reactions.fb++;
         bucket.reactions.total++;
       }
     } 
@@ -559,11 +559,11 @@ export function buildAttackDefenseSuperiorityStats(
     bucket.eff = Math.round((bucket.scored / bucket.attacks) * 1000) /10;
     const nextShot = findNextShotAfter(shots, shot);
     if(nextShot && (nextShot.result === 'goal' || nextShot.result === 'goal_empty')){
-      if(nextShot.fastbreak){
-        bucket.reactions.fb++;
-        bucket.reactions.total++;
-      }else if(nextShot.result === 'goal_empty'){
+      if(nextShot.result === 'goal_empty'){
         bucket.reactions.ld++;
+        bucket.reactions.total++;
+      }else if(nextShot.fastbreak){
+        bucket.reactions.fb++;
         bucket.reactions.total++;
       }
     } 
