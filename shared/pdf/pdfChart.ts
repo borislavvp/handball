@@ -33,7 +33,8 @@ export function calculateScoreProgression(events: MatchEvents): ScoreAtMinute[] 
 
   // Update scores sequentially
   scoreEvents.forEach(ev => {
-    const minute = Math.min(60, Math.floor(ev.time / 60));
+    // Keep minute 0 as kickoff baseline (0-0) unless a goal is exactly at 00:00
+    const minute = Math.min(60, Math.ceil(ev.time / 60));
     if (ev.team === "home") homeScore++;
     else awayScore++;
 
