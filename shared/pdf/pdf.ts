@@ -496,6 +496,32 @@ export const findNextShotAfter = (shots: Shot[], shot:Shot) => {
   return nextShot;
 };
 
+const findNextShotAfterByResults = (
+  shots: Shot[],
+  shot: Shot,
+  acceptedResults: Set<Shot["result"]>
+) => {
+  const currentIndex = shots.indexOf(shot);
+  if (currentIndex >= 0) {
+    for (let i = currentIndex + 1; i < shots.length; i++) {
+      const next = shots[i]!;
+      if (acceptedResults.has(next.result)) {
+        return next;
+      }
+    }
+    return null;
+  }
+
+  const shotSeconds = parseTimeToSeconds(shot.time);
+  for (const s of shots) {
+    if (parseTimeToSeconds(s.time) > shotSeconds && acceptedResults.has(s.result)) {
+      return s;
+    }
+  }
+
+  return null;
+};
+
 export function buildAttackDefenseSuperiorityStats(
   shots: Shot[],
   events: MatchEvents
@@ -535,8 +561,12 @@ export function buildAttackDefenseSuperiorityStats(
       bucket.missed++;
     }
     bucket.eff = Math.round((bucket.scored / bucket.attacks) * 1000) /10;
-    const nextShot = findNextShotAfter(shots, shot);
-    if(nextShot && (nextShot.result === 'gkmiss' || nextShot.result === 'gkmiss_empty')){
+    const nextShot = findNextShotAfterByResults(
+      shots,
+      shot,
+      new Set<Shot["result"]>(['gkmiss', 'gkmiss_empty'])
+    );
+    if(nextShot){
       if(nextShot.result === 'gkmiss_empty'){
         bucket.reactions.ld++;
         bucket.reactions.total++;
@@ -557,8 +587,12 @@ export function buildAttackDefenseSuperiorityStats(
       bucket.missed++;
     }
     bucket.eff = Math.round((bucket.scored / bucket.attacks) * 1000) /10;
-    const nextShot = findNextShotAfter(shots, shot);
-    if(nextShot && (nextShot.result === 'goal' || nextShot.result === 'goal_empty')){
+    const nextShot = findNextShotAfterByResults(
+      shots,
+      shot,
+      new Set<Shot["result"]>(['goal', 'goal_empty'])
+    );
+    if(nextShot){
       if(nextShot.result === 'goal_empty'){
         bucket.reactions.ld++;
         bucket.reactions.total++;
