@@ -28,6 +28,7 @@ export const useSelection = () => {
     };
 
     const clearSelection = () => {
+        player.value = null;
         primaryAssist.value = null;
         secondaryAssist.value = null;
         mistakePlayer.value = null;

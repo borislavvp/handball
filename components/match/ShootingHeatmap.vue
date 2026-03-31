@@ -42,7 +42,7 @@ const title = computed(() =>
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="space-y-3 w-full max-w-[660px]">
     <!-- Title -->
     <div class="flex items-center justify-between">
       <h3 class="text-sm font-semibold text-gray-700">

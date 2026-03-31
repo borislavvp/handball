@@ -18,8 +18,8 @@
             <span class="mx-4 select-none text-white ">{{ team?.name }}</span>
             <div v-if="match.data.value.twoMinutesHome.length > 0" class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
                 <span>{{ match.data.value.twoMinutesHome.length  }}</span>
-                <header-two-minutes-tag v-show="value === match.data.value.twoMinutesHome[0]"
-                 v-for="value in match.data.value.twoMinutesHome" :player-id="value" />
+                <header-two-minutes-tag 
+                 v-for="value in match.data.value.twoMinutesHome" :player-id="value" side="home" />
             </div>
         </div>
         <div class="flex items-center justify-center h-full">
@@ -34,8 +34,8 @@
             <span class="mx-4 select-none text-white ">{{ match.data.value.opponent }}</span>
             <div v-if="match.data.value.twoMinutesAway.length > 0" class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white  -mb-11 items-center w-full py-1">
                 <span>{{ match.data.value.twoMinutesAway.length  }}</span>
-                <header-two-minutes-tag  v-show="value === match.data.value.twoMinutesAway[0]" 
-                v-for="value in match.data.value.twoMinutesAway":player-id="value" />
+                <header-two-minutes-tag  
+                v-for="value in match.data.value.twoMinutesAway":player-id="value" side="away"/>
             </div>
         </div>
         <span class="w-19 flex items-center justify-center h-full bg-blue-400  text-white select-none">

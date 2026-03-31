@@ -179,6 +179,7 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         return null;
     };
 
+
     return {
         matches,
         match: computed(() => getActiveMatch()),

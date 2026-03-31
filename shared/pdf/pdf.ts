@@ -345,6 +345,10 @@ export function calculateShootingTargets(
     };
     
     playerShots.forEach(shot => {
+      if (isGoalkeeper) {
+        if (shot.result !== 'gksave' && shot.result !== 'gkmiss') return;
+      }
+      
       if (!isGoalkeeper) {
         if (shot.to === ShootingTarget.OUT_LEFT) {
           grid.missed!.left++;
@@ -363,7 +367,7 @@ export function calculateShootingTargets(
       const targetIndex = shot.to - 1;
       if (targetIndex >= 0 && targetIndex < 9) {
         grid.squares[targetIndex]!.total++;
-        if (shot.result === 'goal') {
+        if ((isGoalkeeper && shot.result === 'gksave') || (!isGoalkeeper && shot.result === 'goal')) {
           grid.squares[targetIndex]!.scored++;
         }
       }
@@ -642,7 +646,7 @@ export function buildAttackByDefenseStats(
   fastBreaks: { total: number; scored: number; provoked7m: number; provoked2m: number };
 } {
   const defenseTypes = new Set<string>();
-  
+  defenseTypes.add("6-0");
   // Extract defense types from events
   if (events) {
     for (const ev of events) {
@@ -652,8 +656,6 @@ export function buildAttackByDefenseStats(
       }
     }
   }
-  
-  if (defenseTypes.size === 0) defenseTypes.add("6-0");
   
   // Initialize maps
   const attackByOppDefense = new Map<string, DefenseBucket>();
@@ -677,7 +679,9 @@ export function buildAttackByDefenseStats(
   for (const shot of attackShots) {
     const defenseType = findDefenseAt(shot.time, events, true);
     const bucket = attackByOppDefense.get(defenseType) || attackByOppDefense.get("6-0")!;
-    
+    console.log(attackByOppDefense)
+    console.log(defenseType)
+    console.log(bucket)
     bucket.shots.total++;
     const scored = shot.result === 'goal' || shot.result === 'goal_empty';
     if (scored) bucket.shots.scored++;

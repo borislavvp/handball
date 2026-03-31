@@ -202,6 +202,18 @@ watch(() => match.value?.data.value.id, () => {
   store.selection.resetAll();
 });
 
+watch(() => match.value?.data.value.result, () => {
+   if(match.value && (match.value.data.value.result)){
+    $dialog.alert({
+      title: 'Match Ended',
+      message: 'This match has already ended. Please go back to matches overview.',
+      okText: 'View Analysis',
+    }).then(() => {
+      useRouter().push(`/matches/${match.value?.data.value.id}`);
+    });
+  }
+});
+
 // const toggleGameMode = () => {
 //   if(store.selection.gameMode.value === 'stats'){
 //     store.selection.changeGameMode('attack');

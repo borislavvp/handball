@@ -8,7 +8,8 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps<{
-    playerId:number
+    playerId:number;
+    side:"away" | "home"
 }>()
 const emit = defineEmits<{
     (e:'twoMinOver',playerId:number): void
@@ -35,9 +36,7 @@ onMounted(() => {
       timeLeft.value--
     } else {
       clearInterval(interval)
-      store.matches.match.value?.data.value?.twoMinutesHome.splice(
-        store.matches.match.value?.data.value.twoMinutesHome.indexOf(props.playerId), 1
-      )
+      store.matches.match.value?.removeTwoMinute(props.playerId,props.side);
     }
   }, 1000)
 })

@@ -8,7 +8,6 @@
       :cells="stats.totalGoalkeeperGrid"
       goalkeeper
     />
-    {{ stats.totalGoalkeeperGrid }}
   </div>
 </template>
 

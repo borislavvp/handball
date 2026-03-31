@@ -221,6 +221,29 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
                 metadata: match.value.emptyGoalAway
             })
         }
+        saveMatchToLocalStorage(match.value)
+    }
+
+    const addTwoMinute = (playerId:number, side: "away" | "home") => {
+        if(side === "away"){
+            const index = match.value.twoMinutesAway.length > 0 ? match.value.twoMinutesAway[match.value.twoMinutesAway.length - 1]! + 1 : 1;
+            match.value.twoMinutesAway.push(index);
+        }else{
+            match.value.twoMinutesHome.push(playerId);
+        }
+        saveMatchToLocalStorage(match.value)
+    }
+    const removeTwoMinute = (playerId:number, side: "away" | "home") => {
+      if(side == "home"){
+        match.value?.twoMinutesHome.splice(
+          match.value.twoMinutesHome.indexOf(playerId), 1
+        )
+      }else{
+        match.value?.twoMinutesAway.splice(
+          match.value.twoMinutesAway.indexOf(playerId), 1
+        )
+      }
+        saveMatchToLocalStorage(match.value)        
     }
 
     const dispose = () => {
@@ -241,6 +264,8 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
         changeDefenseSystem,
         changeOpponentDefenseSystem,
         toggleEmptyGoal,
+        addTwoMinute, 
+        removeTwoMinute,
         dispose
     }
 }
