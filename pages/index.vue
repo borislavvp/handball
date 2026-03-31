@@ -7,12 +7,11 @@ import MatchesPanel from '~/components/layout/MatchesPanel.vue'
 
 const store = useHandballStore()
 
-onMounted(async () => {
-  if (!store.teams.selectedTeam.value) {
-    await store.initialize()
-  }
-  store.matches.fetchMatches()
-})
+// onMounted(async () => {
+//   if (!store.teams.selectedTeam.value) {
+//     await store.initialize()
+//   }
+// })
 </script>
 
 <template>

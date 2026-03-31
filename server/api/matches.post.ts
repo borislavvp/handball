@@ -1,35 +1,33 @@
 import type { CreateMatchBody } from '~/types/dto'
 import { supabase } from '../utils/databaseClient'
 
-export default defineEventHandler(async (event): Promise<number> => {
+export default defineEventHandler(async (event): Promise<{id:number, createdat: string }> => {
   try {
+    const body = await readBody<CreateMatchBody>(event)
 
-  const body = await readBody<CreateMatchBody>(event)
-
-  if (!body?.opponent || !body?.teamId) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Player opponent and teamId are required'
-    })
-  }
-  const { data, error } = await supabase
-    .from('match')
-    .insert({
-      opponent:body.opponent,
-      teamid: body.teamId,
-      opponentScore: 0,
-      score: 0,
-      timeoutsLeftHome: 3,
-      timeoutsLeftAway: 3,
-    })
-    .select()
-    .single()
-  if (error || !data) {
+    if (!body?.opponent || !body?.teamId) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Player opponent and teamId are required'
+      })
+    }
+    const { data, error } = await supabase
+      .from('match')
+      .insert({
+        opponent:body.opponent,
+        teamid: body.teamId,
+        opponentScore: 0,
+        score: 0,
+        timeoutsLeftHome: 3,
+        timeoutsLeftAway: 3,
+      })
+      .select()
+      .single()
+    if (error || !data) {
+      throw createError({ statusCode: 400, statusMessage: error.message } )
+    }
+    return {id: data!.id, createdat: data!.createdat }
+  }catch (error: any) {
     throw createError({ statusCode: 400, statusMessage: error.message } )
   }
-  return data!.id
-}catch (error: any) {
-  throw createError({ statusCode: 400, statusMessage: error.message } )
-}
-
 })

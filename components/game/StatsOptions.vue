@@ -26,8 +26,8 @@
             :class="store.selection.stats.value.general ? 'bg-yellow-300 shadow-inner text-gray-900' : 'text-gray-900 bg-white border border-gray-300 shadow-lg'">
             %</span>
             <div v-if="provokesOpenned" class="absolute flex flex-wrap gap-5 bg-white text-white font-semibold rounded p-4 -mt-1 -ml-2">
-                <button @click="increasePlayerStats('provokeTwoMin')" class="bg-emerald-700 p-1 rounded-full px-2 shadow-lg border border-emerald-900">2 MIN</button>
-                <button @click="setPlayerProvokeTwoMinutes('provokePenalty')" class="bg-emerald-700 p-1 rounded-full px-2 shadow-lg border border-emerald-900">Penalty</button>
+                <button @click="setPlayerProvokeTwoMinutes('provokeTwoMin')" class="bg-emerald-700 p-1 rounded-full px-2 shadow-lg border border-emerald-900">2 MIN</button>
+                <button @click="increasePlayerStats('provokePenalty')" class="bg-emerald-700 p-1 rounded-full px-2 shadow-lg border border-emerald-900">Penalty</button>
                 <button @click="increasePlayerStats('provokeCard')" class="bg-emerald-700 p-1 rounded-full px-2 shadow-lg border border-emerald-900 flex items-center space-x-4">
                     YELLOW <span class="ml-2 h-6 w-4 bg-yellow-400" />
                 </button>
@@ -107,7 +107,7 @@ const suspensionStatStyle = "flex items-center rounded p-4 bg-gray-200 font-semi
 const oneOnOneWin = ref(false)
 const oneOnOneLost = ref(false)
 const fastBreak = ref(false)
-
+const activeMatch = computed(() => store.matches.match.value!)
 const { $dialog } = useNuxtApp();
 
 const provokesOpenned = ref(false)
@@ -124,6 +124,10 @@ const toggleProvokes = () => {
 
 const increasePlayerStats = (stat:Stats,player:Player = props.player!) => {
     store.players.increasePlayerStat(player, stat);
+    store.selection.clearSelection();
+    if(provokesOpenned.value){
+        provokesOpenned.value = false
+    }
 }
 
 const addShotToPlayer = (result: ShootingResult,) => {
@@ -151,18 +155,23 @@ const addShotToPlayer = (result: ShootingResult,) => {
     if(oneOnOneLost.value){
         increasePlayerStats('1on1lost',store.selection.mistakePlayer.value!)
     }
+    if(result === 'gkmiss'){
+        activeMatch.value.increaseMatchScore("away")
+    } else if(result === 'goal'){
+        activeMatch.value.increaseMatchScore("home")
+    }
     store.players.addShotToPlayer(props.player, {
         from: shootingArea,
         to: shootingTarget,
         result: result,
-        time: store.matches.currentMatch.value!.time,
+        time: activeMatch.value.data.value.time,
         playerid: props.player.id,
         fastbreak: fastBreak.value,
         breakthrough: props.goalkeeperSelected ? oneOnOneLost.value : oneOnOneWin.value,
         assistPrimary: store.selection.primaryAssist.value?.id || null,
         assistSecondary: store.selection.secondaryAssist.value?.id || null,
         mistakePlayer: store.selection.mistakePlayer.value?.id || null,
-        matchid: store.matches.currentMatch.value!.id,
+        matchid: activeMatch.value.data.value!.id,
     });
 
     oneOnOneWin.value = false;
@@ -179,14 +188,15 @@ const updateOneOnOneLost = (val:boolean) => {
 
 const setPlayerProvokeTwoMinutes = (stat: Stats) => {
     increasePlayerStats(stat)
-    const index = store.matches.currentMatch.value!.twoMinutesAway.length > 0 ? 
-    store.matches.currentMatch.value!.twoMinutesAway[store.matches.currentMatch.value!.twoMinutesAway.length - 1]! + 1 : 1; 
-
-    store.matches.currentMatch.value?.twoMinutesAway.push(index)
+    store.matches.match.value?.addTwoMinute(props.player!.id, "away");
+    if(provokesOpenned.value){
+        provokesOpenned.value = false
+    }
 }
 const setPlayerTwoMinutes = () => {
     increasePlayerStats('twominutes')
-    store.matches.currentMatch.value?.twoMinutesHome.push(props.player!.id)
+    store.matches.match.value?.addTwoMinute(props.player!.id, "home");
+    store.selection.clearSelection();
 }
 
 </script>

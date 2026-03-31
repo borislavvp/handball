@@ -8,7 +8,8 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps<{
-    playerId:number
+    playerId:number;
+    side:"away" | "home"
 }>()
 const emit = defineEmits<{
     (e:'twoMinOver',playerId:number): void
@@ -27,7 +28,7 @@ const formattedTime = computed(() => {
 
 onMounted(() => {
   interval = setInterval(() => {
-    if(store.matches.currentMatch.value?.playing === false){
+    if(store.matches.match.value?.data.value?.playing === false){
       return;
     }
     
@@ -35,9 +36,7 @@ onMounted(() => {
       timeLeft.value--
     } else {
       clearInterval(interval)
-      store.matches.currentMatch.value?.twoMinutesHome.splice(
-        store.matches.currentMatch.value.twoMinutesHome.indexOf(props.playerId), 1
-      )
+      store.matches.match.value?.removeTwoMinute(props.playerId,props.side);
     }
   }, 1000)
 })

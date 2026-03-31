@@ -4,7 +4,7 @@
       <span>
         #{{ keeper.number }} {{ keeper.name }}
       </span>
-      <span class="text-2xl">{{ keeper.efficiency }}%</span>
+      <span class="text-2xl">Eff. {{ keeper.efficiency }}%</span>
         <span 
           class="flex size-10 rounded-full text-lg  font-semibold items-center justify-center"
           :class="[
@@ -24,7 +24,7 @@
       <GKStat label="7m" :data="keeper.by7m" />
       <GKStat label="FB" :data="keeper.fastbreak" />
     </div>
-    <div>
+    <div class="mt-2 grid grid-cols-3 gap-2 text-xs text-center">
         <StatBadge v-if="keeper.assistsPrimary" class="bg-emerald-600 text-white"  label="1 Ast" :value="keeper.assistsPrimary" />
         <StatBadge v-if="keeper.assistsSecondary" class="bg-emerald-600 text-white"  label="2 Ast" :value="keeper.assistsSecondary" />
         <StatBadge v-if="keeper.lostball" class="bg-red-800 text-white"  label="2 Ast" :value="keeper.lostball" />
@@ -35,12 +35,11 @@
 <script setup lang="ts">
 import type { MatchStats } from '~/shared/pdf/fetchMatchStats';
 import GKStat from './GKStat.vue'
-
+import StatBadge from './StatusBadge.vue'
 
 const props = defineProps<{
   keeper: MatchStats['goalkeepers'][number]
 }>()
-
 
 </script>
 

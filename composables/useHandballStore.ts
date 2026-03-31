@@ -9,10 +9,9 @@ export function createHandballStore() {
   const loadingState = useLoading();
   const teams = useTeam(loadingState);
   const matches = useMatch(loadingState, teams.selectedTeam);
-  const players = usePlayer(loadingState, teams.selectedTeam, matches.currentMatch);
+  const players = usePlayer(loadingState, teams.selectedTeam, matches.match);
   const selection = useSelection();
-  const stats = useStats(selection, teams.selectedTeam, matches.currentMatch);
-  
+  const stats = useStats(selection, teams.selectedTeam);
   const initialize = async () => {
     loadingState.loading.value = true;
     await teams.fetchTeams();
@@ -21,7 +20,8 @@ export function createHandballStore() {
   }
 
   return {
-    loading: computed(() => loadingState.fetching.value),
+    loadingState,
+    loading: computed(() => loadingState.loading.value),
     fetching: computed(() => loadingState.fetching.value),
     teams,
     matches,

@@ -12,11 +12,11 @@ function format(stat: { total: number; scored: number }) {
 </script>
 
 <template>
-  <div class="overflow-x-auto">
+  <div class="m-4 rounded-xl shadow">
     <table class="w-full text-sm border-collapse">
       <thead>
-        <tr class="border-b text-left">
-          <th class="py-2 pr-4">Defense</th>
+        <tr class="border-b text-lg text-left">
+          <th class="py-2 pl-4">Defense</th>
           <th>9m</th>
           <th>6m</th>
           <th>Wing</th>
@@ -31,9 +31,9 @@ function format(stat: { total: number; scored: number }) {
         <tr
           v-for="[label, bucket] in data"
           :key="label"
-          class="border-b last:border-0"
+          class="border-b last:border-0 text-lg"
         >
-          <td class="py-2 pr-4 font-medium">{{ label }}</td>
+          <td class="py-2 pl-4 font-medium">{{ label }}</td>
 
           <td>{{ format(bucket.by9m) }}</td>
           <td>{{ format(bucket.by6m) }}</td>

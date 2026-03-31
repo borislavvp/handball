@@ -65,9 +65,7 @@ const confirm = () => {
 const cancel = () => {
   if (!state.value) return
 
-  state.value.resolve?.(
-    state.value.type === 'confirm' ? false : null
-  )
+  state.value.reject?.()
 
   nuxtApp.$dialog.close()
 }

@@ -136,7 +136,7 @@ function getShootingAreaInfo (target: ShootingArea){
       
       return {text:`${positive}/${shots?.length ?? 0}`, color}
     }else{
-      const shots = store.matches.currentMatch.value?.shots
+      const shots = store.matches.match.value?.data.value?.shots
       .filter(s => s.from === target && s.result !== 'gkmiss' && s.result !== 'gksave')
       .filter(s => props.selectedShootingTarget ? s.to === props.selectedShootingTarget : true);
       const positive = shots?.filter(s => s.result === "goal").length ?? 0;

@@ -1,64 +1,71 @@
-<template>
-  <div class="space-y-4">
-    <div
-      v-for="[label, result] in data"
-      :key="label"
-      class="border rounded-lg p-4"
-    >
-      <div class="flex justify-between items-center mb-3">
-        <h3 class="font-semibold">{{ label }}</h3>
-        <span class="text-sm text-gray-500">
-          {{ result.attacks }} attacks · {{ result.eff }}%
-        </span>
-      </div>
-
-      <div class="grid grid-cols-3 gap-4 text-sm">
-        
-        <div>
-          <div class="text-gray-500 text-xs">Goals</div>
-          <div class="font-semibold">{{ result.scored }}/{{ result.scored + result.missed }}</div>
-        </div>
-        <div>
-          <div class="text-gray-500 text-xs">Missed</div>
-          <div class="font-semibold">{{ result.missed }}</div>
-        </div>
-        <div>
-          <div class="text-gray-500 text-xs">Efficiency</div>
-          <div class="font-semibold">{{ result.eff }}%</div>
-        </div>
-
-      </div>
-
-      <!-- REACTIONS -->
-      <div class="mt-4 bg-gray-50 rounded-md p-3">
-        <div class="text-xs uppercase text-gray-500 mb-2">
-          Attack reactions
-        </div>
-
-        <div class="grid grid-cols-3 gap-3 text-sm">
-          <div class="bg-white rounded p-2 text-center shadow-sm">
-            <div class="text-xs text-gray-500">Fastbreak</div>
-            <div class="font-semibold">{{ result.reactions.fb }}</div>
-          </div>
-          <div class="bg-white rounded p-2 text-center shadow-sm">
-            <div class="text-xs text-gray-500">Late defense</div>
-            <div class="font-semibold">{{ result.reactions.ld }}</div>
-          </div>
-          <div class="bg-white rounded p-2 text-center shadow-sm">
-            <div class="text-xs text-gray-500">Total</div>
-            <div class="font-semibold">{{ result.reactions.total }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import type { SuperiortyResult } from '~/shared/pdf/pdf';
+import type { SuperiortyResult } from '~/shared/pdf/pdf'
 
 defineProps<{
   data: Map<string, SuperiortyResult>
 }>()
+
+function goals(r: SuperiortyResult) {
+  return `${r.scored}/${r.scored + r.missed}`
+}
 </script>
 
+<template>
+  <div class="m-4 rounded-xl shadow">
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr class="text-right ">
+          <th></th>
+          <th></th>
+          <th class="text-lg">Shots</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th class="text-lg">Reactions</th>
+        </tr>
+        <tr class="border-b text-left text-lg">
+          <th class="py-2 pl-4">Situation</th>
+          <th>Goals</th>
+          <th>Missed</th>
+          <th>Attacks %</th>
+          <th>Efficiency %</th>
+          <th class="text-center">FB</th>
+          <th class="text-center">Late D</th>
+          <th class="text-center">Total</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr
+          v-for="[label, result] in data"
+          :key="label"
+          class="border-b last:border-0 text-lg"
+        >
+          <!-- Label -->
+          <td class="py-2 pl-4 font-medium">
+            {{ label }}
+          </td>
+
+          <!-- Core stats -->
+          <td>{{ goals(result) }}</td>
+          <td>{{ result.missed }}</td>
+          <td>{{ result.attacks }}%</td>
+          <td class="font-semibold">{{ result.eff }}%</td>
+
+          <!-- Reactions -->
+          <td class="text-center">
+            {{ result.reactions.fb }}
+          </td>
+
+          <td class="text-center">
+            {{ result.reactions.ld }}
+          </td>
+
+          <td class="text-center font-semibold">
+            {{ result.reactions.total }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>

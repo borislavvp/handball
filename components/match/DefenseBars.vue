@@ -1,10 +1,10 @@
 
 <template>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm border-collapse">
+  <div class="m-4 rounded-xl shadow">
+    <table class="w-full text-lg border-collapse">
       <thead>
         <tr class="border-b text-left">
-          <th class="py-2 pr-4">Defense</th>
+          <th class="py-2 pl-4">Defense</th>
           <th>9m</th>
           <th>6m</th>
           <th>Wing</th>
@@ -21,7 +21,7 @@
           :key="label"
           class="border-b last:border-0"
         >
-          <td class="py-2 pr-4 font-medium">{{ label }}</td>
+          <td class="py-2 pl-4 font-medium">{{ label }}</td>
 
           <td>{{ format(bucket.by9m) }}</td>
           <td>{{ format(bucket.by6m) }}</td>

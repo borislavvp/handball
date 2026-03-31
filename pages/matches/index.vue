@@ -20,9 +20,9 @@
               <span class="text-md font-semibold uppercase text-gray-900 rounded-full border border-gray-900 px-2 py-1">{{ m.opponent }}</span>
             </div>
             <p 
-              v-if="store.matches.currentMatch.value?.id === m.id"
+              v-if="store.matches.activeMatches.has(m.id)"
               class="text-md w-35 text-center text-blue-500 border-2 select-none border-blue-500 font-semibold shadow-inner rounded-full px-2 py-1">
-              {{store.matches.currentMatch.value?.time }}
+              {{store.matches.activeMatches.get(m.id)?.data.value.time }}
             </p>
             <span v-else class="text-md italic text-gray-600">{{ formatDate(m.createdat) }}</span>
             <dropdown-menu>
@@ -46,7 +46,7 @@
 
               <dropdown-item
                 action-id="delete-item-42"
-                :on-action="() => store.matches.deleteMatch(m.id!)"
+                :on-action="() => store.matches.deleteMatch(m)"
                 class="text-red-700"
               >
                 Delete
@@ -83,8 +83,6 @@ onMounted(async () => {
   if(!store.teams.selectedTeam.value){
     await store.initialize();
   }
-
-  store.matches.fetchMatches();
 })
 
 const options = { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" };
@@ -100,7 +98,7 @@ const formatDate = (iso?: string) => {
 }
 
 const seeMatch = (match: Match) => {
-  if(store.matches.currentMatch.value?.id === match.id){
+  if(store.matches.match.value?.data.value?.id === match.id){
     router.push({path:`/matches/active`})
   }else{
     router.push({path:`/matches/${match.id}`})

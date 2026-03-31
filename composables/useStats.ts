@@ -1,12 +1,9 @@
-import type { CreatePlayerBody } from "~/types/dto";
-import type { CurrentMatch, Player, PlayerCurrentStats, PlayerStats, Position, Shot, Stats, Team } from "~/types/handball";
-import type { LoadingState } from "./useLoading";
+import type { Player, PlayerCurrentStats, PlayerStats, Position, Shot, Stats, Team } from "~/types/handball";
 import type { GameSelection } from "./useSelection";
 
 export const useStats = (
     selection: GameSelection,
-    team: ComputedRef<Team | undefined>,
-    currentMatch:Ref<CurrentMatch | null>) => {
+    team: ComputedRef<Team | undefined>) => {
     
 
     const attackValue = computed(() => {

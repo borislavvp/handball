@@ -1,52 +1,113 @@
-import type { CurrentMatch, DefenseSystem, Match, MATCH_EVENTS, Team } from "~/types/handball";
+import type { ActiveMatchData, Match, Team } from "~/types/handball";
 import type { LoadingState } from "./useLoading";
 import { computePlayerValue } from "./usePlayer";
+import { useActiveMatch, type ActiveMatch } from "./useActiveMatch";
+import { useSelection } from "./useSelection";
 
-export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | undefined>,  ) => {
-
+export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | undefined>) => {
     const matches = useState<Match[]>('matches', () => []);
-    const currentMatch = ref<CurrentMatch | null>(null);
+    const currentActiveMatch = useState<number | null>('currentActiveMatch', () => null);
+    const activeMatches = shallowReactive(new Map()) as Map<number, ActiveMatch>;
 
-    // Initialize total seconds
-    const totalSeconds = useState<number>('totalSeconds', () => 0);
-
-    // Start timer
-    const timer = ref(null as ReturnType<typeof setInterval> | null);
-    
     function getMatch(id:number){
-        return matches.value.find(m => m.id === id)
+        return matches.value.find(m => m.id === id);
     }
 
-    async function deleteMatch(id:number){
+
+    function mapPersistedStats(stat: any) {
+        return {
+            "1on1lost": stat["1on1lost"] ?? 0,
+            "1on1win": stat["1on1win"] ?? 0,
+            goal: stat.goal ?? 0,
+            gkmiss_empty: stat.gkmiss_empty ?? 0,
+            goal_empty: stat.goal_empty ?? 0,
+            defense: stat.defense ?? 0,
+            assistprimary: stat.assistprimary ?? 0,
+            assistsecondary: stat.assistsecondary ?? 0,
+            defensex2: stat.defensex2 ?? 0,
+            steal: stat.steal ?? 0,
+            twominutes: stat.twominutes ?? 0,
+            yellowcard: stat.yellowcard ?? 0,
+            redcard: stat.redcard ?? 0,
+            bluecard: stat.bluecard ?? 0,
+            penaltymade: stat.penaltymade ?? 0,
+            penaltyscored: stat.penaltyscored ?? 0,
+            miss: stat.miss ?? 0,
+            safe: stat.safe ?? 0,
+            lostball: stat.lostball ?? 0,
+            gkmiss: stat.gkmiss ?? 0,
+            gksave: stat.gksave ?? 0,
+            provokePenalty: stat.provokePenalty ?? 0,
+            provokeTwoMin: stat.provokeTwoMin ?? 0,
+            provokeCard: stat.provokeCard ?? 0,
+            block: stat.block ?? 0,
+            norebound: stat.norebound ?? 0,
+            value: stat.value ?? 0,
+        };
+    }
+
+    function hydratePlayerViewForMatch(matchId: number) {
+        team.value?.players.forEach((player) => {
+            if (!player.liveByMatch) {
+                player.liveByMatch = {};
+            }
+
+            const existing = player.liveByMatch[matchId];
+            if (existing) {
+                player.currentStats = existing.stats;
+                player.currentShots = existing.shots;
+                return;
+            }
+
+            const persisted = player.recentStats.find((stat) => stat.match.id === matchId);
+            if (persisted) {
+                player.liveByMatch[matchId] = {
+                    stats: mapPersistedStats(persisted),
+                    shots: persisted.match.shots.filter((shot) => shot.playerid === player.id),
+                };
+                computePlayerValue(player, player.liveByMatch[matchId]!.stats);
+                player.currentStats = player.liveByMatch[matchId]!.stats;
+                player.currentShots = player.liveByMatch[matchId]!.shots;
+            } else {
+                player.currentStats = undefined;
+                player.currentShots = [];
+            }
+        });
+    }
+
+    watch(currentActiveMatch, (matchId) => {
+        if (matchId) {
+            hydratePlayerViewForMatch(matchId);
+        }
+    });
+
+    async function deleteMatch(match:Match){
         await $fetch('/api/match/delete', {
             method: 'POST',
-            body: { matchId: id }
-        })
-        if(currentMatch.value?.id === id){
-            currentMatch.value = null;
-            stopMatchTimer();
-            totalSeconds.value = 0;
-            localStorage.removeItem('currentMatch');
+            body: { matchId: match.id },
+        });
+        const m = activeMatches.get(match.id);
+        if(m){
+            m.dispose();
+            activeMatches.delete(match.id);
         }
 
-        const index = matches.value.findIndex(m => m.id === id);
+        const index = matches.value.findIndex(m => m.id === match.id);
         if(index !== -1) {
             matches.value.splice(index, 1);
         }
-        
     }
 
     async function createMatch(opponent: string): Promise<Match | null> {
-        const matchId = await $fetch('/api/matches', {
+        const data = await $fetch('/api/matches', {
             method: 'POST',
-            body: { opponent: opponent, teamId: team.value?.id, }
+            body: { opponent: opponent, teamId: team.value?.id },
         });
-
-        const match: CurrentMatch = { 
-            id:matchId as number, 
+        const match: ActiveMatchData = {
+            id: data.id as number,
             opponent,
-            teamid:team.value!.id, 
-            createdat: Date.now().toString(), 
+            teamid: team.value!.id,
+            createdat: `${data.createdat}`,
             result: null,
             score: 0,
             opponentScore: 0,
@@ -62,267 +123,71 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             twoMinutesHome: [],
             twoMinutesAway: [],
         };
-        
-        matches.value.push(match);
-        currentMatch.value = match;
+
+        const active = useActiveMatch(match);
+        activeMatches.set(match.id, active);
+        currentActiveMatch.value = match.id;
+        hydratePlayerViewForMatch(match.id);
         return match;
-    }
-    
-
-    const startMatchTimer = () => {
-        console.log("START TIMER")
-        timer.value = setInterval(() => {
-            if (!currentMatch.value!.playing) return;
-
-            totalSeconds.value++;
-
-            // Stop at 60 minutes
-            if (totalSeconds.value >= 60 * 60) {
-                totalSeconds.value = 60 * 60;
-                clearInterval(timer.value!);
-            }
-
-            // Compute minutes and seconds
-            const minutes = Math.floor(totalSeconds.value / 60);
-            const seconds = totalSeconds.value % 60;
-            if(minutes === 30 && seconds === 0){
-                // Half-time reached
-                currentMatch.value!.playing = false;
-            }else if(minutes === 60 && seconds === 0){
-                endMatch(currentMatch.value!.score > currentMatch.value!.opponentScore ? "WIN" : "LOST")
-            }
-
-            // Format as MM:SS
-            currentMatch.value!.time = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            saveMatchToLocalStorage(currentMatch.value);
-        }, 1000);
     }
 
     async function fetchMatches() {
-        const { $supabase } = useNuxtApp()
+        const { $supabase } = useNuxtApp();
         loadingState.fetching.value = true;
-        const {data, error} = await $supabase.from('match').select("*, shots(*)").eq('teamid', team.value!.id).order('id', { ascending: true }); // ascending: false for descending
+        const {data, error} = await $supabase.from('match').select("*, shots(*)").order('id', { ascending: true });
         if (error){
             console.error("Error fetching matches:", error.message);
             loadingState.fetching.value = false;
-            return;  
+            return;
         }
+
         matches.value = data!;
-        const lastMatch = matches.value[matches.value.length -1];
-        if(lastMatch && !lastMatch.result){
-            const cached = loadMatchFromLocalStorage() as CurrentMatch;
-            currentMatch.value = {
-                ...lastMatch,
-                time: "47:00",
-                playing: false,
-                defenseSystem: "6:0",
-                opponentDefenseSystem: "6:0",
-                emptyGoalHome: false,
-                emptyGoalAway: false,
-                twoMinutesHome: [],
-                twoMinutesAway: [],
-            };
-            if(cached.id === lastMatch.id){
-                currentMatch.value = {
-                    ...currentMatch.value,  
-                    ...cached,
-                    result: lastMatch.result
+
+        matches.value.forEach((m) => {
+            if (!m.result) {
+                const active = useActiveMatch(m, true);
+                activeMatches.set(m.id, active);
+                if (!currentActiveMatch.value) {
+                    currentActiveMatch.value = m.id;
                 }
-            }else{
-                saveMatchToLocalStorage(currentMatch.value);
+                hydratePlayerViewForMatch(m.id);
             }
-            if(currentMatch.value?.result !== null){
-                currentMatch.value = null;
-            }else{
-                if(currentMatch.value?.playing){
-                    resumeMatch()
-                }
-                team.value?.players.forEach(p => {
-                    const stats = p.recentStats[p.recentStats.length -1]
-                    if (stats && stats.match.id === currentMatch.value?.id){
-                        p.currentStats = stats;
-                        computePlayerValue(p);
-                        if(stats?.goal || stats?.miss || stats?.gkmiss || stats?.gksave){
-                            p.currentShots = stats.match.shots.filter(s => s.playerid === p.id);
-                        }else{
-                            p.currentShots = []
-                        }
-                    }
-                });
-            }
+        });
+
+        if (currentActiveMatch.value) {
+            hydratePlayerViewForMatch(currentActiveMatch.value);
         }
+
         loadingState.fetching.value = false;
     }
-    
-    // Utility function to save match to localStorage
-    function saveMatchToLocalStorage(match: typeof currentMatch.value) {
-        if (!match) return;
-        const data = {
-            match,
-            lastUpdated: new Date().toISOString()
-        };
-        localStorage.setItem('currentMatch', JSON.stringify(data));
-    }
-    
-    function logMatchEvent(data: {eventType: MATCH_EVENTS, playerId?: number, metadata?: any}) {
-        $fetch('/api/match/event', {
-            method: 'POST',
-            body: { matchId: currentMatch.value?.id, eventType:data.eventType, playerId:data.playerId, metadata:data.metadata, time: currentMatch.value?.time }
-        })
-    }
 
-    const stopMatchTimer = () => {  
-        clearInterval(timer.value!);
-        totalSeconds.value = 0;
-    }
-
-    const endMatch = (result: "WIN" | "LOST") => {
-        currentMatch.value!.result = result;
-        currentMatch.value!.playing = false;
-        $fetch(`/api/match/${currentMatch.value?.id}`, {
-            method: 'PUT',
-            body: { result, score: currentMatch.value?.score, opponentScore: currentMatch.value?.opponentScore }
-        })
-        stopMatchTimer();
-        saveMatchToLocalStorage(currentMatch.value);
-        logMatchEvent({
-            eventType: 'playing',
-            metadata: false
-        })
-    }
-
-    function loadMatchFromLocalStorage() {
-        const saved = localStorage.getItem('currentMatch');
-        if (saved) {
-            const data = JSON.parse(saved);
-            const seconds = Number(data.match.time.split(":")[1]);
-            const minutes = Number(data.match.time.split(":")[0]);
-            if(minutes){
-                totalSeconds.value = seconds  + minutes * 60
-            }else{
-                totalSeconds.value = seconds
-            }
-            console.log("Last updated:", data.lastUpdated);
-            if (data.match.playing){
-                startMatchTimer()
-            }
-            return data.match;
-        }else{
-            return {
-                result: null,
-                score: 0,
-                opponentScore: 0,
-                timeoutsLeft: 3,
-                time: "00:00",
-                playing: false,
-                shots: [],
-                defenseSystem: "6:0",
-                opponentDefenseSystem: "6:0",
-                emptyGoal: false,
-            }
+    const seeActiveMatch = (match:Match) => {
+        const active = activeMatches.get(match.id);
+        if(active){
+            currentActiveMatch.value = match.id;
+            useSelection().resetAll();
+            useRouter().push(`/matches/active`);
         }
-    }
+    };
 
-    const pauseMatch = () => {
-        currentMatch.value!.playing = false;
-        saveMatchToLocalStorage(currentMatch.value);
-        logMatchEvent({
-            eventType: 'playing',
-            metadata: false
-        })
-    }
-
-    const resumeMatch = () => {
-        console.log("TIMER", timer.value)
-        console.log("RESUME MATCH", currentMatch.value!.playing)
-        if (timer.value === null) {
-            startMatchTimer();
+    const getActiveMatch = (): ActiveMatch | null => {
+        if(currentActiveMatch.value){
+            const match = activeMatches.get(currentActiveMatch.value);
+            return match || null;
         }
-        currentMatch.value!.playing = true;
-        saveMatchToLocalStorage(currentMatch.value);
-        logMatchEvent({
-            eventType: 'playing',
-            metadata: true
-        })
-    }
+        return null;
+    };
 
-    const increaseMatchScore = (team: "home" | "away") => {
-        if (team === "home") {
-            currentMatch.value!.score! += 1; 
-        } else {
-            currentMatch.value!.opponentScore! += 1;
-        }
-        saveMatchToLocalStorage(currentMatch.value);
-    }
 
-    const takeTimeout = (side: 'home' | 'away') => {
-        if (side === 'home' && currentMatch.value!.timeoutsLeftHome > 0) {
-            currentMatch.value!.timeoutsLeftHome -= 1;
-            saveMatchToLocalStorage(currentMatch.value);
-            logMatchEvent({
-                eventType: 'timeout_home',
-                metadata: currentMatch.value!.timeoutsLeftHome
-            })
-        } else if (side === 'away' && currentMatch.value!.timeoutsLeftAway > 0) {
-            currentMatch.value!.timeoutsLeftAway -= 1;
-            saveMatchToLocalStorage(currentMatch.value);
-            logMatchEvent({
-                eventType: 'timeout_away',
-                metadata: currentMatch.value!.timeoutsLeftAway
-            })
-        }
-    }
-
-    const changeDefenseSystem = (defense: DefenseSystem) => {
-        currentMatch.value!.defenseSystem = defense;
-        saveMatchToLocalStorage(currentMatch.value);
-        logMatchEvent({
-            eventType: 'defense_change',
-            metadata: defense
-        })
-    }
-    
-    const changeOpponentDefenseSystem = (defense: DefenseSystem) => {
-        currentMatch.value!.opponentDefenseSystem = defense;
-        saveMatchToLocalStorage(currentMatch.value);
-        logMatchEvent({
-            eventType: 'opponent_defense_change',
-            metadata: defense
-        })
-    }
-
-    const toggleEmptyGoal = (side: "home" | "away") => {
-        if(side === "home"){
-            currentMatch.value!.emptyGoalHome = !currentMatch.value!.emptyGoalHome 
-            logMatchEvent({
-                eventType: `empty_goal_home`,
-                metadata: currentMatch.value!.emptyGoalHome
-            })
-        }else{
-            currentMatch.value!.emptyGoalAway = !currentMatch.value!.emptyGoalAway 
-            logMatchEvent({
-                eventType: `empty_goal_away`,
-                metadata: currentMatch.value!.emptyGoalAway
-            })
-        }
-    }
     return {
         matches,
-        currentMatch,
-        currentMatchTime: computed(() => Math.floor(totalSeconds.value / 60)),
+        match: computed(() => getActiveMatch()),
+        activeMatches,
         fetchMatches,
         createMatch,
-        logMatchEvent,
-        endMatch,
-        pauseMatch,
-        resumeMatch,
-        increaseMatchScore,
-        takeTimeout,
         getMatch,
         deleteMatch,
-        startMatchTimer,
-        changeDefenseSystem,
-        changeOpponentDefenseSystem,
-        toggleEmptyGoal
-    }
-}
+        seeActiveMatch,
+        hydratePlayerViewForMatch,
+    };
+};

@@ -14,7 +14,6 @@
 <script setup lang="ts">
 import ShootingHeatmap from "./ShootingHeatmap.vue"
 import type { ShootingTabStats } from "@/types/stats"
-
 defineProps<{
   stats: ShootingTabStats
 }>()
