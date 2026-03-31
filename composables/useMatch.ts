@@ -103,12 +103,11 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
             method: 'POST',
             body: { opponent: opponent, teamId: team.value?.id },
         });
-
         const match: ActiveMatchData = {
             id: data.id as number,
             opponent,
             teamid: team.value!.id,
-            createdat: data.createdat,
+            createdat: `${data.createdat}`,
             result: null,
             score: 0,
             opponentScore: 0,

@@ -8,7 +8,6 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
     const initializeData = (match:Match): ActiveMatchData => {
         return { 
             ...match, 
-            createdat: Date.now().toLocaleString(), 
             result: null,
             score: 0,
             opponentScore: 0,
@@ -174,6 +173,10 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
     const takeTimeout = (side: 'home' | 'away') => {
         if (side === 'home' && match.value.timeoutsLeftHome > 0) {
             match.value.timeoutsLeftHome -= 1;
+            $fetch(`/api/match/${match.value?.id}`, {
+                method: 'PUT',
+                body: {timeoutsLeftHome: match.value.timeoutsLeftHome }
+            })
             saveMatchToLocalStorage(match.value);
             logMatchEvent({
                 eventType: 'timeout_home',
@@ -181,12 +184,17 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
             })
         } else if (side === 'away' && match.value.timeoutsLeftAway > 0) {
             match.value.timeoutsLeftAway -= 1;
+            $fetch(`/api/match/${match.value?.id}`, {
+                method: 'PUT',
+                body: {timeoutsLeftAway: match.value.timeoutsLeftAway }
+            })
             saveMatchToLocalStorage(match.value);
             logMatchEvent({
                 eventType: 'timeout_away',
                 metadata: match.value.timeoutsLeftAway
             })
         }
+        pauseMatch();
     }
 
     const changeDefenseSystem = (defense: DefenseSystem) => {

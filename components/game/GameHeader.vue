@@ -63,7 +63,6 @@ const store = useHandballStore();
 const match = computed(() => store.matches.match.value!);
 const team = computed(() =>  store.teams.getTeam(match.value.data.value.teamid));
 const goBack = () => useRouter().back();
-console.log(match.value.data)
 const toggleMatchTimer = () => {
     if(!match.value) return;
     if(match.value.data.value.playing){

@@ -2,11 +2,11 @@
 <template>
 <button  class="p-4 rounded-xl border-2 cursor-pointer ">
     <div class="flex justify-between items-center">
-        <div class="flex gap-2 items-center w-35">
+        <div class="flex gap-2 items-center w-40">
             <span class="px-2 py-1 rounded text-md font-semibold bg-gray-800 text-white">
                 {{ store.teams.getTeam(m.teamid)?.name }}</span>
             <span class="italic">vs</span>
-            <span class="py-1 rounded text-md font-semibold text-gray-800">{{ m.opponent }}</span>
+            <span class="py-1 rounded text-md font-semibold text-gray-800 ">{{ m.opponent }}</span>
         </div>
         <span class="text-white px-2 py-1 rounded-full shadow-inner" 
         :class="isActive ? 'bg-blue-600': 

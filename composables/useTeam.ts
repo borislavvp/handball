@@ -50,7 +50,7 @@ export const useTeam = (loadingState: LoadingState) => {
                 recentStats: p.player_stats,
             })).sort((a,b) => a.number - b.number),
         } as Team));
-        selectTeam(teamData[0]!.id);
+        selectTeam(teamData[2]!.id);
         loadingState.fetching.value = false;
 
         }catch(err){
