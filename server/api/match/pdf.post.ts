@@ -757,12 +757,17 @@ export default defineEventHandler(async (event) => {
     const pdf = await pdfPromise;
     
     // Return response
-    const res = event.node.res;
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename=match_${body.matchId}_stats.pdf`);
-    res.setHeader("Content-Length", String(pdf.length));
-    res.end(pdf);
-    
+    // const res = event.node.res;
+    // res.setHeader("Content-Type", "application/pdf");
+    // res.setHeader("Content-Disposition", `inline; filename=match_${body.matchId}_stats.pdf`);
+    // res.setHeader("Content-Length", String(pdf.length));
+    // res.end(pdf);
+    return new Response(pdf as any, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename=match_${body.matchId}_stats.pdf`,
+      },
+    });
   } catch (error) {
     throw createError({
       statusCode: 500,
