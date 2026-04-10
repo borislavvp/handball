@@ -208,7 +208,7 @@ function drawGoalkeepersTable(
   let y = startY;
   
   y += 12;
-  drawTableRow(doc, startX, y, ["Goalkeepers", "Saves/Shots"], [105, 200], 12, true);
+  drawTableRow(doc, startX, y, ["Goalkeepers", "Saves/Shots"], [130, 200], 12, true);
   y += 12;
   
   const gkWidths = [15, 100, 15, 25, 25, 25, 25, 25, 25, 25, 25];
