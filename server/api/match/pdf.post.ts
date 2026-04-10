@@ -211,7 +211,7 @@ function drawGoalkeepersTable(
   drawTableRow(doc, startX, y, ["Goalkeepers", "Saves/Shots"], [105, 200], 12, true);
   y += 12;
   
-  const gkWidths = [15, 75, 15, 25, 25, 25, 25, 25, 25, 25, 25];
+  const gkWidths = [15, 100, 15, 25, 25, 25, 25, 25, 25, 25, 25];
   const gkCols = ["#", "Name", 'V', "Tot", "%", "9M", "6M", "Wing", "7M", "FB", "BT"];
   
   drawTableRow(doc, startX, y, gkCols, gkWidths, 12, true);
@@ -253,6 +253,7 @@ function drawGoalkeepersTable(
     `${total.byWing.saved}/${total.byWing.total}`,
     `${total.by7m.saved}/${total.by7m.total}`,
     `${total.fastbreak.saved}/${total.fastbreak.total}`,
+    `${total.breakthrough.saved}/${total.breakthrough.total}`
   ];
   
   y = drawTableRow(doc, startX, y, totalRow, gkWidths, 12);
