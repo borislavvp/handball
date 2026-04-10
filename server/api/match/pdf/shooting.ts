@@ -4,7 +4,7 @@ import { ShootingArea } from '~/types/handball'
 
 export function drawHalfFieldAttackDefenseStats(
   doc: PDFKit.PDFDocument,
-  fieldImagePath: string,
+  fieldImage: Buffer,
   stats: AttackDefenseStats,
   startX: number,
   startY: number,
@@ -26,7 +26,7 @@ export function drawHalfFieldAttackDefenseStats(
   })
 
   // FIELD IMAGE
-  doc.image(fieldImagePath, startX, startY, {
+  doc.image(fieldImage, startX, startY, {
     width: fieldWidth
   })
 

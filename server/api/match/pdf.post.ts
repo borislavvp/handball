@@ -740,7 +740,11 @@ export default defineEventHandler(async (event) => {
     );
     
     const FIELD_IMAGE_PATH = `${process.env.BASE_URL}/assets/court.png`;
-    drawHalfFieldAttackDefenseStats(doc, FIELD_IMAGE_PATH ,attackDefenseStatsByPosition, startX, currentY + 12);
+
+    const imageRes = await fetch(FIELD_IMAGE_PATH);
+    const arrayBuffer = await imageRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    drawHalfFieldAttackDefenseStats(doc, buffer ,attackDefenseStatsByPosition, startX, currentY + 12);
     drawShootingStatistics(doc, areaStats, startX + 320, currentY);
     
 
