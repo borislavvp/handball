@@ -739,9 +739,9 @@ export default defineEventHandler(async (event) => {
       doc.y + 6
     );
 
-    const FIELD_IMAGE_PATH = path.resolve(
+    const FIELD_IMAGE_PATH = path.join(
       process.cwd(),
-      'server/assets/court.png'
+      'public/assets/court.png'
     )
     drawHalfFieldAttackDefenseStats(doc, FIELD_IMAGE_PATH ,attackDefenseStatsByPosition, startX, currentY + 12);
     drawShootingStatistics(doc, areaStats, startX + 320, currentY);
