@@ -738,10 +738,8 @@ export default defineEventHandler(async (event) => {
       startX,
       doc.y + 6
     );
-    const baseUrl =process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000';
-    const FIELD_IMAGE_PATH = `${baseUrl}/assets/court.png`;
+    
+    const FIELD_IMAGE_PATH = `${process.env.BASE_URL}/assets/court.png`;
     drawHalfFieldAttackDefenseStats(doc, FIELD_IMAGE_PATH ,attackDefenseStatsByPosition, startX, currentY + 12);
     drawShootingStatistics(doc, areaStats, startX + 320, currentY);
     
