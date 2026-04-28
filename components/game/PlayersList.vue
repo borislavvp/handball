@@ -25,7 +25,7 @@
       <span v-else-if="p.currentStats?.redcard" class=" h-7 w-5 bg-red-400" />
       <span v-else-if="p.currentStats?.yellowcard" class="h-7 w-5 bg-yellow-400" />
     </div>
-    <span v-if="p.position === 'GK'" class="flex items-center space-x-1 py-1 px-2 bg-gradient-to-r from-gray-200 from-10% to-white text-black border border-gray-300 rounded-full absolute top-0 left-0 -mt-4 -ml-4">
+    <span v-if="p.position === 'GK'" class="flex items-center space-x-1 py-1 px-2 bg-gradient-to-r from-gray-200 from-10% to-white text-black border border-gray-300 rounded-full absolute top-0 left-0 -mt-4 -ml-1 ">
       <wall class="h-7 w-7 "/>
       <p class="font-bold text-lg">{{ p.currentStats?.gksave }}</p>
     </span>

@@ -61,15 +61,15 @@ async function saveChanges() {
 
   try {
     store.players.updatePlayer(updatedFields, player.value.id!)
-    const playerIndex = store.teams.selectedTeam.value?.players.findIndex(p => p.id === player.value!.id)
+    // const playerIndex = store.teams.selectedTeam.value?.players.findIndex(p => p.id === player.value!.id)
     originalPlayer.value = { ...player.value as Player }
-    if (playerIndex !== undefined && playerIndex > -1) {
-      // Update each field in place
-      const targetPlayer = store.teams.selectedTeam.value!.players[playerIndex]
-      targetPlayer!.name = player.value.name
-      targetPlayer!.number = player.value.number
-      targetPlayer!.position = player.value.position
-    }
+    // if (playerIndex !== undefined && playerIndex > -1) {
+    //   // Update each field in place
+    //   const targetPlayer = store.teams.selectedTeam.value!.players[playerIndex]
+    //   targetPlayer!.name = player.value.name
+    //   targetPlayer!.number = player.value.number
+    //   targetPlayer!.position = player.value.position
+    // }
   } catch (err) {
     console.error(err)
     alert("Failed to update player")

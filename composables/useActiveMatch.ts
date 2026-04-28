@@ -31,8 +31,6 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
     
 
     const startMatchTimer = () => {
-        console.log("START TIMER", match.value.opponent)
-        console.log("START TIMER", totalSeconds)
         timer.value = setInterval(() => {
             if (!match.value.playing) return;
 
@@ -110,10 +108,11 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
             }else{
                 totalSeconds.value = seconds
             }
+            data.match.playing = false;
             console.log("Last updated:", data.lastUpdated);
-            if (data.match.playing){
-                startMatchTimer()
-            }
+            // if (data.match.playing){
+            //     startMatchTimer()
+            // }
             return data.match;
         }else{
             return {

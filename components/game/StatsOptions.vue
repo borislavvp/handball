@@ -155,10 +155,11 @@ const addShotToPlayer = (result: ShootingResult,) => {
     if(oneOnOneLost.value){
         increasePlayerStats('1on1lost',store.selection.mistakePlayer.value!)
     }
-    if(result === 'gkmiss'){
+    if(result === 'gkmiss' || result === 'gkmiss_empty'){
         activeMatch.value.increaseMatchScore("away")
-    } else if(result === 'goal'){
+    } else if(result === 'goal' || result === 'goal_empty'){
         activeMatch.value.increaseMatchScore("home")
+        // increasePlayerStats('goal_empty', props.player!)
     }
     store.players.addShotToPlayer(props.player, {
         from: shootingArea,

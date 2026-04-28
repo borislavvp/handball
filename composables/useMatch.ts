@@ -81,6 +81,13 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         }
     });
 
+    // watch(() => getActiveMatch(), (active) => {
+    //     if (active?.data.value.result || !active?.data.value.playing) {
+    //         activeMatches.delete(currentActiveMatch.value!);
+    //         currentActiveMatch.value = null;
+    //     }   
+    // });
+
     async function deleteMatch(match:Match){
         await $fetch('/api/match/delete', {
             method: 'POST',

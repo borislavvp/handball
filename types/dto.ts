@@ -37,7 +37,7 @@ export interface IncreaseStatBody {
 export type LineupChangeBody = {
     lineupId: number;
     teamId: number;
-    position: Position["key"] | "PV2";
+    position: Position["key"] ;
     playerId: number
 }
 

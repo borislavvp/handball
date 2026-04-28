@@ -105,10 +105,34 @@ export const usePlayer = (
     }
 
     async function updatePlayer(data:Record<string, any>,playerId:number){
-        await $fetch(`/api/player/${playerId}`, {
-            method: 'PUT',
-            body: data,
-        });
+        const playerIndex = team.value?.players.findIndex(p => p.id === playerId);
+        const prevValue = team.value?.players[playerIndex!]
+        if (playerIndex !== -1) {
+            // replace player value to trigger reactivity
+            const targetPlayer = team.value!.players[playerIndex!]
+            if(data.name){
+                targetPlayer!.name = data.name
+            }
+            if(data.number){
+                targetPlayer!.number = data.number
+            }
+            if(data.position){
+                targetPlayer!.position = data.position
+            }
+        }
+        try {
+            await $fetch(`/api/player/${playerId}`, {
+                method: 'PUT',
+                body: data,
+            });
+        } catch (err) {
+            console.error('Failed to update player', err);
+            alert("Failed to update player");
+            // Revert to previous value on error
+            if (playerIndex !== -1 && prevValue) {
+                team.value!.players[playerIndex!] = prevValue;
+            }
+        }
     }
 
     async function removePlayer(playerId: number) {
@@ -192,17 +216,14 @@ export const usePlayer = (
     };
 };
 
-export function computePlayerValue(player: Player, statsInput?: PlayerCurrentStats) {
-    const stats = statsInput ?? player.currentStats;
+export function computePlayerValue(player: Player, stats: PlayerCurrentStats) {
     if(!stats) return 0;
-
-    const attackValue = (stats.goal - stats.miss) +
+    const attackValue = (stats.goal + stats.goal_empty - stats.miss) +
         ((stats.assistprimary + stats.assistsecondary + stats.provokeCard +
         stats.provokePenalty + stats.provokeTwoMin + stats["1on1win"]) - stats.lostball);
 
     const defenseValue = (stats.steal + stats.block + stats.defense + stats.defensex2)
         - stats["1on1lost"] - stats.penaltymade - stats.norebound - stats.twominutes - stats.redcard - stats.bluecard;
-
     stats.value = attackValue + defenseValue;
 
     return stats.value;

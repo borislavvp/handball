@@ -7,7 +7,6 @@ export const AttackPosValues = [
   'RB',
   'RW',
   'PV',
-  'PV2',
 ] as const;
 
 export const DefensePosValues = [
