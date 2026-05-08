@@ -21,7 +21,7 @@
       <game-header />
       <div class="flex flex-1 overflow-hidden">
         <!-- Team Side -->
-        <div class="flex flex-col pt-4 border-r border-gray-200 w-2/5 h-full justify-between overflow-x-hidden overflow-y-auto">
+        <div class="flex flex-col mt-4 border-r border-gray-200 w-2/5 h-full justify-between overflow-x-hidden overflow-y-auto">
           <div class="flex flex-col justify-center">
             <!-- Players -->
             <div class="h-20 w-full px-4">

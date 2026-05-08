@@ -13,6 +13,7 @@
     "@nuxt/ui": "3.3.3",
     "@supabase/supabase-js": "^2.57.4",
     "@vite-pwa/nuxt": "^1.0.4",
+    "@vueuse/components": "^14.3.0",
     "@vueuse/core": "^13.9.0",
     "nuxt": "^4.1.1",
     "puppeteer": "^24.32.1",

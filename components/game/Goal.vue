@@ -1,7 +1,7 @@
 <template>
 <div class="w-full flex flex-col bg-white py-4 rounded items-center justify-center">
   <span @click="store.selection.stats.value.goal = !store.selection.stats.value.goal"
-   class="absolute top-0 select-none right-0 -mt-2 -mr-1 rounded-full px-3 py-1 text-2xl font-bold" 
+   class="absolute top-0 select-none right-0 -mt-3 -mr-4 rounded-full px-3 py-1 text-2xl font-bold" 
    :class="statsMode ? 'bg-yellow-300 shadow-inner text-gray-900' : 'text-gray-900 bg-white border border-gray-300 shadow-lg'">
    %</span>
   <div class="svg-container">
