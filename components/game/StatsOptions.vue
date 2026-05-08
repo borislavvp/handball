@@ -38,10 +38,10 @@
                 <button @click="increasePlayerStats('provokePenalty')" class="bg-white text-emerald-900 py-4 rounded px-2 shadow-lg border border-emerald-900">Penalty</button>
                 <button @click="setPlayerProvokeTwoMinutes('provokeTwoMin')" class="bg-white text-emerald-900 py-4 rounded px-2 shadow-lg border border-emerald-900">2 MIN</button>
             </div>
-            <div v-if="extraDefenseOpened" class="absolute right-0 flex flex-wrap gap-5 items-center bg-white text-white font-semibold rounded p-4 h-28 mr-5">
-                <button @click="increasePlayerStats('defensex2')" class="bg-white text-emerald-900 py-4 rounded px-2 shadow-lg border border-emerald-900 flex items-center">
+            <div v-if="extraDefenseOpened" class="absolute right-0 flex flex-wrap gap-5 items-center bg-white text-white font-semibold rounded-r-4xl p-4 h-28 mr-5">
+                <button @click="increasePlayerStats('defensex2')" class="bg-white h-16 text-emerald-900 py-4 rounded px-2 shadow-lg border border-emerald-900 flex items-center">
                     <span class="text-md">EXTRA</span>
-                    <span class="text-2xl  -mt-1 font-bold">+</span>
+                    <span class="text-4xl -mt-1 font-bold">+</span>
                 </button>
                 <button @click="increasePlayerStats('steal')" class="bg-white text-emerald-900 py-4 rounded px-2 shadow-lg border border-emerald-900 flex items-center ">
                     <span class="text-md">STEAL</span>
@@ -54,8 +54,26 @@
             </div>
 
             <div v-if="!store.selection.stats.value.general" class="h-full" >
-                <div v-if="!goalkeeperSelected" class="grid grid-rows-3 gap-8 px-4 mt-2">
-                    <div class=" grid grid-cols-4 gap-16 ">
+                <div class="grid px-4 mt-2" :class="goalkeeperSelected ? 'grid-rows-2 gap-40 ' : 'grid-rows-3 gap-8'">
+                    <!-- <div  class="grid gird-rows-2 gap-6"> -->
+                        <div v-if="goalkeeperSelected" class="grid grid-cols-3 gap-16">
+                            <button class="flex flex-col items-center" @click="addShotToPlayer('goal_empty')" :class="positiveStatStyle">
+                                <longdistance class="h-12 w-20 text-emerald-800" />
+                                <span class="text-md ">GOAL</span>
+                            </button>
+
+                            <button class="flex flex-col items-center" @click="increasePlayerStats('lostball')" :class="negativeStatStyle">
+                                <lostball class="h-12 w-12 text-red-600" />
+                                <span class="text-md ">LOST BALL</span>
+                            </button>
+                            
+                            <button class="flex flex-col items-center" @click="addShotToPlayer('gkmiss_empty')" :class="negativeStatStyle">
+                                <longdistance class="h-12 w-20 text-red-600 transform -scale-x-100" />
+                                <span class="text-md ">EMPTY GOAL</span>
+                            </button>
+                        </div>
+                    <!-- </div> -->
+                    <div v-if="!goalkeeperSelected" class=" grid grid-cols-4 gap-16 ">
                         <button class="flex flex-col items-center" @click="increasePlayerStats('defense')" :class="positiveStatStyle">
                             <wrestling class="h-12 w-12 text-emerald-800" />
                             <span class="text-md ">DEFENSE</span>
@@ -76,20 +94,14 @@
                             <provoke class="h-12 w-12 text-emerald-800" />
                             <span class="text-md ">PROVOKE</span>
                         </button>
-                        <!-- <button @click="increasePlayerStats('defensex2')" :class="positiveStatStyle">DEFENSE+</button>
-                        <button @click="addShotToPlayer('goal_empty')" :class="positiveStatStyle">GOAL LD</button>
-                        <button @click="toggleProvokes()" :class="[positiveStatStyle, provokesOpenned && 'bg-emerald-900']">PROVOKE</button> -->
-                        <!-- <button @click="increasePlayerStats('block')" :class="positiveStatStyle">BLOCK</button>
-                        <button @click="increasePlayerStats('steal')" :class="positiveStatStyle">STEAL</button> -->
                     </div>
-                    <div class="grid grid-cols-4 gap-16 ">
+                    <div v-if="!goalkeeperSelected" class="grid grid-cols-4 gap-16 ">
                         
                         <button class="flex flex-col items-center" @click="increasePlayerStats('lostball')" :class="negativeStatStyle">
                             <lostball class="h-12 w-12 text-red-600" />
                             <span class="text-md ">LOST BALL</span>
                         </button>
                         <button class="flex flex-col items-center" @click="increasePlayerStats('1on1lost')" :class="negativeStatStyle">
-                            <!-- <shield class="h-12 w-12 text-red-600" /> -->
                             <span class="text-4xl h-12  font-bold">1-1</span>
                             <span class="text-md ">1-1 LOST</span>
                         </button>
@@ -99,12 +111,8 @@
                         </button>
                         <button class="flex flex-col items-center" @click="increasePlayerStats('norebound')" :class="negativeStatStyle">
                             <norebound class="h-12 w-12 text-red-600" />
-                            <span class="text-md ">REBOUND</span>
+                            <span class="text-md text-nowrap">NO REB</span>
                         </button>
-                        <!-- <button @click="increasePlayerStats('lostball')" :class="negativeStatStyle">LOST BALL</button>
-                        <button @click="increasePlayerStats('1on1lost')" :class="negativeStatStyle">1-1 LOST</button>
-                        <button @click="increasePlayerStats('penaltymade')" :class="negativeStatStyle">PENALTY</button>
-                        <button @click="increasePlayerStats('norebound')" :class="negativeStatStyle">NO REBOUND</button> -->
                     </div>
                     <div class="grid grid-cols-4 gap-16">
                         
@@ -124,29 +132,18 @@
                             <span class="h-12 w-8 bg-blue-600" />
                             <span class="text-md ">CARD</span>
                         </button>
-                        <!-- <button @click="setPlayerTwoMinutes()" :class="suspensionStatStyle">2 MIN</button> -->
-                        <!-- <button @click="increasePlayerStats('yellowcard')" :class="suspensionStatStyle">YELLOW
-                            <span class="ml-2 h-6 w-4 bg-yellow-400" />
-                        </button>
-                        <button @click="increasePlayerStats('redcard')" :class="suspensionStatStyle">RED
-                            <span class="ml-2 h-6 w-4 bg-red-600" />
-                        </button>
-                        <button @click="increasePlayerStats('bluecard')" :class="suspensionStatStyle">BLUE
-                            <span class="ml-2 h-6 w-4 bg-blue-600" />
-                        </button> -->
+                       
                     </div>
                     
                 </div>  
-                <div v-if="goalkeeperSelected" class="flex flex-col gap-6">
-                    <div class="flex flex-wrap gap-3">
+                <!-- <div v-if="goalkeeperSelected" class="grid gird-rows-2 gap-6">
+                    <div class="grid grid-cols-3 gap-3">
                         <button @click="addShotToPlayer('goal_empty')" :class="positiveStatStyle">GOAL</button>
-                    </div>
-                    <div class="flex flex-wrap gap-3">
                         <button @click="increasePlayerStats('lostball')" :class="negativeStatStyle">LOST BALL</button>
                         <button @click="addShotToPlayer('gkmiss_empty')" :class="negativeStatStyle">EMPTY GOAL</button>
                     </div>
                     
-                    <div class="flex flex-wrap gap-6">
+                    <div class="grid grid-cols-4 gap-16">
                         <button @click="setPlayerTwoMinutes()" :class="suspensionStatStyle">2 MIN</button>
                         <button @click="increasePlayerStats('yellowcard')" :class="suspensionStatStyle">YELLOW
                             <span class="ml-2 h-6 w-4 bg-yellow-400" />
@@ -158,7 +155,7 @@
                             <span class="ml-2 h-6 w-4 bg-blue-600" />
                         </button>
                     </div>
-                </div>
+                </div> -->
             </div>
             <div v-else >
                 <stats-overview :player="store.selection.player.value" />
@@ -225,7 +222,6 @@ const toggleProvokes = () => {
 
 const increasePlayerStats = (stat:Stats,player:Player = props.player!) => {
     store.players.increasePlayerStat(player, stat);
-    store.selection.clearSelection();
     if(provokesOpenned.value){
         provokesOpenned.value = false
     }
@@ -298,7 +294,6 @@ const setPlayerProvokeTwoMinutes = (stat: Stats) => {
 const setPlayerTwoMinutes = () => {
     increasePlayerStats('twominutes')
     store.matches.match.value?.addTwoMinute(props.player!.id, "home");
-    store.selection.clearSelection();
 }
 
 </script>
