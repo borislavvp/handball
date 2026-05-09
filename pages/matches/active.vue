@@ -81,7 +81,8 @@
 
         </div>
         <!-- Stats Side -->
-        <div class="w-3/5 h-full flex flex-col px-10 py-10 bg-gray-100 overflow-x-hidden overflow-y-auto">
+        <div class="w-3/5 h-full flex flex-col px-10 py-6 bg-gray-100 overflow-x-hidden" 
+        :class="shootingTarget !== null ? 'overflow-y-auto' : 'overflow-y-hidden'">
           <goal 
             @position-click="onShootingTargetClick"
             :goalkeep-selected="selectedPlayer?.position === 'GK'"
@@ -97,9 +98,11 @@
             :player="selectedPlayer"
             :stats-mode="store.selection.stats.value.goal"
             :selected-shooting-target="shootingTarget"
-            class="px-10 -mt-4 z-100" 
+            class="bg-white px-10 -mt-4 z-100" 
           />
-          <stats-options class="mt-5 flex-1" 
+          <stats-options 
+            class="flex-1"
+            :class="shootingTarget === null && 'mt-5'" 
             :mode="gameMode"
             :goal-selected="shootingTarget !== null"
             :goalkeeper-selected="selectedPlayer?.position === 'GK'"
