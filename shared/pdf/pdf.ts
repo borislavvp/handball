@@ -679,9 +679,6 @@ export function buildAttackByDefenseStats(
   for (const shot of attackShots) {
     const defenseType = findDefenseAt(shot.time, events, true);
     const bucket = attackByOppDefense.get(defenseType) || attackByOppDefense.get("6-0")!;
-    console.log(attackByOppDefense)
-    console.log(defenseType)
-    console.log(bucket)
     bucket.shots.total++;
     const scored = shot.result === 'goal' || shot.result === 'goal_empty';
     if (scored) bucket.shots.scored++;

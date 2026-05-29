@@ -51,7 +51,6 @@ export function drawScoreChart(
   ----------------------------- */
   if (paddedMin <= 0 && paddedMax >= 0) {
     const y0 = yForDiff(0)
-    console.log(y0)
     doc
       .lineWidth(1)
       .strokeColor("#9CA3AF")

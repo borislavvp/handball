@@ -186,7 +186,6 @@ const startEdit = (field: FieldName, currentValue: string | number, playerId: nu
 
 const saveField = (field: string, playerId: number) => {
   if (editableField.value === field && editablePlayerId.value === playerId) {
-    console.log('Saving field', field, 'for player', playerId, 'with value', editableData.value[field as FieldName])
     // Create update object with only the changed field
     const updateData: Partial<Player> = {
       [field]: editableData.value[field as FieldName]

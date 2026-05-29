@@ -77,7 +77,6 @@ function drawSideStats(
       .text(`${stat.scored}/${stat.total}`, x, y, {
         lineBreak: false
       })
-    console.log(`${position}: ${stat.scored}/${stat.total}`)
   })
    Object.entries(DEFENSE_FIELD_POSITIONS).forEach(([position, rel]) => {
     const stat = defenseStats[position as ShootingArea]

@@ -108,7 +108,6 @@ const computeStats = (players: Database["public"]['Tables']['player']['Row'][], 
 export async function fetchMatchStats(matchId: number) {
     const {players, playerStats, shots, events} = await fetchMatchData(matchId);
     // 2️⃣ Map player stats by playerId
-    console.log(players)
     return computeStats(players, playerStats, shots, events);
 }
 

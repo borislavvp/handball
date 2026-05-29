@@ -147,8 +147,6 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
     }
 
     const resumeMatch = () => {
-        console.log("TIMER", timer.value)
-        console.log("RESUME MATCH", match.value.playing)
         if (timer.value === null) {
             startMatchTimer();
         }

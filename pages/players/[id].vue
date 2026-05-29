@@ -54,7 +54,6 @@ async function saveChanges() {
     updatedFields["position"] = player.value.position
   }
   
-  console.log(updatedFields)
   if (Object.keys(updatedFields).length === 0) {
     return
   }

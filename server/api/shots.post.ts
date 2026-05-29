@@ -51,7 +51,6 @@ export default defineEventHandler(async (event): Promise<void> => {
         breakthrough: body.shot.breakthrough ?? false,
         mistakePlayer: body.shot.mistakePlayer ?? null,
       }).select().single()
-      console.log(data, error);
     if (error || !data) {
         throw createError({ statusCode: 400, statusMessage: error.message})
     }
