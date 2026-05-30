@@ -21,8 +21,8 @@
     </div>
 
     <SummaryTab v-if="active === 'Summary'" :stats="stats" />
-    <PlayersTab v-if="active === 'Players' && stats?.players" :players="stats.players" />
-    <GoalkeepersTab v-if="active === 'Goalkeepers' && stats?.goalkeepers" :goalkeepers="stats.goalkeepers" />
+    <PlayersTab v-if="active === 'Players' && stats?.players" :stats="stats" :match-id="match.id" @stats-changed="emit('statsChanged')" />
+    <GoalkeepersTab v-if="active === 'Goalkeepers' && stats?.goalkeepers" :stats="stats" :match-id="match.id" @stats-changed="emit('statsChanged')" />
     <AttackDefenseTab v-if="active === 'Attack / Defense' && stats" :stats="stats" />
     <ShootingTab v-if="active === 'Shooting' && stats?.shooting" :stats="stats.shooting" />
   </div>
@@ -38,6 +38,9 @@ import type { MatchStats } from '~/shared/pdf/fetchMatchStats';
 import type { Match } from '~/types/handball';
 
 const props = defineProps<{ stats: MatchStats, match: Match }>();
+const emit = defineEmits<{
+  (e: 'statsChanged'): void;
+}>();
 
 const tabs = [
   'Summary',

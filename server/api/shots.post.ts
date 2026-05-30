@@ -20,7 +20,7 @@ const incrementOrCreateStat = async (matchId:number, playerId:number, stat:Stats
             matchid: matchId,
             playerid: playerId,
             [stat]: 1,
-        })
+        } as any)
     }
 }
 

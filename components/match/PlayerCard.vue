@@ -1,22 +1,28 @@
 
 <template>
-  <div class="bg-white rounded-xl shadow p-4" 
-    v-if="hasExtraStats(player) || hasShots(player) || hasSuspensions(player) || hasProvokes(player) || 
-    player.value !== 0 ">
+  <div class="bg-white rounded-xl shadow p-4">
     <div class="w-full flex justify-between items-center">
         <div class="font-bold text-lg">
           #{{ player.number }} {{ player.name }}
         </div>
-        <span 
-          class="flex size-10 rounded-full text-lg  font-semibold items-center justify-center"
-          :class="[
-            player.value < 0  ? 'bg-gradient-to-r from-red-700 from-10% via-red-800 via-30% to-red-900 to-90% text-white ' 
-            : player.value > 0 ? 'bg-gradient-to-b from-emerald-600 from-10% via-emerald-700 via-50% to-emerald-600 to-90% text-white ' 
-            : 'bg-gradient-to-r from-gray-200 from-10%  border to-white text-gray-900 border-gray-300',
-          ]"
+        <div class="flex items-center gap-2">
+          <button
+            class="rounded-md border border-blue-800 px-3 py-2 text-sm font-semibold text-blue-900"
+            @click="editorOpen = true"
           >
-          <p :class="player.value !== 0 && '-ml-1'">{{ player.value > 0 ? `+${player.value}` : player.value }}</p>
-        </span>
+            Events
+          </button>
+          <span 
+            class="flex size-10 rounded-full text-lg  font-semibold items-center justify-center"
+            :class="[
+              player.value < 0  ? 'bg-gradient-to-r from-red-700 from-10% via-red-800 via-30% to-red-900 to-90% text-white ' 
+              : player.value > 0 ? 'bg-gradient-to-b from-emerald-600 from-10% via-emerald-700 via-50% to-emerald-600 to-90% text-white ' 
+              : 'bg-gradient-to-r from-gray-200 from-10%  border to-white text-gray-900 border-gray-300',
+            ]"
+            >
+            <p :class="player.value !== 0 && '-ml-1'">{{ player.value > 0 ? `+${player.value}` : player.value }}</p>
+          </span>
+        </div>
     </div>
     
     <!-- Shot distribution -->
@@ -74,13 +80,34 @@
         <StatBadge v-if="player.blue" class="bg-blue-600 text-white"  label="Blue" :value="player.blue" />
       </div>
     </div>
+    <TimedEventEditor
+      v-if="editorOpen"
+      :match-id="matchId"
+      :player="player"
+      :value="player.value"
+      :events="events"
+      :roster="roster"
+      @close="editorOpen = false"
+      @stats-changed="emit('statsChanged')"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { MatchStats } from '~/shared/pdf/fetchMatchStats';
 import StatBadge from './StatusBadge.vue'
-defineProps<{ player: MatchStats['players'][number] }>()
+import TimedEventEditor from './TimedEventEditor.vue'
+const props = defineProps<{
+  player: MatchStats['players'][number]
+  matchId: number
+  events: MatchStats['events']
+  roster: MatchStats['roster']
+}>()
+const emit = defineEmits<{
+  (e: 'statsChanged'): void;
+}>()
+
+const editorOpen = ref(false)
 
 const getShotClass = (data: { scored: number, total: number }) => {
   if (data.total === 0) {
@@ -97,7 +124,7 @@ const getShotClass = (data: { scored: number, total: number }) => {
 }
 
 const hasExtraStats = (player: MatchStats['players'][number]) => {
-  return player.steals > 0 || player.blocks > 0 || player.defense > 0 || player.lostballs > 0;
+  return player.steals > 0 || player.blocks > 0 || player.defense > 0 || player.lostballs > 0 || player.norebounds > 0 || player.penaltiesMade > 0;
 }
 
 const hasSuspensions = (player: MatchStats['players'][number]) => {

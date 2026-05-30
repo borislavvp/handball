@@ -1,5 +1,5 @@
 // server/api/match/[id]/stats.ts
-import type { Shot, Player, PlayerStats } from "~/types/handball";
+import type { Shot, PlayerStats } from "~/types/handball";
 import type { GoalkeeperRow, PlayerRow, DefenseBucket, DefenseTypeBucket, AreaStats, MatchEvents } from "~/types/pdf";
 import {
   calculatePlayerRow,
@@ -21,7 +21,11 @@ import type { Database } from "~/types/database.types";
 // ==================== FETCH & PROCESS ALL STATS ====================
 
 
-const computeStats = (players: Database["public"]['Tables']['player']['Row'][], playerStats: Partial<PlayerStats>[], shots: Shot[], events: MatchEvents) => {
+export type EditableMatchEvent = MatchEvents[number] & {
+    shot: (Shot & { id?: number }) | null;
+}
+
+const computeStats = (players: Database["public"]['Tables']['player']['Row'][], playerStats: Partial<PlayerStats>[], shots: (Shot & { id?: number })[], events: MatchEvents) => {
     const playerStatsMap = new Map<number, Partial<PlayerStats>>();
     playerStats.forEach(stat => playerStatsMap.set(stat.playerid!, stat));
 
@@ -90,9 +94,29 @@ const computeStats = (players: Database["public"]['Tables']['player']['Row'][], 
     // 9️⃣ Defense by type stats
     const { defenseByType, defensedFastBreaks } = buildDefenseByTypeStats(shots, events);
 
+    const shotsById = new Map<number, Shot & { id?: number }>();
+    shots.forEach((shot) => {
+        if (typeof shot.id === 'number') {
+            shotsById.set(shot.id, shot);
+        }
+    });
+
+    const editableEvents: EditableMatchEvent[] = events
+        .filter((event) => event.playerid !== null)
+        .map((event) => {
+            const shotId = event.metadata ? Number(event.metadata) : NaN;
+            return {
+                ...event,
+                shot: Number.isInteger(shotId) ? shotsById.get(shotId) ?? null : null,
+            };
+        });
+
     return {
         players: playerRows,
         goalkeepers: goalkeeperRows,
+        roster: players,
+        shots,
+        events: editableEvents,
         totalGoalkeeper: totalGoalkeeperRow,
         shooting: shootingTabStats,
         areaStats,

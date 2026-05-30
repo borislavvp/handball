@@ -18,7 +18,7 @@
       </div>
       <div v-if="match && stats" class="flex-1 flex flex-col">
         <StatsHeader :match="match"/>
-        <StatsTabs :stats="stats" :match="match" />
+        <StatsTabs :stats="stats" :match="match" @stats-changed="loadStats(matchId)" />
       </div>
     </div>
   </div>
@@ -40,11 +40,16 @@ const team = computed(() => match.value ? store.teams.getTeam(match.value.teamid
 const stats = ref<any>(null)
 
 async function loadStats(id: number) {
-  if (!id || Number.isNaN(id)) {
-    stats.value = null;
-    return;
+  store.loadingState.fetching.value = true;
+  try {
+    if (!id || Number.isNaN(id)) {
+      stats.value = null;
+      return;
+    }
+    stats.value = await fetchMatchStats(id);
+  } finally {
+    store.loadingState.fetching.value = false;
   }
-  stats.value = await fetchMatchStats(id);
 }
 
 watch(
@@ -55,5 +60,3 @@ watch(
   { immediate: true }
 );
 </script>
-
-

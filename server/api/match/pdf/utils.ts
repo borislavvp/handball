@@ -20,11 +20,11 @@ export function drawTableRow(
     });
     
     // Draw vertical line
-    doc.moveTo(curX + colWidths[i], y)
-      .lineTo(curX + colWidths[i], y + rowHeight)
+    doc.moveTo(curX + colWidths[i]!, y)
+      .lineTo(curX + colWidths[i]!, y + rowHeight)
       .stroke();
     
-    curX += colWidths[i];
+    curX += colWidths[i]!;
   });
   
   // Draw bottom line

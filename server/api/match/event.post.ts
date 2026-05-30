@@ -23,7 +23,7 @@ export default defineEventHandler(async (event): Promise<void> => {
         metadata: body.metadata 
       })
     if(error){
-      throw createError(error)
+      throw createError({ statusCode: 400, statusMessage: error.message } )
     }
   }catch (error: any) {
     throw createError({ statusCode: 400, statusMessage: error.message } )

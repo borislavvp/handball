@@ -15,7 +15,7 @@ export default defineEventHandler(async (event): Promise<void> => {
         matchid: body.matchId,
         playerid: body.playerId,
         [body.statType]: 1,
-    })
+    } as any)
     
     supabase
     .from("match_event")

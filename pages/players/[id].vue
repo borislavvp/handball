@@ -7,6 +7,7 @@ const store = useHandballStore();
 const id = Number(route.params.id);
 const originalPlayer = ref<Player | undefined>(undefined)
 
+const { $dialog } = useNuxtApp();
 const player = ref<Player | undefined>(undefined)
 
 const positions: Position["key"][] = ['LW', 'LB', 'CB', 'RB', 'RW', 'PV', "GK"];
@@ -25,9 +26,13 @@ function toggleEdit() {
   isEditing.value = !isEditing.value;
 }
 
-function removePlayer() {
-  const res = window.confirm(`Are you sure you want to delete ${player.value?.name} (${player.value?.number})`)
-  if(res){
+async function removePlayer() {
+  const res = await $dialog.confirm(
+    {
+      title: 'Confirm Deletion',
+      message: `Are you sure you want to delete ${player.value?.name} (#${player.value?.number})? This action cannot be undone.`,
+    })
+    if(res){
     store.players.removePlayer(player.value!.id)
   }
 }

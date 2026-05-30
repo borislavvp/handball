@@ -111,13 +111,13 @@ export function drawScoreChart(
     .strokeColor("#111827")
     .moveTo(
       chartX,
-      yForDiff(scores[0].difference)
+      yForDiff(scores[0]!.difference)
     )
 
   for (let minute = 1; minute <= 60; minute++) {
     const score = scores[minute]
     const x = chartX + (minute / 60) * chartWidth
-    const y = yForDiff(score.difference)
+    const y = yForDiff(score!.difference)
     doc.lineTo(x, y)
   }
 
@@ -130,10 +130,10 @@ export function drawScoreChart(
 
   for (let minute = 1; minute <= 60; minute++) {
     const score = scores[minute]
-    if (score.difference === scores[minute - 1]?.difference) continue
+    if (score!.difference === scores[minute - 1]?.difference) continue
 
     const x = chartX + (minute / 60) * chartWidth
-    const y = yForDiff(score.difference)
+    const y = yForDiff(score!.difference)
 
     doc.circle(x, y, 2).fill()
   }
