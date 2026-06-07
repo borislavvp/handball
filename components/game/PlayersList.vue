@@ -11,12 +11,13 @@
     store.selection.mistakePlayer.value?.id == p.id ? 'shadow-inner text-gray-900 border-red-400 bg-red-400' :
     store.selection.noRecoveryPlayer.value?.id == p.id ? 'shadow-inner text-white border-orange-400 bg-orange-400' :
     // gameMode === 'stats' && !p.currentStats ? 'border-gray-400 bg-gray-200 text-gray-500' :
-    p.position === 'GK' ? 'text-white border-blue-700 bg-blue-400' : 
+    p.position === 'GK' ? 'text-white border-blue-700 bg-blue-400' :
     'border-gray-700 bg-white text-gray-900',
     (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p) || shouldAnimateNoRecoverySelection(p)) && 'animate-border border-white',
+    isPlayerFlashing(p.id) && 'card-flash',
   ]">
-    <two-minutes-tag 
-      v-if="store.matches.match.value?.data.value.twoMinutesHome.includes(p.id)" 
+    <two-minutes-tag
+      v-if="store.matches.match.value?.data.value.twoMinutesHome.includes(p.id)"
       class="absolute bottom-0 left-0 -mb-4 -ml-4"
       :player-id="p.id"
     />
@@ -30,18 +31,12 @@
       <wall class="h-7 w-7 "/>
       <p class="font-bold text-lg">{{ p.currentStats?.gksave }}</p>
     </span>
-    <span v-if="p.currentStats !== undefined" 
-      class="absolute top-0 right-0 -mt-4 -mr-4 flex size-10  rounded-full text-lg  font-semibold items-center justify-center"
-      :class="[
-        p.currentStats?.value < 0  ? 'bg-gradient-to-r from-red-700 from-10% via-red-800 via-30% to-red-900 to-90% text-white ' 
-        : p.currentStats?.value > 0 ? 'bg-gradient-to-b from-emerald-600 from-10% via-emerald-700 via-50% to-emerald-600 to-90% text-white ' 
-        // : p.currentStats?.value > 0 ? 'bg-gradient-to-r from-emerald-700 from-10% via-emerald-800 via-30% to-emerald-900 to-90% text-white ' 
-        // : p.currentStats?.value > 0 ? 'bg-emerald-600 text-white border-emerald-800' 
-        : 'bg-gradient-to-r from-gray-200 from-10%  border to-white text-gray-900 border-gray-300',
-      ]"
-      >
-      <p :class="p.currentStats.value !== 0 && '-ml-1'">{{ p.currentStats.value > 0 ? `+${p.currentStats.value}` : p.currentStats.value }}</p>
-    </span>
+    <PlayerValueBadge
+      v-if="p.currentStats !== undefined"
+      :value="p.currentStats.value"
+      :player-id="p.id"
+      class="absolute top-0 right-0 -mt-4 -mr-4"
+    />
     <div class="flex flex-col items-center">
       <div class="flex items-center space-x-1">
         <span class="text-3xl font-semibold">{{ p.number }}</span>
@@ -50,12 +45,13 @@
       <span class="text-md">{{ p.name.split(' ')[0] }}</span>
     </div>
   </button>
-</template> 
+</template>
 
 <script setup lang="ts">
 import type { Player, ShootingTarget } from '~/types/handball';
 import TwoMinutesTag from '~/components/game/TwoMinutesTag.vue';
 import Wall from '../icons/wall.vue';
+import PlayerValueBadge from '../shared/PlayerValueBadge.vue';
 
 const props = defineProps<{
     statsMode: boolean;
@@ -67,6 +63,12 @@ const emits = defineEmits<{
 }>();
 
 const store = useHandballStore();
+const { flash: flashState, isFlashing } = usePlayerFlash();
+
+const isPlayerFlashing = (playerId: number) => {
+    void flashState.value
+    return isFlashing(playerId)
+}
 
 const teamPlayers = computed(() => {
   const players = store.teams.selectedTeam.value?.players;
@@ -196,5 +198,24 @@ function onTwoMinutesOver(playedId:number){
   -webkit-mask-composite: xor;
           mask-composite: exclude;
   z-index: 0;
+}
+
+@keyframes card-flash-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(66, 184, 131, 0.7), inset 0 0 0 0 rgba(66, 184, 131, 0);
+        border-color: rgba(66, 184, 131, 0.9);
+    }
+    40% {
+        box-shadow: 0 0 0 8px rgba(66, 184, 131, 0), inset 0 0 0 2px rgba(66, 184, 131, 0.5);
+        border-color: rgba(66, 184, 131, 1);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(66, 184, 131, 0), inset 0 0 0 0 rgba(66, 184, 131, 0);
+        border-color: rgba(66, 184, 131, 0);
+    }
+}
+
+.card-flash {
+    animation: card-flash-glow 1.2s ease-out;
 }
 </style>

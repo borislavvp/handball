@@ -1,5 +1,5 @@
 <template>
-  <div class="flex rounded-xl shadow p-4 flex-col">
+  <div class="flex rounded-xl shadow p-4 flex-col transition-shadow" :class="cardFlashing && 'card-flash'">
     <div class="flex items-center justify-between font-semibold mb-3">
       <span>
         #{{ keeper.number }} {{ keeper.name }}
@@ -12,16 +12,7 @@
           >
             Events
           </button>
-          <span 
-            class="flex size-10 rounded-full text-lg  font-semibold items-center justify-center"
-            :class="[
-              keeper.value < 0  ? 'bg-gradient-to-r from-red-700 from-10% via-red-800 via-30% to-red-900 to-90% text-white ' 
-              : keeper.value > 0 ? 'bg-gradient-to-b from-emerald-600 from-10% via-emerald-700 via-50% to-emerald-600 to-90% text-white ' 
-              : 'bg-gradient-to-r from-gray-200 from-10%  border to-white text-gray-900 border-gray-300',
-            ]"
-            >
-            <p :class="keeper.value !== 0 && '-ml-1'">{{ keeper.value > 0 ? `+${keeper.value}` : keeper.value }}</p>
-          </span>
+          <PlayerValueBadge :value="keeper.value" :player-id="keeper.id" />
         </div>
     </div>
 
@@ -56,6 +47,7 @@ import type { MatchStats } from '~/shared/pdf/fetchMatchStats';
 import GKStat from './GKStat.vue'
 import StatBadge from './StatusBadge.vue'
 import TimedEventEditor from './TimedEventEditor.vue'
+import PlayerValueBadge from '../shared/PlayerValueBadge.vue'
 
 const props = defineProps<{
   keeper: MatchStats['goalkeepers'][number]
@@ -67,6 +59,21 @@ const emit = defineEmits<{
   (e: 'statsChanged'): void;
 }>()
 const editorOpen = ref(false)
+const cardFlashing = ref(false)
+let cardFlashTimer: ReturnType<typeof setTimeout> | null = null
+
+const { flash } = usePlayerFlash()
+watch(() => flash.value, (next) => {
+  if (next.playerId !== props.keeper.id) return
+  if (next.timestamp === 0) return
+  cardFlashing.value = true
+  if (cardFlashTimer) clearTimeout(cardFlashTimer)
+  cardFlashTimer = setTimeout(() => { cardFlashing.value = false }, 1400)
+})
+
+onUnmounted(() => {
+  if (cardFlashTimer) clearTimeout(cardFlashTimer)
+})
 
 </script>
 
@@ -75,5 +82,32 @@ const editorOpen = ref(false)
   background: #1c1c1c;
   padding: 16px;
   border-radius: 16px;
+}
+
+@keyframes card-flash {
+    0% { box-shadow: 0 0 0 0 rgba(66, 184, 131, 0.7); }
+    50% { box-shadow: 0 0 0 6px rgba(66, 184, 131, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(66, 184, 131, 0); }
+}
+
+@keyframes card-zebra {
+    from { background-position: 0 0, 0 0; }
+    to   { background-position: 0 0, 16px 0; }
+}
+
+.card-flash {
+    border: 2px solid transparent;
+    background-image:
+        linear-gradient(white, white),
+        repeating-linear-gradient(
+            45deg,
+            #42b883 0,
+            #42b883 8%,
+            #34a06b 16%,
+            #42b883 24%
+        );
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    animation: card-flash 1.2s ease-out, card-zebra 0.5s linear infinite;
 }
 </style>
