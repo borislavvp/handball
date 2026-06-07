@@ -108,12 +108,12 @@
               </div>
             </div>
 
-              <div class="grid grid-cols-2 gap-2 lg:col-span-1">
+              <div class="grid gap-2 lg:col-span-1" :class="isGoalkeeper ? 'grid-cols-1' : 'grid-cols-2'">
                 <label class="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
                   <input v-model="form.shot.fastbreak" type="checkbox" />
                   Fastbreak
                 </label>
-                <label class="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
+                <label v-if="!isGoalkeeper" class="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
                   <input v-model="form.shot.breakthrough" type="checkbox" />
                   Breakthrough
                 </label>
@@ -148,7 +148,7 @@
             </div>
 
               
-              <div class="grid gap-4 lg:col-span-1" :class="isGoalkeeper ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-3'">
+              <div class="grid gap-4 lg:col-span-1" :class="isGoalkeeper ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2'">
                 <label v-if="!isGoalkeeper" class="block">
                   <span class="mb-1 block text-sm font-semibold text-gray-700">Primary Assist</span>
                   <select v-model.number="form.shot.assistPrimary" class="w-full rounded-md border border-gray-300 px-3 py-2">
@@ -157,13 +157,54 @@
                   </select>
                 </label>
 
-                <label class="block">
-                  <span class="mb-1 block text-sm font-semibold text-gray-700">Mistake Player</span>
-                  <select v-model.number="form.shot.mistakePlayer" class="w-full rounded-md border border-gray-300 px-3 py-2">
-                    <option :value="null">None</option>
-                    <option v-for="p in roster" :key="p.id" :value="p.id">#{{ p.number }} {{ p.name }}</option>
-                  </select>
-                </label>
+                <div v-if="isGoalkeeper" class="rounded-lg border-2 border-red-300 bg-gradient-to-br from-red-50 to-rose-50 p-4 shadow-sm">
+                  <div class="mb-3 flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold uppercase tracking-wider text-red-700">1-1 Lost</p>
+                      <p class="text-xs text-gray-500">Attacker beat the keeper in a 1-on-1 duel</p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      :aria-checked="form.shot.breakthrough"
+                      @click="form.shot.breakthrough = !form.shot.breakthrough"
+                      :class="[
+                        'relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2',
+                        form.shot.breakthrough ? 'bg-red-500' : 'bg-gray-300'
+                      ]"
+                    >
+                      <span
+                        :class="[
+                          'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
+                          form.shot.breakthrough ? 'translate-x-6' : 'translate-x-1'
+                        ]"
+                      />
+                    </button>
+                  </div>
+
+                  <div :class="form.shot.breakthrough ? 'opacity-100' : 'pointer-events-none opacity-40'">
+                    <span class="mb-2 block text-sm font-semibold text-gray-700">Losing Player</span>
+                    <div class="grid max-h-48 grid-cols-2 gap-2 overflow-auto rounded-md border border-red-200 bg-white p-2">
+                      <button
+                        v-for="p in roster"
+                        :key="p.id"
+                        type="button"
+                        :disabled="!form.shot.breakthrough"
+                        @click="form.shot.mistakePlayer = form.shot.mistakePlayer === p.id ? null : p.id"
+                        :class="[
+                          'flex items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm transition-colors',
+                          form.shot.mistakePlayer === p.id
+                            ? 'border-red-500 bg-red-100 font-semibold text-red-900 shadow-inner'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-red-300 hover:bg-red-50'
+                        ]"
+                      >
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700">{{ p.number }}</span>
+                        <span class="truncate">{{ p.name }}</span>
+                      </button>
+                    </div>
+                    <p v-if="form.shot.breakthrough && form.shot.mistakePlayer === null" class="mt-2 text-xs text-gray-500">Optional - leave empty to count at team level only.</p>
+                  </div>
+                </div>
 
                 <div v-if="isGoalkeeper" class="rounded-lg border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 p-4 shadow-sm">
                   <div class="mb-3 flex items-center justify-between">
