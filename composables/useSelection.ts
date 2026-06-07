@@ -7,7 +7,9 @@ export const useSelection = () => {
     const primaryAssist = useState<Player | null>('selection-primary-assist', () => null);
     const secondaryAssist = useState<Player | null>('selection-secondary-assist', () => null);
     const mistakePlayer = useState<Player | null>('selection-mistake-player', () => null);
+    const noRecoveryPlayer = useState<Player | null>('selection-no-recovery-player', () => null);
     const oneOnOneLost = useState<boolean | null>('selection-oneonone-lost', () => false);
+    const noRecovery = useState<boolean | null>('selection-no-recovery', () => false);
 
     const gameMode = useState<GameMode>('selection-game-mode', () => "attack");
 
@@ -32,7 +34,9 @@ export const useSelection = () => {
         primaryAssist.value = null;
         secondaryAssist.value = null;
         mistakePlayer.value = null;
+        noRecoveryPlayer.value = null;
         oneOnOneLost.value = false;
+        noRecovery.value = false;
     };
 
     const resetAll = () => {
@@ -50,7 +54,9 @@ export const useSelection = () => {
         primaryAssist,
         secondaryAssist,
         mistakePlayer,
+        noRecoveryPlayer,
         oneOnOneLost,
+        noRecovery,
         gameMode,
         stats,
         clearSelection,

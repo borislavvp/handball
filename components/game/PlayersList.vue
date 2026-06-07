@@ -9,10 +9,11 @@
     store.selection.primaryAssist.value?.id == p.id ? 'shadow-inner text-white border-emerald-600 bg-emerald-600' :
     store.selection.secondaryAssist.value?.id == p.id ? 'shadow-inner text-gray-900 border-emerald-300 bg-emerald-300' :
     store.selection.mistakePlayer.value?.id == p.id ? 'shadow-inner text-gray-900 border-red-400 bg-red-400' :
+    store.selection.noRecoveryPlayer.value?.id == p.id ? 'shadow-inner text-white border-orange-400 bg-orange-400' :
     // gameMode === 'stats' && !p.currentStats ? 'border-gray-400 bg-gray-200 text-gray-500' :
     p.position === 'GK' ? 'text-white border-blue-700 bg-blue-400' : 
     'border-gray-700 bg-white text-gray-900',
-    (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p)) && 'animate-border border-white',
+    (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p) || shouldAnimateNoRecoverySelection(p)) && 'animate-border border-white',
   ]">
     <two-minutes-tag 
       v-if="store.matches.match.value?.data.value.twoMinutesHome.includes(p.id)" 
@@ -88,13 +89,14 @@ const teamPlayers = computed(() => {
 
 function onPlayerClick(p: Player) {
   const selectMistakePlayer = store.selection.player.value?.position === 'GK' && store.selection.oneOnOneLost.value;
+  const selectNoRecoveryPlayer = store.selection.player.value?.position === 'GK' && store.selection.noRecovery.value;
 
 
   if(p.id === store.selection.player.value?.id){
     store.selection.player.value = null;
     store.selection.clearSelection();
-  }else if (props.shootingTarget === null || store.selection.player.value === null || 
-            (store.selection.player.value.position === 'GK' && !store.selection.oneOnOneLost.value)) {
+  }else if (props.shootingTarget === null || store.selection.player.value === null ||
+            (store.selection.player.value.position === 'GK' && !store.selection.oneOnOneLost.value && !store.selection.noRecovery.value)) {
       store.selection.player.value = p;
   }else{
     if(selectMistakePlayer){
@@ -102,6 +104,12 @@ function onPlayerClick(p: Player) {
         store.selection.mistakePlayer.value = null;
       }else{
         store.selection.mistakePlayer.value = p;
+      }
+    } else if (selectNoRecoveryPlayer){
+      if(store.selection.noRecoveryPlayer.value?.id === p.id){
+        store.selection.noRecoveryPlayer.value = null;
+      }else{
+        store.selection.noRecoveryPlayer.value = p;
       }
     } else if (store.selection.primaryAssist.value?.id === p.id) {
       store.selection.primaryAssist.value = null;
@@ -132,12 +140,21 @@ const shouldAnimateAssistSelection = (p:Player) => {
 }
 
 const shouldAnimateMistakeSelection = (p:Player) => {
-  return store.selection.player.value && 
-  store.selection.player.value.position === 'GK' && 
-  store.selection.player.value.id !== p.id && 
-  props.shootingTarget !== null && 
-  store.selection.mistakePlayer.value?.id !== p.id && 
-  store.selection.oneOnOneLost.value 
+  return store.selection.player.value &&
+  store.selection.player.value.position === 'GK' &&
+  store.selection.player.value.id !== p.id &&
+  props.shootingTarget !== null &&
+  store.selection.mistakePlayer.value?.id !== p.id &&
+  store.selection.oneOnOneLost.value
+}
+
+const shouldAnimateNoRecoverySelection = (p:Player) => {
+  return store.selection.player.value &&
+  store.selection.player.value.position === 'GK' &&
+  store.selection.player.value.id !== p.id &&
+  props.shootingTarget !== null &&
+  store.selection.noRecoveryPlayer.value?.id !== p.id &&
+  store.selection.noRecovery.value
 }
 
 function onTwoMinutesOver(playedId:number){

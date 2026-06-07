@@ -3,8 +3,9 @@
         <div class="relative flex flex-col bg-white px-4 py-4">
             <!-- <span class="font-semibold text-gray-800 pt-2 pb-4">{{goalkeeperSelected ? 'Goalkeeper Saves Statistic' : 'Shooting Statistic' }}</span> -->
             <div v-if="goalkeeperSelected" class="flex justify-between gap-6 px-6 mb-4">
-                <toggle-button :value="oneOnOneLost" @update:model-value="(val) => updateOneOnOneLost(val)" negative label="1-1 LOST" class="flex-1" /> 
-                <toggle-button v-model="fastBreak" negative label="FASTBREAK" class="flex-1" /> 
+                <toggle-button :value="oneOnOneLost" @update:model-value="(val) => updateOneOnOneLost(val)" negative label="1-1 LOST" class="flex-1" />
+                <toggle-button :value="noRecovery" @update:model-value="(val) => updateNoRecovery(val)" negative label="NO RCV" class="flex-1" />
+                <toggle-button v-model="fastBreak" negative label="FASTBREAK" class="flex-1" />
             </div>
             <div v-else class="flex justify-between gap-6 px-6 mb-4">
                 <toggle-button v-model="oneOnOneWin" label="1-1 WON" class="flex-1" /> 
@@ -172,6 +173,7 @@ const negativeStatStyle = "rounded-2xl border-2 border-red-700 p-2 bg-gray-10 h-
 const suspensionStatStyle = "flex items-center justify-center rounded-2xl h-24 p-2 border-2 border-gray-400 bg-gray-10 text-gray-700 font-semibold uppercase  active:bg-gray-100 focus:shadow-inner";
 const oneOnOneWin = ref(false)
 const oneOnOneLost = ref(false)
+const noRecovery = ref(false)
 const fastBreak = ref(false)
 const activeMatch = computed(() => store.matches.match.value!)
 const { $dialog } = useNuxtApp();
@@ -182,7 +184,9 @@ const extraDefenseOpened = ref(false)
 watch(() => props.player, (newVal) => {
     oneOnOneWin.value = false;
     oneOnOneLost.value = false;
+    noRecovery.value = false;
     store.selection.oneOnOneLost.value = false;
+    store.selection.noRecovery.value = false;
 })
 
 const toggleExtraDefense = () => {
@@ -225,6 +229,9 @@ const addShotToPlayer = (result: ShootingResult,) => {
     if(oneOnOneLost.value){
         increasePlayerStats('1on1lost',store.selection.mistakePlayer.value!)
     }
+    if(noRecovery.value && store.selection.noRecoveryPlayer.value){
+        increasePlayerStats('norebound',store.selection.noRecoveryPlayer.value)
+    }
     if(result === 'gkmiss' || result === 'gkmiss_empty'){
         activeMatch.value.increaseMatchScore("away")
     } else if(result === 'goal' || result === 'goal_empty'){
@@ -242,12 +249,15 @@ const addShotToPlayer = (result: ShootingResult,) => {
         assistPrimary: store.selection.primaryAssist.value?.id || null,
         assistSecondary: store.selection.secondaryAssist.value?.id || null,
         mistakePlayer: store.selection.mistakePlayer.value?.id || null,
+        noRecovery: noRecovery.value,
+        noRecoveryPlayer: store.selection.noRecoveryPlayer.value?.id || null,
         matchid: activeMatch.value.data.value!.id,
     });
 
     oneOnOneWin.value = false;
-    fastBreak.value = false;    
+    fastBreak.value = false;
     oneOnOneLost.value = false;
+    noRecovery.value = false;
     store.selection.clearSelection();
     emit('shotAdded')
 }
@@ -255,6 +265,14 @@ const addShotToPlayer = (result: ShootingResult,) => {
 const updateOneOnOneLost = (val:boolean) => {
     oneOnOneLost.value = val;
     store.selection.oneOnOneLost.value = val;
+}
+
+const updateNoRecovery = (val:boolean) => {
+    noRecovery.value = val;
+    store.selection.noRecovery.value = val;
+    if(!val){
+        store.selection.noRecoveryPlayer.value = null;
+    }
 }
 
 const setPlayerProvokeTwoMinutes = (stat: Stats) => {
