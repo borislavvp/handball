@@ -50,6 +50,15 @@ export interface GoalkeeperRow {
   by7m: { saved: number; total: number };
   fastbreak: { saved: number; total: number };
   breakthrough: { saved: number; total: number };
+  stopsWithoutRecovery: number;
+  stopsWithoutRecoveryByArea: {
+    by9m: number;
+    by6m: number;
+    byWing: number;
+    by7m: number;
+    fastbreak: number;
+    breakthrough: number;
+  };
 }
 
 export interface DefenseBucket {

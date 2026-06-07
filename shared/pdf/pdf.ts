@@ -219,6 +219,15 @@ export function calculateGoalkeeperTotals(goalkeepers: GoalkeeperRow[]): Goalkee
     byWing: { saved: acc.byWing.saved + gk.byWing.saved, total: acc.byWing.total + gk.byWing.total },
     fastbreak: { saved: acc.fastbreak.saved + gk.fastbreak.saved, total: acc.fastbreak.total + gk.fastbreak.total },
     breakthrough: { saved: acc.breakthrough.saved + gk.breakthrough.saved, total: acc.breakthrough.total + gk.breakthrough.total },
+    stopsWithoutRecovery: acc.stopsWithoutRecovery + gk.stopsWithoutRecovery,
+    stopsWithoutRecoveryByArea: {
+      by9m: acc.stopsWithoutRecoveryByArea.by9m + gk.stopsWithoutRecoveryByArea.by9m,
+      by6m: acc.stopsWithoutRecoveryByArea.by6m + gk.stopsWithoutRecoveryByArea.by6m,
+      by7m: acc.stopsWithoutRecoveryByArea.by7m + gk.stopsWithoutRecoveryByArea.by7m,
+      byWing: acc.stopsWithoutRecoveryByArea.byWing + gk.stopsWithoutRecoveryByArea.byWing,
+      fastbreak: acc.stopsWithoutRecoveryByArea.fastbreak + gk.stopsWithoutRecoveryByArea.fastbreak,
+      breakthrough: acc.stopsWithoutRecoveryByArea.breakthrough + gk.stopsWithoutRecoveryByArea.breakthrough,
+    },
   }), {
     id: 0,
     name: "",
@@ -233,6 +242,15 @@ export function calculateGoalkeeperTotals(goalkeepers: GoalkeeperRow[]): Goalkee
     byWing: { saved: 0, total: 0 },
     fastbreak: { saved: 0, total: 0 },
     breakthrough: { saved: 0, total: 0 },
+    stopsWithoutRecovery: 0,
+    stopsWithoutRecoveryByArea: {
+      by9m: 0,
+      by6m: 0,
+      by7m: 0,
+      byWing: 0,
+      fastbreak: 0,
+      breakthrough: 0,
+    },
   });
 }
 
@@ -269,7 +287,7 @@ export function calculateGoalkeeperRow(
   const attempts = goalkeeperShots.length;
   const totalSaves = goalkeeperShots.filter(s => s.result === 'gksave').length;
   const efficiency = calculateEfficiency(totalSaves, attempts);
-  
+
   const counters = {
     by9m: { saved: 0, total: 0 },
     by6m: { saved: 0, total: 0 },
@@ -278,11 +296,21 @@ export function calculateGoalkeeperRow(
     fastbreak: { saved: 0, total: 0 },
     breakthrough: { saved: 0, total: 0 },
   };
-  
+
+  const stopsWithoutRecoveryByArea = {
+    by9m: 0,
+    by6m: 0,
+    byWing: 0,
+    by7m: 0,
+    fastbreak: 0,
+    breakthrough: 0,
+  };
+  let stopsWithoutRecovery = 0;
+
   goalkeeperShots.forEach(shot => {
     const area = labelShootingArea(shot.from);
     const saved = shot.result === 'gksave';
-    
+
     switch (area) {
       case "9M":
         counters.by9m.total++;
@@ -301,7 +329,7 @@ export function calculateGoalkeeperRow(
         if (saved) counters.by7m.saved++;
         break;
     }
-    
+
     if (shot.fastbreak) {
       counters.fastbreak.total++;
       if (saved) counters.fastbreak.saved++;
@@ -311,8 +339,28 @@ export function calculateGoalkeeperRow(
       if (saved) counters.breakthrough.saved++;
     }
 
+    if (saved && shot.noRecovery) {
+      stopsWithoutRecovery++;
+      switch (area) {
+        case "9M":
+          stopsWithoutRecoveryByArea.by9m++;
+          break;
+        case "6M":
+          stopsWithoutRecoveryByArea.by6m++;
+          break;
+        case "Wing":
+          stopsWithoutRecoveryByArea.byWing++;
+          break;
+        case "7M":
+          stopsWithoutRecoveryByArea.by7m++;
+          break;
+      }
+      if (shot.fastbreak) stopsWithoutRecoveryByArea.fastbreak++;
+      if (shot.breakthrough) stopsWithoutRecoveryByArea.breakthrough++;
+    }
+
   });
-  
+
   return {
     id: goalkeeper.id,
     number: goalkeeper.number,
@@ -325,6 +373,8 @@ export function calculateGoalkeeperRow(
     attempts,
     efficiency,
     ...counters,
+    stopsWithoutRecovery,
+    stopsWithoutRecoveryByArea,
   };
 }
 

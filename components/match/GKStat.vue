@@ -7,7 +7,7 @@
       </span>
     </div>
     <span class="text-2xl font-semibold">
-      {{ data.saved }}/{{ data.total }}
+      {{ data.saved }}/{{ data.total }}<span v-if="noRecoveryCount" class="ml-1 text-sm font-semibold text-orange-200">({{ noRecoveryCount }})</span>
     </span>
   </div>
 </template>
@@ -18,6 +18,7 @@ import { computed } from 'vue'
 const props = defineProps<{
   label: string
   data: { saved: number; total: number };
+  noRecoveryCount?: number;
 }>()
 
 const efficiency = computed(() =>

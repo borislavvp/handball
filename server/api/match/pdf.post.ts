@@ -620,7 +620,16 @@ export default defineEventHandler(async (event) => {
       by7m: { saved: acc.by7m.saved + gk.by7m.saved, total: acc.by7m.total + gk.by7m.total },
       byWing: { saved: acc.byWing.saved + gk.byWing.saved, total: acc.byWing.total + gk.byWing.total },
       fastbreak: { saved: acc.fastbreak.saved + gk.fastbreak.saved, total: acc.fastbreak.total + gk.fastbreak.total },
-      breakthrough: { saved: acc.breakthrough.saved + gk.breakthrough.saved, total: acc.breakthrough.total + gk.breakthrough.total }
+      breakthrough: { saved: acc.breakthrough.saved + gk.breakthrough.saved, total: acc.breakthrough.total + gk.breakthrough.total },
+      stopsWithoutRecovery: acc.stopsWithoutRecovery + gk.stopsWithoutRecovery,
+      stopsWithoutRecoveryByArea: {
+        by9m: acc.stopsWithoutRecoveryByArea.by9m + gk.stopsWithoutRecoveryByArea.by9m,
+        by6m: acc.stopsWithoutRecoveryByArea.by6m + gk.stopsWithoutRecoveryByArea.by6m,
+        by7m: acc.stopsWithoutRecoveryByArea.by7m + gk.stopsWithoutRecoveryByArea.by7m,
+        byWing: acc.stopsWithoutRecoveryByArea.byWing + gk.stopsWithoutRecoveryByArea.byWing,
+        fastbreak: acc.stopsWithoutRecoveryByArea.fastbreak + gk.stopsWithoutRecoveryByArea.fastbreak,
+        breakthrough: acc.stopsWithoutRecoveryByArea.breakthrough + gk.stopsWithoutRecoveryByArea.breakthrough,
+      }
     }), {
       id: 0,
       name: "",
@@ -637,7 +646,16 @@ export default defineEventHandler(async (event) => {
       by7m: { saved: 0, total: 0 },
       byWing: { saved: 0, total: 0 },
       fastbreak: { saved: 0, total: 0 },
-      breakthrough: { saved: 0, total: 0 }
+      breakthrough: { saved: 0, total: 0 },
+      stopsWithoutRecovery: 0,
+      stopsWithoutRecoveryByArea: {
+        by9m: 0,
+        by6m: 0,
+        by7m: 0,
+        byWing: 0,
+        fastbreak: 0,
+        breakthrough: 0,
+      }
     });
     
     // Calculate shooting distributions

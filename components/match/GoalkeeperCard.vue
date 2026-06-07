@@ -26,16 +26,17 @@
     </div>
 
     <div class="grid grid-cols-3 gap-4">
-      <GKStat label="9m" :data="keeper.by9m" />
-      <GKStat label="6m" :data="keeper.by6m" />
-      <GKStat label="Wing" :data="keeper.byWing" />
-      <GKStat label="7m" :data="keeper.by7m" />
-      <GKStat label="FB" :data="keeper.fastbreak" />
+      <GKStat label="9m" :data="keeper.by9m" :no-recovery-count="keeper.stopsWithoutRecoveryByArea?.by9m" />
+      <GKStat label="6m" :data="keeper.by6m" :no-recovery-count="keeper.stopsWithoutRecoveryByArea?.by6m" />
+      <GKStat label="Wing" :data="keeper.byWing" :no-recovery-count="keeper.stopsWithoutRecoveryByArea?.byWing" />
+      <GKStat label="7m" :data="keeper.by7m" :no-recovery-count="keeper.stopsWithoutRecoveryByArea?.by7m" />
+      <GKStat label="FB" :data="keeper.fastbreak" :no-recovery-count="keeper.stopsWithoutRecoveryByArea?.fastbreak" />
     </div>
     <div class="mt-2 grid grid-cols-3 gap-2 text-xs text-center">
         <StatBadge v-if="keeper.assistsPrimary" class="bg-emerald-600 text-white"  label="1 Ast" :value="keeper.assistsPrimary" />
         <StatBadge v-if="keeper.assistsSecondary" class="bg-emerald-600 text-white"  label="2 Ast" :value="keeper.assistsSecondary" />
         <StatBadge v-if="keeper.lostball" class="bg-red-800 text-white"  label="LB" :value="keeper.lostball" />
+        <StatBadge v-if="keeper.stopsWithoutRecovery" class="bg-orange-500 text-white" label="No RCV" :value="keeper.stopsWithoutRecovery" />
     </div>
     <TimedEventEditor
       v-if="editorOpen"
