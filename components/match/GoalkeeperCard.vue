@@ -1,5 +1,8 @@
 <template>
-  <div class="flex rounded-xl shadow p-4 flex-col transition-shadow" :class="cardFlashing && 'card-flash'">
+  <div
+    class="flex rounded-xl shadow p-4 flex-col transition-colors bg-white"
+    :class="cardFlashClass"
+  >
     <div class="flex items-center justify-between font-semibold mb-3">
       <span>
         #{{ keeper.number }} {{ keeper.name }}
@@ -59,16 +62,32 @@ const emit = defineEmits<{
   (e: 'statsChanged'): void;
 }>()
 const editorOpen = ref(false)
-const cardFlashing = ref(false)
+const cardFlashKind = ref<'positive' | 'negative' | 'neutral' | null>(null)
+const cardFlashActive = ref(false)
+const lastCardTimestamp = ref(0)
 let cardFlashTimer: ReturnType<typeof setTimeout> | null = null
+
+const cardFlashClass = computed(() => {
+  if (!cardFlashActive.value || !cardFlashKind.value) return ''
+  return `card-flash-${cardFlashKind.value}`
+})
+
+const triggerCardFlash = async (next: { kind: 'positive' | 'negative' | 'neutral' }) => {
+  cardFlashKind.value = next.kind
+  cardFlashActive.value = false
+  await nextTick()
+  cardFlashActive.value = true
+  if (cardFlashTimer) clearTimeout(cardFlashTimer)
+  cardFlashTimer = setTimeout(() => { cardFlashActive.value = false }, 1100)
+}
 
 const { flash } = usePlayerFlash()
 watch(() => flash.value, (next) => {
   if (next.playerId !== props.keeper.id) return
   if (next.timestamp === 0) return
-  cardFlashing.value = true
-  if (cardFlashTimer) clearTimeout(cardFlashTimer)
-  cardFlashTimer = setTimeout(() => { cardFlashing.value = false }, 1400)
+  if (next.timestamp === lastCardTimestamp.value) return
+  lastCardTimestamp.value = next.timestamp
+  triggerCardFlash(next)
 })
 
 onUnmounted(() => {
@@ -84,30 +103,22 @@ onUnmounted(() => {
   border-radius: 16px;
 }
 
-@keyframes card-flash {
-    0% { box-shadow: 0 0 0 0 rgba(66, 184, 131, 0.7); }
-    50% { box-shadow: 0 0 0 6px rgba(66, 184, 131, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(66, 184, 131, 0); }
+@keyframes flash-positive-bg {
+    0%   { background-color: rgb(52, 211, 153); }
+    100% { background-color: rgb(255, 255, 255); }
 }
 
-@keyframes card-zebra {
-    from { background-position: 0 0, 0 0; }
-    to   { background-position: 0 0, 16px 0; }
+@keyframes flash-negative-bg {
+    0%   { background-color: rgb(251, 113, 133); }
+    100% { background-color: rgb(255, 255, 255); }
 }
 
-.card-flash {
-    border: 2px solid transparent;
-    background-image:
-        linear-gradient(white, white),
-        repeating-linear-gradient(
-            45deg,
-            #42b883 0,
-            #42b883 8%,
-            #34a06b 16%,
-            #42b883 24%
-        );
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
-    animation: card-flash 1.2s ease-out, card-zebra 0.5s linear infinite;
+@keyframes flash-neutral-bg {
+    0%   { background-color: rgb(96, 165, 250); }
+    100% { background-color: rgb(255, 255, 255); }
 }
+
+.card-flash-positive { animation: flash-positive-bg 1s ease-out; }
+.card-flash-negative { animation: flash-negative-bg 1s ease-out; }
+.card-flash-neutral  { animation: flash-neutral-bg 1s ease-out; }
 </style>

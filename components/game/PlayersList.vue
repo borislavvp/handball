@@ -14,8 +14,12 @@
     p.position === 'GK' ? 'text-white border-blue-700 bg-blue-400' :
     'border-gray-700 bg-white text-gray-900',
     (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p) || shouldAnimateNoRecoverySelection(p)) && 'animate-border border-white',
-    isPlayerFlashing(p.id) && 'card-flash',
   ]">
+    <span
+      v-if="playerFlashKind(p.id)"
+      :class="['tile-flash-overlay', `tile-flash-${playerFlashKind(p.id)}`]"
+      aria-hidden="true"
+    />
     <two-minutes-tag
       v-if="store.matches.match.value?.data.value.twoMinutesHome.includes(p.id)"
       class="absolute bottom-0 left-0 -mb-4 -ml-4"
@@ -68,6 +72,12 @@ const { flash: flashState, isFlashing } = usePlayerFlash();
 const isPlayerFlashing = (playerId: number) => {
     void flashState.value
     return isFlashing(playerId)
+}
+
+const playerFlashKind = (playerId: number): 'positive' | 'negative' | 'neutral' | null => {
+    void flashState.value
+    if (!isPlayerFlashing(playerId)) return null
+    return flashState.value.kind
 }
 
 const teamPlayers = computed(() => {
@@ -200,22 +210,33 @@ function onTwoMinutesOver(playedId:number){
   z-index: 0;
 }
 
-@keyframes card-flash-glow {
-    0% {
-        box-shadow: 0 0 0 0 rgba(66, 184, 131, 0.7), inset 0 0 0 0 rgba(66, 184, 131, 0);
-        border-color: rgba(66, 184, 131, 0.9);
-    }
-    40% {
-        box-shadow: 0 0 0 8px rgba(66, 184, 131, 0), inset 0 0 0 2px rgba(66, 184, 131, 0.5);
-        border-color: rgba(66, 184, 131, 1);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(66, 184, 131, 0), inset 0 0 0 0 rgba(66, 184, 131, 0);
-        border-color: rgba(66, 184, 131, 0);
-    }
+.tile-flash-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
 }
 
-.card-flash {
-    animation: card-flash-glow 1.2s ease-out;
+@keyframes flash-positive-tile {
+    0%   { background-color: rgb(52, 211, 153); opacity: 1; }
+    30%  { background-color: rgb(52, 211, 153); opacity: 0.9; }
+    100% { background-color: rgb(52, 211, 153); opacity: 0; }
 }
+
+@keyframes flash-negative-tile {
+    0%   { background-color: rgb(251, 113, 133); opacity: 1; }
+    30%  { background-color: rgb(251, 113, 133); opacity: 0.9; }
+    100% { background-color: rgb(251, 113, 133); opacity: 0; }
+}
+
+@keyframes flash-neutral-tile {
+    0%   { background-color: rgb(96, 165, 250); opacity: 1; }
+    30%  { background-color: rgb(96, 165, 250); opacity: 0.9; }
+    100% { background-color: rgb(96, 165, 250); opacity: 0; }
+}
+
+.tile-flash-positive { animation: flash-positive-tile 1s ease-out forwards; }
+.tile-flash-negative { animation: flash-negative-tile 1s ease-out forwards; }
+.tile-flash-neutral  { animation: flash-neutral-tile 1s ease-out forwards; }
 </style>

@@ -153,7 +153,7 @@ export const usePlayer = (
         const playerState = getMatchState(player, matchId);
         playerState.shots.push(shot);
         playerState.stats[shot.result] += 1;
-        flashTrigger(player.id, shot.result, 1);
+        flashTrigger(player.id, shot.result);
 
         if (shot.assistPrimary) {
             const assistPlayer = getPlayer(shot.assistPrimary);
@@ -162,7 +162,7 @@ export const usePlayer = (
                 assistState.stats.assistprimary += 1;
                 computePlayerValue(assistPlayer, assistState.stats);
                 syncCurrentPlayerView(assistPlayer, matchId);
-                flashTrigger(assistPlayer.id, 'assistprimary', 1);
+                flashTrigger(assistPlayer.id, 'assistprimary');
             }
         }
 
@@ -173,17 +173,17 @@ export const usePlayer = (
                 assistState.stats.assistsecondary += 1;
                 computePlayerValue(assistPlayer, assistState.stats);
                 syncCurrentPlayerView(assistPlayer, matchId);
-                flashTrigger(assistPlayer.id, 'assistsecondary', 1);
+                flashTrigger(assistPlayer.id, 'assistsecondary');
             }
         }
 
         if (shot.mistakePlayer) {
             const mp = getPlayer(shot.mistakePlayer);
-            if (mp) flashTrigger(mp.id, 'mistakePlayer', 0);
+            if (mp) flashTrigger(mp.id, 'mistakePlayer');
         }
         if (shot.noRecoveryPlayer) {
             const nrp = getPlayer(shot.noRecoveryPlayer);
-            if (nrp) flashTrigger(nrp.id, 'noRecoveryPlayer', 0);
+            if (nrp) flashTrigger(nrp.id, 'noRecoveryPlayer');
         }
 
         currentMatch.value?.data.value.shots.push(shot);
@@ -212,7 +212,7 @@ export const usePlayer = (
 
         computePlayerValue(player, state.stats);
         syncCurrentPlayerView(player, matchId);
-        flashTrigger(player.id, stat, 1);
+        flashTrigger(player.id, stat);
 
         $fetch('/api/stats', {
             method: hasExistingState ? 'PUT' : 'POST',

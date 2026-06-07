@@ -2,10 +2,11 @@
   <span
     ref="badgeRef"
     :class="[
-      'flex shrink-0 items-center justify-center rounded-full text-lg font-semibold transition-transform',
+      'player-value-badge',
+      'flex shrink-0 items-center justify-center rounded-full font-semibold transition-transform',
       sizeClass,
       colorClass,
-      flashing && 'flash-pulse',
+      flashing && `flash-${kind}`,
     ]"
     :data-stat="lastFlashedStat"
   >
@@ -22,10 +23,12 @@ const props = withDefaults(defineProps<{
     size: 'md',
 })
 
-const { isFlashing, flash } = usePlayerFlash()
+const { flash } = usePlayerFlash()
 
 const flashing = ref(false)
 const lastFlashedStat = ref<string | null>(null)
+const lastKind = ref<'positive' | 'negative' | 'neutral'>('neutral')
+const lastTimestamp = ref(0)
 let timer: ReturnType<typeof setTimeout> | null = null
 
 const sizeClass = computed(() => {
@@ -47,16 +50,26 @@ const formatted = computed(() => {
     return `${props.value}`
 })
 
-watch(() => flash.value, (next) => {
-    if (next.playerId !== props.playerId) return
-    if (next.timestamp === 0) return
+const kind = computed(() => lastKind.value)
+
+const trigger = async (next: { playerId: number | null, stat: string | null, kind: 'positive' | 'negative' | 'neutral', timestamp: number }) => {
     lastFlashedStat.value = next.stat
+    lastKind.value = next.kind
+    lastTimestamp.value = next.timestamp
+    flashing.value = false
+    await nextTick()
     flashing.value = true
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
         flashing.value = false
-        lastFlashedStat.value = null
-    }, 1400)
+    }, 1100)
+}
+
+watch(() => flash.value, (next) => {
+    if (next.playerId !== props.playerId) return
+    if (next.timestamp === 0) return
+    if (next.timestamp === lastTimestamp.value) return
+    trigger(next)
 }, { deep: true })
 
 onUnmounted(() => {
@@ -65,26 +78,31 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-@keyframes value-flash-pulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(66, 184, 131, 0.7);
-    }
-    20% {
-        transform: scale(1.35);
-        box-shadow: 0 0 0 14px rgba(66, 184, 131, 0);
-    }
-    60% {
-        transform: scale(1.15);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(66, 184, 131, 0);
-    }
+.player-value-badge {
+    transform-origin: center;
 }
 
-.flash-pulse {
-    animation: value-flash-pulse 1.2s ease-out;
-    z-index: 1;
+@keyframes pulse-positive {
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.9); }
+    25%  { transform: scale(1.5);  box-shadow: 0 0 0 18px rgba(16, 185, 129, 0); }
+    55%  { transform: scale(0.92); }
+    100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
+
+@keyframes pulse-negative {
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.9); }
+    25%  { transform: scale(1.5);  box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
+    55%  { transform: scale(0.92); }
+    100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes pulse-neutral {
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.9); }
+    25%  { transform: scale(1.4);  box-shadow: 0 0 0 14px rgba(59, 130, 246, 0); }
+    100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.flash-positive { animation: pulse-positive 1s ease-out; }
+.flash-negative { animation: pulse-negative 1s ease-out; }
+.flash-neutral  { animation: pulse-neutral 1s ease-out; }
 </style>
