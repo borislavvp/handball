@@ -148,8 +148,8 @@
             </div>
 
               
-              <div class="grid grid-cols-3 gap-4 lg:col-span-1">
-                <label class="block">
+              <div class="grid gap-4 lg:col-span-1" :class="isGoalkeeper ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-3'">
+                <label v-if="!isGoalkeeper" class="block">
                   <span class="mb-1 block text-sm font-semibold text-gray-700">Primary Assist</span>
                   <select v-model.number="form.shot.assistPrimary" class="w-full rounded-md border border-gray-300 px-3 py-2">
                     <option :value="null">None</option>
@@ -165,21 +165,56 @@
                   </select>
                 </label>
 
-                <div v-if="isGoalkeeper" class="space-y-3 rounded-md border border-orange-200 bg-orange-50 p-3">
-                  <label class="flex items-center gap-2">
-                    <input v-model="form.shot.noRecovery" type="checkbox" class="size-4 rounded border-gray-300" />
-                    <span class="text-sm font-semibold text-gray-700">No Recovery (NO RCV)</span>
-                  </label>
-                  <label class="block">
-                    <span class="mb-1 block text-sm font-semibold text-gray-700">No Recovery Player</span>
-                    <select v-model.number="form.shot.noRecoveryPlayer" :disabled="!form.shot.noRecovery" class="w-full rounded-md border border-gray-300 px-3 py-2 disabled:bg-gray-100">
-                      <option :value="null">None</option>
-                      <option v-for="p in roster" :key="p.id" :value="p.id">#{{ p.number }} {{ p.name }}</option>
-                    </select>
-                  </label>
+                <div v-if="isGoalkeeper" class="rounded-lg border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 p-4 shadow-sm">
+                  <div class="mb-3 flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold uppercase tracking-wider text-orange-700">No Recovery</p>
+                      <p class="text-xs text-gray-500">Defending team failed to secure the rebound</p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      :aria-checked="form.shot.noRecovery"
+                      @click="form.shot.noRecovery = !form.shot.noRecovery; if(!form.shot.noRecovery) form.shot.noRecoveryPlayer = null"
+                      :class="[
+                        'relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2',
+                        form.shot.noRecovery ? 'bg-orange-500' : 'bg-gray-300'
+                      ]"
+                    >
+                      <span
+                        :class="[
+                          'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
+                          form.shot.noRecovery ? 'translate-x-6' : 'translate-x-1'
+                        ]"
+                      />
+                    </button>
+                  </div>
+
+                  <div :class="form.shot.noRecovery ? 'opacity-100' : 'pointer-events-none opacity-40'">
+                    <span class="mb-2 block text-sm font-semibold text-gray-700">Failing Player</span>
+                    <div class="grid max-h-48 grid-cols-2 gap-2 overflow-auto rounded-md border border-orange-200 bg-white p-2">
+                      <button
+                        v-for="p in roster"
+                        :key="p.id"
+                        type="button"
+                        :disabled="!form.shot.noRecovery"
+                        @click="form.shot.noRecoveryPlayer = form.shot.noRecoveryPlayer === p.id ? null : p.id"
+                        :class="[
+                          'flex items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm transition-colors',
+                          form.shot.noRecoveryPlayer === p.id
+                            ? 'border-orange-500 bg-orange-100 font-semibold text-orange-900 shadow-inner'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50'
+                        ]"
+                      >
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700">{{ p.number }}</span>
+                        <span class="truncate">{{ p.name }}</span>
+                      </button>
+                    </div>
+                    <p v-if="form.shot.noRecovery && form.shot.noRecoveryPlayer === null" class="mt-2 text-xs text-gray-500">Optional - leave empty to count at team level only.</p>
+                  </div>
                 </div>
 
-                <label class="block">
+                <label v-if="!isGoalkeeper" class="block">
                   <span class="mb-1 block text-sm font-semibold text-gray-700">Secondary Assist</span>
                   <select v-model.number="form.shot.assistSecondary" class="w-full rounded-md border border-gray-300 px-3 py-2">
                     <option :value="null">None</option>
