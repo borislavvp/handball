@@ -126,6 +126,7 @@ const { flash } = usePlayerFlash()
 watch(() => flash.value, (next) => {
   if (next.playerId !== props.player.id) return
   if (next.timestamp === 0) return
+  if (next.target !== 'value') return
   if (next.timestamp === lastCardTimestamp.value) return
   lastCardTimestamp.value = next.timestamp
   triggerCardFlash(next)

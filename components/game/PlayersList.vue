@@ -16,7 +16,8 @@
     (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p) || shouldAnimateNoRecoverySelection(p)) && 'animate-border border-white',
   ]">
     <span
-      v-if="playerFlashKind(p.id)"
+      v-if="playerFlashKind(p.id) && valueOverlayKey(p.id)"
+      :key="valueOverlayKey(p.id)"
       :class="['tile-flash-overlay', `tile-flash-${playerFlashKind(p.id)}`]"
       aria-hidden="true"
     />
@@ -31,7 +32,13 @@
       <span v-else-if="p.currentStats?.redcard" class=" h-7 w-5 bg-red-400" />
       <span v-else-if="p.currentStats?.yellowcard" class="h-7 w-5 bg-yellow-400" />
     </div>
-    <span v-if="p.position === 'GK'" class="flex items-center space-x-1 py-1 px-2 bg-gradient-to-r from-gray-200 from-10% to-white text-black border border-gray-300 rounded-full absolute top-0 left-0 -mt-4 -ml-1 ">
+    <span
+      v-if="p.position === 'GK'"
+      :class="[
+        'flex items-center space-x-1 py-1 px-2 bg-gradient-to-r from-gray-200 from-10% to-white text-black border border-gray-300 rounded-full absolute top-0 left-0 -mt-4 -ml-1',
+        playerSavesFlashing(p.id) && 'saves-flash-pulse',
+      ]"
+    >
       <wall class="h-7 w-7 "/>
       <p class="font-bold text-lg">{{ p.currentStats?.gksave }}</p>
     </span>
@@ -77,7 +84,39 @@ const isPlayerFlashing = (playerId: number) => {
 const playerFlashKind = (playerId: number): 'positive' | 'negative' | 'neutral' | null => {
     void flashState.value
     if (!isPlayerFlashing(playerId)) return null
+    if (flashState.value.target !== 'value') return null
     return flashState.value.kind
+}
+
+const savingPlayerIds = ref(new Set<number>())
+const lastSavesTimestamp = ref(0)
+
+watch(() => flashState.value, async (next) => {
+    if (next.target !== 'saves') return
+    if (next.timestamp === lastSavesTimestamp.value) return
+    if (next.playerId === null) return
+    if (next.timestamp === 0) return
+    lastSavesTimestamp.value = next.timestamp
+    const nextSet = new Set(savingPlayerIds.value)
+    nextSet.delete(next.playerId)
+    savingPlayerIds.value = nextSet
+    await nextTick()
+    nextSet.add(next.playerId)
+    savingPlayerIds.value = nextSet
+    setTimeout(() => {
+        const cleared = new Set(savingPlayerIds.value)
+        cleared.delete(next.playerId)
+        savingPlayerIds.value = cleared
+    }, 1100)
+}, { deep: true })
+
+const playerSavesFlashing = (playerId: number) => savingPlayerIds.value.has(playerId)
+
+const valueOverlayKey = (playerId: number) => {
+    void flashState.value
+    if (!isPlayerFlashing(playerId)) return 0
+    if (flashState.value.target !== 'value') return 0
+    return flashState.value.timestamp
 }
 
 const teamPlayers = computed(() => {
@@ -239,4 +278,17 @@ function onTwoMinutesOver(playedId:number){
 .tile-flash-positive { animation: flash-positive-tile 1s ease-out forwards; }
 .tile-flash-negative { animation: flash-negative-tile 1s ease-out forwards; }
 .tile-flash-neutral  { animation: flash-neutral-tile 1s ease-out forwards; }
+
+@keyframes saves-pulse {
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.9); }
+    25%  { transform: scale(1.6);  box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
+    55%  { transform: scale(0.92); }
+    100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.saves-flash-pulse {
+    transform-origin: center;
+    animation: saves-pulse 1s ease-out;
+    z-index: 5;
+}
 </style>

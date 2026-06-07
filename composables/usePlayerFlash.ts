@@ -4,6 +4,7 @@ type FlashState = {
     playerId: number | null
     stat: string | null
     kind: 'positive' | 'negative' | 'neutral'
+    target: 'value' | 'saves' | 'none'
     timestamp: number
 }
 
@@ -27,19 +28,25 @@ export function classifyStat(stat: string): 'positive' | 'negative' | 'neutral' 
     return 'neutral'
 }
 
+type TriggerOptions = {
+    target?: 'value' | 'saves' | 'none'
+}
+
 export const usePlayerFlash = () => {
     const flash = useState<FlashState>('player-flash', () => ({
         playerId: null,
         stat: null,
         kind: 'neutral',
+        target: 'none',
         timestamp: 0,
     }))
 
-    const trigger = (playerId: number, stat: string) => {
+    const trigger = (playerId: number, stat: string, options: TriggerOptions = {}) => {
         flash.value = {
             playerId,
             stat,
             kind: classifyStat(stat),
+            target: options.target ?? 'value',
             timestamp: Date.now(),
         }
     }

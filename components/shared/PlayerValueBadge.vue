@@ -68,6 +68,7 @@ const trigger = async (next: { playerId: number | null, stat: string | null, kin
 watch(() => flash.value, (next) => {
     if (next.playerId !== props.playerId) return
     if (next.timestamp === 0) return
+    if (next.target !== 'value') return
     if (next.timestamp === lastTimestamp.value) return
     trigger(next)
 }, { deep: true })
