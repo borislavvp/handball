@@ -1,27 +1,26 @@
 <template>
   <div
-    class="players-list flex flex-wrap items-start gap-4 p-2"
-    @dragover.prevent
+    ref="listRef"
+    class="players-list flex flex-wrap items-start gap-4 p-2 touch-none"
   >
     <div
       v-for="(p, idx) in orderedPlayers"
       :key="p.id"
-      class="relative"
       :class="[
-        'drop-slot',
-        dragOverIndex === idx && draggedIndex !== null && draggedIndex !== idx && 'drop-slot-active',
+        'drop-slot relative',
+        dragOverIndex === idx && dragging && draggedIndex !== idx && 'drop-slot-active',
+        draggedIndex === idx && 'drop-slot-source',
       ]"
-      @dragenter.prevent="onDragEnter(idx)"
-      @dragleave="onDragLeave(idx)"
-      @drop.prevent="onDrop(idx)"
     >
       <button
-        :draggable="true"
-        @dragstart="onDragStart($event, idx)"
-        @dragend="onDragEnd"
-        @click="onPlayerClick(p)"
+        @pointerdown.prevent="onPointerDown($event, idx)"
+        @pointermove="onPointerMove($event, idx)"
+        @pointerup="onPointerUp($event, idx)"
+        @pointercancel="onPointerCancel"
+        @click="onClickTile(p, $event)"
+        :style="draggedIndex === idx ? { transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`, zIndex: 60 } : undefined"
         :class="[
-        'player-tile relative rounded-md w-24 h-24 flex items-center transition-colors justify-center z-50 border-1  select-none',
+        'player-tile relative rounded-md w-24 h-24 flex items-center transition-shadow justify-center border-1  select-none',
         // statsMode && !p.currentStats ? 'border-gray-200 bg-gray-200 text-gray-400' :
         store.selection.player.value?.id == p.id ? 'shadow-inner text-white border-emerald-900 bg-emerald-900' :
         store.selection.primaryAssist.value?.id == p.id ? 'shadow-inner text-white border-emerald-600 bg-emerald-600' :
@@ -32,7 +31,7 @@
         p.position === 'GK' ? 'text-white border-blue-700 bg-blue-400' :
         'border-gray-700 bg-white text-gray-900',
         (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p) || shouldAnimateNoRecoverySelection(p)) && 'animate-border border-white',
-        draggedIndex === idx && 'player-tile-dragging',
+        draggedIndex === idx && dragging && 'player-tile-lifted',
         ]"
       >
         <span
@@ -75,12 +74,6 @@
           </div>
           <span class="text-md">{{ p.name.split(' ')[0] }}</span>
         </div>
-        <span
-          class="drag-handle absolute top-0 right-0 mt-1 mr-1 h-5 w-5 cursor-grab rounded text-xs font-bold leading-5 text-white opacity-0 transition-opacity bg-black/40"
-          aria-hidden="true"
-        >
-          <span class="block leading-5 text-center">⋮⋮</span>
-        </span>
       </button>
     </div>
   </div>
@@ -169,6 +162,10 @@ const teamPlayers = computed(() => {
 const reorderIds = ref<number[] | null>(null)
 const draggedIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
+const dragging = ref(false)
+const dragOffset = reactive({ x: 0, y: 0 })
+const wasDragged = ref(false)
+const listRef = ref<HTMLElement | null>(null)
 
 const orderedPlayers = computed<Player[]>(() => {
   const base = teamPlayers.value
@@ -193,38 +190,89 @@ watch(teamPlayers, (next) => {
   reorderIds.value = filtered.length === next.length ? filtered : null
 })
 
-function onDragStart(event: DragEvent, index: number) {
-  draggedIndex.value = index
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/plain', String(orderedPlayers.value[index]?.id ?? ''))
-  }
+const DRAG_THRESHOLD_PX = 6
+let activePointerId: number | null = null
+let startX = 0
+let startY = 0
+let startIndex = 0
+
+function tileSlotAt(clientX: number, clientY: number): number {
+    const slots = listRef.value?.querySelectorAll<HTMLElement>('.drop-slot') ?? []
+    for (let i = 0; i < slots.length; i++) {
+        const rect = slots[i].getBoundingClientRect()
+        if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+            return i
+        }
+    }
+    return -1
 }
 
-function onDragEnter(index: number) {
-  if (draggedIndex.value === null) return
-  if (draggedIndex.value === index) return
-  dragOverIndex.value = index
+function onPointerDown(event: PointerEvent, index: number) {
+    if (event.button !== undefined && event.button !== 0) return
+    activePointerId = event.pointerId
+    startX = event.clientX
+    startY = event.clientY
+    startIndex = index
+    wasDragged.value = false
+    ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
 }
 
-function onDragLeave(index: number) {
-  if (dragOverIndex.value === index) dragOverIndex.value = null
+function onPointerMove(event: PointerEvent, _index: number) {
+    if (activePointerId !== event.pointerId) return
+    const dx = event.clientX - startX
+    const dy = event.clientY - startY
+    if (!dragging.value) {
+        if (Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD_PX) return
+        dragging.value = true
+        draggedIndex.value = startIndex
+        dragOverIndex.value = startIndex
+        wasDragged.value = true
+    }
+    dragOffset.x = dx
+    dragOffset.y = dy
+    const hover = tileSlotAt(event.clientX, event.clientY)
+    if (hover !== -1) dragOverIndex.value = hover
+    else dragOverIndex.value = null
 }
 
-function onDrop(targetIndex: number) {
-  const sourceIndex = draggedIndex.value
-  draggedIndex.value = null
-  dragOverIndex.value = null
-  if (sourceIndex === null || sourceIndex === targetIndex) return
-  const list = [...orderedPlayers.value]
-  const [moved] = list.splice(sourceIndex, 1)
-  list.splice(targetIndex, 0, moved)
-  reorderIds.value = list.map((p) => p.id)
+function onPointerUp(event: PointerEvent, _index: number) {
+    if (activePointerId !== event.pointerId) return
+    const wasDragging = dragging.value
+    const sourceIndex = draggedIndex.value
+    const targetIndex = dragOverIndex.value
+    if (wasDragging && sourceIndex !== null && targetIndex !== null && sourceIndex !== targetIndex) {
+        const list = [...orderedPlayers.value]
+        const [moved] = list.splice(sourceIndex, 1)
+        list.splice(targetIndex, 0, moved)
+        reorderIds.value = list.map((p) => p.id)
+    }
+    try { (event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId) } catch {}
+    resetDrag()
 }
 
-function onDragEnd() {
-  draggedIndex.value = null
-  dragOverIndex.value = null
+function onPointerCancel(event: PointerEvent) {
+    if (activePointerId !== event.pointerId) return
+    try { (event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId) } catch {}
+    resetDrag()
+}
+
+function resetDrag() {
+    activePointerId = null
+    dragging.value = false
+    draggedIndex.value = null
+    dragOverIndex.value = null
+    dragOffset.x = 0
+    dragOffset.y = 0
+    wasDragged.value = false
+}
+
+function onClickTile(p: Player, event: MouseEvent) {
+    if (wasDragged.value) {
+        wasDragged.value = false
+        event.preventDefault()
+        return
+    }
+    onPlayerClick(p)
 }
 
 function onPlayerClick(p: Player) {
@@ -264,17 +312,17 @@ function onPlayerClick(p: Player) {
 }
 
 const shouldAnimatePlayerSelection = () => {
-  return !store.selection.player.value && 
-  props.shootingTarget !== null && 
+  return !store.selection.player.value &&
+  props.shootingTarget !== null &&
   (store.selection.primaryAssist.value === null || store.selection.secondaryAssist.value === null ||
    store.selection.mistakePlayer.value === null)
 }
 
 const shouldAnimateAssistSelection = (p:Player) => {
-  return store.selection.player.value && 
-  store.selection.player.value.position !== 'GK' && 
-  store.selection.player.value.id !== p.id && 
-  props.shootingTarget !== null && 
+  return store.selection.player.value &&
+  store.selection.player.value.position !== 'GK' &&
+  store.selection.player.value.id !== p.id &&
+  props.shootingTarget !== null &&
   store.selection.primaryAssist.value?.id !== p.id &&
   store.selection.secondaryAssist.value?.id !== p.id
 }
@@ -304,6 +352,10 @@ function onTwoMinutesOver(playedId:number){
 </script>
 
 <style scoped>
+.players-list {
+    position: relative;
+}
+
 @keyframes zebra-slide {
   from {
     background-position: 0 0;
@@ -318,7 +370,7 @@ function onTwoMinutesOver(playedId:number){
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 2px; /* border thickness */
+  padding: 2px;
   background-image: repeating-linear-gradient(
     45deg,
     black 0,
@@ -328,8 +380,7 @@ function onTwoMinutesOver(playedId:number){
   );
   background-size: 16px 16px;
   animation: zebra-slide 0.5s linear infinite;
-  
-  /* Make only the border visible */
+
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -382,8 +433,9 @@ function onTwoMinutesOver(playedId:number){
 }
 
 .drop-slot {
+    border-radius: 0.5rem;
     transition: transform 0.15s ease;
-    border-radius: 0.375rem;
+    position: relative;
 }
 
 .drop-slot-active {
@@ -400,15 +452,22 @@ function onTwoMinutesOver(playedId:number){
     z-index: 40;
 }
 
+.drop-slot-source {
+    opacity: 0.35;
+}
+
 .player-tile {
     cursor: grab;
+    touch-action: none;
 }
 
 .player-tile:active {
     cursor: grabbing;
 }
 
-.player-tile-dragging {
-    opacity: 0.4;
+.player-tile-lifted {
+    box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.4);
+    cursor: grabbing;
+    transition: none;
 }
 </style>
