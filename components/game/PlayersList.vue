@@ -1,61 +1,89 @@
 <template>
-  <button
-    v-for="p in teamPlayers"
-    @click="onPlayerClick(p)"
-    :class="[
-    'relative my-4 rounded-md w-24 h-24 flex items-center transition-colors justify-center z-50 border-1  select-none',
-    // statsMode && !p.currentStats ? 'border-gray-200 bg-gray-200 text-gray-400' :
-    store.selection.player.value?.id == p.id ? 'shadow-inner text-white border-emerald-900 bg-emerald-900' :
-    store.selection.primaryAssist.value?.id == p.id ? 'shadow-inner text-white border-emerald-600 bg-emerald-600' :
-    store.selection.secondaryAssist.value?.id == p.id ? 'shadow-inner text-gray-900 border-emerald-300 bg-emerald-300' :
-    store.selection.mistakePlayer.value?.id == p.id ? 'shadow-inner text-gray-900 border-red-400 bg-red-400' :
-    store.selection.noRecoveryPlayer.value?.id == p.id ? 'shadow-inner text-white border-orange-400 bg-orange-400' :
-    // gameMode === 'stats' && !p.currentStats ? 'border-gray-400 bg-gray-200 text-gray-500' :
-    p.position === 'GK' ? 'text-white border-blue-700 bg-blue-400' :
-    'border-gray-700 bg-white text-gray-900',
-    (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p) || shouldAnimateNoRecoverySelection(p)) && 'animate-border border-white',
-  ]">
-    <span
-      v-if="playerFlashKind(p.id) && valueOverlayKey(p.id)"
-      :key="valueOverlayKey(p.id)"
-      :class="['tile-flash-overlay', `tile-flash-${playerFlashKind(p.id)}`]"
-      aria-hidden="true"
-    />
-    <two-minutes-tag
-      v-if="store.matches.match.value?.data.value.twoMinutesHome.includes(p.id)"
-      class="absolute bottom-0 left-0 -mb-4 -ml-4"
-      :player-id="p.id"
-    />
-    <div class="flex items-center space-x-2 absolute bottom-0 right-0 -mb-3 mr-1 ">
-      <span v-for="_ in p.currentStats?.twominutes" class="text-xl font-semibold text-gray-800 px-1 rounded bg-gray-200 border">2</span>
-      <span v-if="p.currentStats?.bluecard" class=" h-7 w-5 bg-blue-400" />
-      <span v-else-if="p.currentStats?.redcard" class=" h-7 w-5 bg-red-400" />
-      <span v-else-if="p.currentStats?.yellowcard" class="h-7 w-5 bg-yellow-400" />
-    </div>
-    <span
-      v-if="p.position === 'GK'"
+  <div
+    class="players-list flex flex-wrap items-start gap-4 p-2"
+    @dragover.prevent
+  >
+    <div
+      v-for="(p, idx) in orderedPlayers"
+      :key="p.id"
+      class="relative"
       :class="[
-        'flex items-center space-x-1 py-1 px-2 bg-gradient-to-r from-gray-200 from-10% to-white text-black border border-gray-300 rounded-full absolute top-0 left-0 -mt-4 -ml-1',
-        playerSavesFlashing(p.id) && 'saves-flash-pulse',
+        'drop-slot',
+        dragOverIndex === idx && draggedIndex !== null && draggedIndex !== idx && 'drop-slot-active',
       ]"
+      @dragenter.prevent="onDragEnter(idx)"
+      @dragleave="onDragLeave(idx)"
+      @drop.prevent="onDrop(idx)"
     >
-      <wall class="h-7 w-7 "/>
-      <p class="font-bold text-lg">{{ p.currentStats?.gksave }}</p>
-    </span>
-    <PlayerValueBadge
-      v-if="p.currentStats !== undefined"
-      :value="p.currentStats.value"
-      :player-id="p.id"
-      class="absolute top-0 right-0 -mt-4 -mr-4"
-    />
-    <div class="flex flex-col items-center">
-      <div class="flex items-center space-x-1">
-        <span class="text-3xl font-semibold">{{ p.number }}</span>
-        <span class="text-xl font-semibold">{{ p.position }}</span>
-      </div>
-      <span class="text-md">{{ p.name.split(' ')[0] }}</span>
+      <button
+        :draggable="true"
+        @dragstart="onDragStart($event, idx)"
+        @dragend="onDragEnd"
+        @click="onPlayerClick(p)"
+        :class="[
+        'player-tile relative rounded-md w-24 h-24 flex items-center transition-colors justify-center z-50 border-1  select-none',
+        // statsMode && !p.currentStats ? 'border-gray-200 bg-gray-200 text-gray-400' :
+        store.selection.player.value?.id == p.id ? 'shadow-inner text-white border-emerald-900 bg-emerald-900' :
+        store.selection.primaryAssist.value?.id == p.id ? 'shadow-inner text-white border-emerald-600 bg-emerald-600' :
+        store.selection.secondaryAssist.value?.id == p.id ? 'shadow-inner text-gray-900 border-emerald-300 bg-emerald-300' :
+        store.selection.mistakePlayer.value?.id == p.id ? 'shadow-inner text-gray-900 border-red-400 bg-red-400' :
+        store.selection.noRecoveryPlayer.value?.id == p.id ? 'shadow-inner text-white border-orange-400 bg-orange-400' :
+        // gameMode === 'stats' && !p.currentStats ? 'border-gray-400 bg-gray-200 text-gray-500' :
+        p.position === 'GK' ? 'text-white border-blue-700 bg-blue-400' :
+        'border-gray-700 bg-white text-gray-900',
+        (shouldAnimatePlayerSelection() || shouldAnimateAssistSelection(p) || shouldAnimateMistakeSelection(p) || shouldAnimateNoRecoverySelection(p)) && 'animate-border border-white',
+        draggedIndex === idx && 'player-tile-dragging',
+        ]"
+      >
+        <span
+          v-if="playerFlashKind(p.id) && valueOverlayKey(p.id)"
+          :key="valueOverlayKey(p.id)"
+          :class="['tile-flash-overlay', `tile-flash-${playerFlashKind(p.id)}`]"
+          aria-hidden="true"
+        />
+        <two-minutes-tag
+          v-if="store.matches.match.value?.data.value.twoMinutesHome.includes(p.id)"
+          class="absolute bottom-0 left-0 -mb-4 -ml-4"
+          :player-id="p.id"
+        />
+        <div class="flex items-center space-x-2 absolute bottom-0 right-0 -mb-3 mr-1 ">
+          <span v-for="_ in p.currentStats?.twominutes" class="text-xl font-semibold text-gray-800 px-1 rounded bg-gray-200 border">2</span>
+          <span v-if="p.currentStats?.bluecard" class=" h-7 w-5 bg-blue-400" />
+          <span v-else-if="p.currentStats?.redcard" class=" h-7 w-5 bg-red-400" />
+          <span v-else-if="p.currentStats?.yellowcard" class="h-7 w-5 bg-yellow-400" />
+        </div>
+        <span
+          v-if="p.position === 'GK'"
+          :class="[
+            'flex items-center space-x-1 py-1 px-2 bg-gradient-to-r from-gray-200 from-10% to-white text-black border border-gray-300 rounded-full absolute top-0 left-0 -mt-4 -ml-1',
+            playerSavesFlashing(p.id) && 'saves-flash-pulse',
+          ]"
+        >
+          <wall class="h-7 w-7 "/>
+          <p class="font-bold text-lg">{{ p.currentStats?.gksave }}</p>
+        </span>
+        <PlayerValueBadge
+          v-if="p.currentStats !== undefined"
+          :value="p.currentStats.value"
+          :player-id="p.id"
+          class="absolute top-0 right-0 -mt-4 -mr-4"
+        />
+        <div class="flex flex-col items-center">
+          <div class="flex items-center space-x-1">
+            <span class="text-3xl font-semibold">{{ p.number }}</span>
+            <span class="text-xl font-semibold">{{ p.position }}</span>
+          </div>
+          <span class="text-md">{{ p.name.split(' ')[0] }}</span>
+        </div>
+        <span
+          class="drag-handle absolute top-0 right-0 mt-1 mr-1 h-5 w-5 cursor-grab rounded text-xs font-bold leading-5 text-white opacity-0 transition-opacity bg-black/40"
+          aria-hidden="true"
+        >
+          <span class="block leading-5 text-center">⋮⋮</span>
+        </span>
+      </button>
     </div>
-  </button>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -137,6 +165,67 @@ const teamPlayers = computed(() => {
     return 0;
   });
 });
+
+const reorderIds = ref<number[] | null>(null)
+const draggedIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+const orderedPlayers = computed<Player[]>(() => {
+  const base = teamPlayers.value
+  if (!reorderIds.value || reorderIds.value.length === 0) return base
+  const byId = new Map(base.map((p) => [p.id, p]))
+  const result: Player[] = []
+  for (const id of reorderIds.value) {
+    const p = byId.get(id)
+    if (p) {
+      result.push(p)
+      byId.delete(id)
+    }
+  }
+  for (const p of byId.values()) result.push(p)
+  return result
+})
+
+watch(teamPlayers, (next) => {
+  if (!reorderIds.value) return
+  const validIds = new Set(next.map((p) => p.id))
+  const filtered = reorderIds.value.filter((id) => validIds.has(id))
+  reorderIds.value = filtered.length === next.length ? filtered : null
+})
+
+function onDragStart(event: DragEvent, index: number) {
+  draggedIndex.value = index
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(orderedPlayers.value[index]?.id ?? ''))
+  }
+}
+
+function onDragEnter(index: number) {
+  if (draggedIndex.value === null) return
+  if (draggedIndex.value === index) return
+  dragOverIndex.value = index
+}
+
+function onDragLeave(index: number) {
+  if (dragOverIndex.value === index) dragOverIndex.value = null
+}
+
+function onDrop(targetIndex: number) {
+  const sourceIndex = draggedIndex.value
+  draggedIndex.value = null
+  dragOverIndex.value = null
+  if (sourceIndex === null || sourceIndex === targetIndex) return
+  const list = [...orderedPlayers.value]
+  const [moved] = list.splice(sourceIndex, 1)
+  list.splice(targetIndex, 0, moved)
+  reorderIds.value = list.map((p) => p.id)
+}
+
+function onDragEnd() {
+  draggedIndex.value = null
+  dragOverIndex.value = null
+}
 
 function onPlayerClick(p: Player) {
   const selectMistakePlayer = store.selection.player.value?.position === 'GK' && store.selection.oneOnOneLost.value;
@@ -290,5 +379,36 @@ function onTwoMinutesOver(playedId:number){
     transform-origin: center;
     animation: saves-pulse 1s ease-out;
     z-index: 5;
+}
+
+.drop-slot {
+    transition: transform 0.15s ease;
+    border-radius: 0.375rem;
+}
+
+.drop-slot-active {
+    transform: scale(1.05);
+}
+
+.drop-slot-active::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px dashed rgba(59, 130, 246, 0.7);
+    border-radius: 0.5rem;
+    pointer-events: none;
+    z-index: 40;
+}
+
+.player-tile {
+    cursor: grab;
+}
+
+.player-tile:active {
+    cursor: grabbing;
+}
+
+.player-tile-dragging {
+    opacity: 0.4;
 }
 </style>
