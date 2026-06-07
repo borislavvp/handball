@@ -100,6 +100,8 @@ export type Shot = {
     result: ShootingResult;
     time: string;
     to: ShootingTarget;
+    noRecovery?: boolean;
+    noRecoveryPlayer?: number | null;
 }
 export type ShootingResult = 'goal' | 'miss' | 'block' | 'gksave' | 'gkmiss' | 'goal_empty' | 'gkmiss_empty';
 
