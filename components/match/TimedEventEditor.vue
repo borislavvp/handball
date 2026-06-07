@@ -122,7 +122,7 @@
                   1-1 Lost
                 </label>
                 <label v-if="isGoalkeeper" class="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
-                  <input v-model="form.shot.noRecovery" type="checkbox" @change="if(!form.shot.noRecovery) form.shot.noRecoveryPlayer = null" />
+                  <input v-model="form.shot.noRecovery" type="checkbox" @change="() => (!form.shot.noRecovery) && (form.shot.noRecoveryPlayer = null)" />
                   No Recovery
                 </label>
               </div>
@@ -166,8 +166,13 @@
                 </label>
 
                 <label v-if="isGoalkeeper && form.shot.breakthrough" class="block">
-                  <span class="mb-1 block text-sm font-semibold text-red-700">Mistake Player <span class="text-red-600">*</span></span>
-                  <select v-model.number="form.shot.mistakePlayer" class="w-full rounded-md border-2 border-red-500 bg-red-50 px-3 py-2 text-red-900 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-400">
+                  <span class="mb-1 block text-sm font-semibold" :class="form.shot.mistakePlayer ? 'text-gray-700' : 'text-red-700'">Mistake Player <span v-if="!form.shot.mistakePlayer" class="text-red-600">*</span></span>
+                  <select
+                    v-model.number="form.shot.mistakePlayer"
+                    :class="form.shot.mistakePlayer
+                      ? 'w-full rounded-md border border-gray-300 px-3 py-2 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300'
+                      : 'w-full rounded-md border-2 border-red-500 bg-red-50 px-3 py-2 text-red-900 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-400'"
+                  >
                     <option :value="null">-- select a player --</option>
                     <option v-for="p in roster" :key="p.id" :value="p.id">#{{ p.number }} {{ p.name }}</option>
                   </select>
