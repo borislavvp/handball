@@ -44,6 +44,8 @@ export default defineEventHandler(async (event: H3Event) => {
       result: shot.result,
       assistPrimary: shot.assistPrimary ?? null,
       assistSecondary: shot.assistSecondary ?? null,
+      mistakePlayer: shot.mistakePlayer ?? null,
+      noRecoveryPlayer: shot.noRecoveryPlayer ?? null,
     })
   } else {
     await decrementPlayerStat(existing.matchid, existing.playerid, existing.event)

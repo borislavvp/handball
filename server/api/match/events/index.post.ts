@@ -14,6 +14,8 @@ type EventMutationBody = {
     assistPrimary?: number | null
     assistSecondary?: number | null
     mistakePlayer?: number | null
+    noRecovery?: boolean
+    noRecoveryPlayer?: number | null
     fastbreak?: boolean
     breakthrough?: boolean
   }
@@ -57,6 +59,8 @@ export default defineEventHandler(async (event: H3Event) => {
         assistPrimary: body.shot.assistPrimary ?? null,
         assistSecondary: body.shot.assistSecondary ?? null,
         mistakePlayer: body.shot.mistakePlayer ?? null,
+        noRecovery: body.shot.noRecovery ?? false,
+        noRecoveryPlayer: body.shot.noRecoveryPlayer ?? null,
         fastbreak: body.shot.fastbreak ?? false,
         breakthrough: body.shot.breakthrough ?? false,
       })
@@ -90,6 +94,8 @@ export default defineEventHandler(async (event: H3Event) => {
       result: body.eventType as ShootingResult,
       assistPrimary: body.shot?.assistPrimary ?? null,
       assistSecondary: body.shot?.assistSecondary ?? null,
+      mistakePlayer: body.shot?.mistakePlayer ?? null,
+      noRecoveryPlayer: body.shot?.noRecoveryPlayer ?? null,
     })
   } else {
     await incrementPlayerStat(body.matchId, body.playerId, body.eventType)

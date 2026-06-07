@@ -50,6 +50,8 @@ type ShotStats = {
   result: ShootingResult
   assistPrimary?: number | null
   assistSecondary?: number | null
+  mistakePlayer?: number | null
+  noRecoveryPlayer?: number | null
 }
 
 function emptyStats() {
@@ -125,10 +127,14 @@ export async function incrementShotStats(matchId: number, playerId: number, shot
   await incrementPlayerStat(matchId, playerId, shot.result)
   await incrementPlayerStat(matchId, shot.assistPrimary, 'assistprimary')
   await incrementPlayerStat(matchId, shot.assistSecondary, 'assistsecondary')
+  await incrementPlayerStat(matchId, shot.mistakePlayer, '1on1lost')
+  await incrementPlayerStat(matchId, shot.noRecoveryPlayer, 'norebound')
 }
 
 export async function decrementShotStats(matchId: number, playerId: number, shot: ShotStats) {
   await decrementPlayerStat(matchId, playerId, shot.result)
   await decrementPlayerStat(matchId, shot.assistPrimary, 'assistprimary')
   await decrementPlayerStat(matchId, shot.assistSecondary, 'assistsecondary')
+  await decrementPlayerStat(matchId, shot.mistakePlayer, '1on1lost')
+  await decrementPlayerStat(matchId, shot.noRecoveryPlayer, 'norebound')
 }
