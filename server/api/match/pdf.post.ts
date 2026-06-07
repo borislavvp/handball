@@ -211,19 +211,19 @@ function drawGoalkeepersTable(
   drawTableRow(doc, startX, y, ["Goalkeepers", "Saves/Shots"], [130, 200], 12, true);
   y += 12;
   
-  const gkWidths = [15, 100, 15, 25, 25, 25, 25, 25, 25, 25, 25];
-  const gkCols = ["#", "Name", 'V', "Tot", "%", "9M", "6M", "Wing", "7M", "FB", "BT"];
-  
+  const gkWidths = [15, 95, 15, 25, 25, 22, 22, 22, 22, 22, 22, 25];
+  const gkCols = ["#", "Name", 'V', "Tot", "%", "9M", "6M", "Wing", "7M", "FB", "BT", "NoRCV"];
+
   drawTableRow(doc, startX, y, gkCols, gkWidths, 12, true);
   y += 12;
-  
+
   // Draw goalkeeper rows
   for (const gk of goalkeepers) {
     if (y + 12 > doc.page.height - doc.page.margins.bottom) {
       doc.addPage();
       y = doc.y + 6;
     }
-    
+
     const row = [
       gk.number,
       gk.name,
@@ -235,12 +235,13 @@ function drawGoalkeepersTable(
       `${gk.byWing.saved}/${gk.byWing.total}`,
       `${gk.by7m.saved}/${gk.by7m.total}`,
       `${gk.fastbreak.saved}/${gk.fastbreak.total}`,
-      `${gk.breakthrough.saved}/${gk.breakthrough.total}`
+      `${gk.breakthrough.saved}/${gk.breakthrough.total}`,
+      gk.stopsWithoutRecovery,
     ];
-    
+
     y = drawTableRow(doc, startX, y, row, gkWidths, 12);
   }
-  
+
   // Draw total row
   const totalRow = [
     "",
@@ -253,9 +254,10 @@ function drawGoalkeepersTable(
     `${total.byWing.saved}/${total.byWing.total}`,
     `${total.by7m.saved}/${total.by7m.total}`,
     `${total.fastbreak.saved}/${total.fastbreak.total}`,
-    `${total.breakthrough.saved}/${total.breakthrough.total}`
+    `${total.breakthrough.saved}/${total.breakthrough.total}`,
+    total.stopsWithoutRecovery,
   ];
-  
+
   y = drawTableRow(doc, startX, y, totalRow, gkWidths, 12);
   y += 24;
   
