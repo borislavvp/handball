@@ -511,18 +511,18 @@ function getTextColor(index: number) {
 }
 
 const targetShortcuts = [
-  "⌃0",
-  "⌃1",
-  "⌃2",
-  "⌃3",
-  "⌃4",
-  "⌃5",
-  "⌃6",
-  "⌃7",
-  "⌃8",
-  "⌃9",
-  "⌃-",
-  "⌃="
+  '⌃0',
+  '⌃1',
+  '⌃2',
+  '⌃3',
+  '⌃4',
+  '⌃5',
+  '⌃6',
+  '⌃7',
+  '⌃8',
+  '⌃9',
+  '⌃-',
+  '⌃='
 ] as const;
 
 const cellCenters: Record<number, { x: number; y: number }> = {
@@ -538,6 +538,33 @@ const cellCenters: Record<number, { x: number; y: number }> = {
   9: { x: 700, y: 515 },
   10: { x: 55, y: 370 },
   11: { x: 865, y: 370 }
+};
+
+const chipOffsets: Record<number, { x: number; y: number }> = {
+  0: { x: 0, y: 45 },
+  1: { x: 0, y: 45 },
+  2: { x: 0, y: 45 },
+  3: { x: 0, y: 45 },
+  4: { x: 0, y: 45 },
+  5: { x: 0, y: 45 },
+  6: { x: 0, y: 45 },
+  7: { x: 0, y: 45 },
+  8: { x: 0, y: 45 },
+  9: { x: 0, y: 45 },
+  10: { x: 30, y: 0 },
+  11: { x: -30, y: 0 }
+};
+
+const getChipX = (idx: number): number => {
+  const c = cellCenters[idx];
+  const o = chipOffsets[idx] ?? { x: 0, y: 0 };
+  return c ? c.x + o.x : 0;
+};
+
+const getChipY = (idx: number): number => {
+  const c = cellCenters[idx];
+  const o = chipOffsets[idx] ?? { x: 0, y: 0 };
+  return c ? c.y + o.y : 0;
 };
 
 const chipOffsets: Record<number, { x: number; y: number }> = {
