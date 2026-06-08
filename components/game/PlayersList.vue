@@ -34,6 +34,11 @@
         draggedIndex === idx && dragging && 'player-tile-lifted',
         ]"
       >
+        <shortcut-chip
+          v-if="shiftHeld && idx < 10"
+          :combo="slotCombo(idx)"
+          class="absolute top-0 right-0 -mt-1 -mr-1"
+        />
         <span
           v-if="playerFlashKind(p.id) && valueOverlayKey(p.id)"
           :key="valueOverlayKey(p.id)"
@@ -84,6 +89,7 @@ import type { Player, ShootingTarget } from '~/types/handball';
 import TwoMinutesTag from '~/components/game/TwoMinutesTag.vue';
 import Wall from '../icons/wall.vue';
 import PlayerValueBadge from '../shared/PlayerValueBadge.vue';
+import ShortcutChip from '../shared/ShortcutChip.vue';
 
 const props = defineProps<{
     statsMode: boolean;
@@ -95,6 +101,8 @@ const emits = defineEmits<{
 }>();
 
 const store = useHandballStore();
+const playerOrder = usePlayerOrder();
+const { shiftHeld } = useModifierState();
 const { flash: flashState, isFlashing } = usePlayerFlash();
 
 const isPlayerFlashing = (playerId: number) => {
@@ -159,7 +167,6 @@ const teamPlayers = computed(() => {
   });
 });
 
-const reorderIds = ref<number[] | null>(null)
 const draggedIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
 const dragging = ref(false)
@@ -167,27 +174,19 @@ const dragOffset = reactive({ x: 0, y: 0 })
 const wasDragged = ref(false)
 const listRef = ref<HTMLElement | null>(null)
 
-const orderedPlayers = computed<Player[]>(() => {
-  const base = teamPlayers.value
-  if (!reorderIds.value || reorderIds.value.length === 0) return base
-  const byId = new Map(base.map((p) => [p.id, p]))
-  const result: Player[] = []
-  for (const id of reorderIds.value) {
-    const p = byId.get(id)
-    if (p) {
-      result.push(p)
-      byId.delete(id)
-    }
-  }
-  for (const p of byId.values()) result.push(p)
-  return result
-})
+const orderedPlayers = computed<Player[]>(() => playerOrder.orderedPlayers(store.teams.selectedTeam.value))
+
+const slotCombo = (idx: number): string => {
+    if (idx < 0 || idx > 9) return ''
+    return idx === 9 ? '⇧0' : `⇧${idx + 1}`
+}
 
 watch(teamPlayers, (next) => {
-  if (!reorderIds.value) return
+  const ids = playerOrder.reorderIds.value
+  if (!ids) return
   const validIds = new Set(next.map((p) => p.id))
-  const filtered = reorderIds.value.filter((id) => validIds.has(id))
-  reorderIds.value = filtered.length === next.length ? filtered : null
+  const filtered = ids.filter((id) => validIds.has(id))
+  playerOrder.setReorder(filtered.length === next.length ? filtered : null)
 })
 
 const DRAG_THRESHOLD_PX = 6
@@ -244,7 +243,7 @@ function onPointerUp(event: PointerEvent, _index: number) {
         const list = [...orderedPlayers.value]
         const [moved] = list.splice(sourceIndex, 1)
         list.splice(targetIndex, 0, moved)
-        reorderIds.value = list.map((p) => p.id)
+        playerOrder.setReorder(list.map((p) => p.id))
     }
     try { (event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId) } catch {}
     resetDrag()
