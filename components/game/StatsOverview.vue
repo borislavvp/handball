@@ -84,7 +84,7 @@ const getStatPercentage = (text:string, stats: Stats[], inverted:boolean = false
 
 const steals = computed(() => getStatPercentage('Steals', ['steal']));
 const blocks = computed(() => getStatPercentage('Blocks', ['block']));
-const oneOnOneWin = computed(() => getStatPercentage('1-1 Wins', ['1on1win']));
+const oneOnOneWin = computed(() => getStatPercentage('1-1 Won', ['1on1win']));
 const oneOnOneLost = computed(() => getStatPercentage('1-1 Lost', ['1on1lost'], true));
 const assists = computed(() => getStatPercentage('Assists', ['assistprimary', 'assistsecondary']));
 const provokes = computed(() => getStatPercentage('Provokes', ['provokeCard', 'provokeTwoMin', 'provokePenalty']));

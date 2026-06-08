@@ -208,10 +208,10 @@ function drawGoalkeepersTable(
   let y = startY;
   
   y += 12;
-  drawTableRow(doc, startX, y, ["Goalkeepers", "Saves/Shots"], [130, 200], 12, true);
+  drawTableRow(doc, startX, y, ["Goalkeepers", "Saves/Shots"], [130, 208], 12, true);
   y += 12;
   
-  const gkWidths = [15, 95, 15, 25, 25, 22, 22, 22, 22, 22, 22, 25];
+  const gkWidths = [15, 95, 15, 25, 25, 22, 22, 22, 22, 22, 22, 30];
   const gkCols = ["#", "Name", 'V', "Tot", "%", "9M", "6M", "Wing", "7M", "FB", "BT", "NoRCV"];
 
   drawTableRow(doc, startX, y, gkCols, gkWidths, 12, true);
