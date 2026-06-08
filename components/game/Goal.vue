@@ -566,33 +566,6 @@ const getChipY = (idx: number): number => {
   const o = chipOffsets[idx] ?? { x: 0, y: 0 };
   return c ? c.y + o.y : 0;
 };
-
-const chipOffsets: Record<number, { x: number; y: number }> = {
-  0: { x: 0, y: 30 },
-  1: { x: 0, y: 30 },
-  2: { x: 0, y: 30 },
-  3: { x: 0, y: 30 },
-  4: { x: 0, y: 30 },
-  5: { x: 0, y: 30 },
-  6: { x: 0, y: 30 },
-  7: { x: 0, y: 30 },
-  8: { x: 0, y: 30 },
-  9: { x: 0, y: 30 },
-  10: { x: 30, y: 0 },
-  11: { x: -30, y: 0 }
-};
-
-const getChipX = (idx: number): number => {
-  const c = cellCenters[idx];
-  const o = chipOffsets[idx] ?? { x: 0, y: 0 };
-  return c ? c.x + o.x : 0;
-};
-
-const getChipY = (idx: number): number => {
-  const c = cellCenters[idx];
-  const o = chipOffsets[idx] ?? { x: 0, y: 0 };
-  return c ? c.y + o.y : 0;
-};
 </script>
 
 <style scoped>
