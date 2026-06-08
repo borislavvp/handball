@@ -1,12 +1,5 @@
 import { useState } from "nuxt/app";
-import type {
-  ShootingArea,
-  ShootingResult,
-  ShootingTarget,
-  Stats,
-  Player
-} from "~/types/handball";
-import { ShootingTarget as ShootingTargetEnum } from "~/types/handball";
+import type { ShootingArea, ShootingTarget } from "~/types/handball";
 
 const STATS_6M_AREA: Record<string, ShootingArea> = {
   LB9: "LB6",
