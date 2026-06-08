@@ -1,7 +1,7 @@
 <template>
 <div class="w-full flex flex-col bg-white py-4 rounded items-center justify-center">
   <span @click="store.selection.stats.value.goal = !store.selection.stats.value.goal"
-   class="absolute top-0 select-none right-0 -mt-3 -mr-4 rounded-full px-3 py-1 text-2xl font-bold" 
+   class="absolute top-0 select-none right-0 -mt-3 -mr-4 rounded-full px-3 py-1 text-2xl font-bold"
    :class="statsMode ? 'bg-yellow-300 shadow-inner text-gray-900' : 'text-gray-900 bg-white border border-gray-300 shadow-lg'">
    %</span>
   <div class="svg-container">
@@ -35,7 +35,7 @@
         <rect x="518.527" y="119.221" width="46.7758" height="21.6766" fill="white" stroke="black" stroke-width="1.14087"/>
         <rect x="601.809" y="119.221" width="46.7758" height="21.6766" fill="white" stroke="black" stroke-width="1.14087"/>
         <rect x="685.094" y="119.221" width="46.7758" height="21.6766" fill="white" stroke="black" stroke-width="1.14087"/>
-     
+
         <!-- Dynamic clickable rectangles -->
       <rect
         v-for="(rect, i) in rects"
@@ -100,6 +100,24 @@
       >
         {{ getShootingTargetInfo(num)['text'] }}
       </text>
+
+      <g v-if="ctrlHeld" pointer-events="none">
+        <text
+          v-for="(combo, idx) in targetShortcuts"
+          :key="`sc-${idx}`"
+          :x="getChipX(idx)"
+          :y="getChipY(idx)"
+          text-anchor="middle"
+          alignment-baseline="middle"
+          font-size="18"
+          font-family="monospace"
+          font-weight="700"
+          class="select-none"
+          fill="white"
+          stroke="#050C58"
+          stroke-width="0.6"
+        >{{ combo }}</text>
+      </g>
     </svg>
   </div>
 </div>
@@ -122,6 +140,7 @@ const emit = defineEmits<{
     (e: 'positionClick', index: number | null): void
 }>()
 const store = useHandballStore()
+const { ctrlHeld } = useModifierState()
 
 const rects = [
   { x: 119.219, y: 0.570437, width: 687.946, height: 117.51, fill: 'white', stroke: 'black', 'stroke-width': 1.14 },
@@ -235,6 +254,52 @@ function getTextColor(index:number){
     return "#050C58"
   }
 }
+
+const targetShortcuts = [
+  '⌃0', '⌃1', '⌃2', '⌃3', '⌃4', '⌃5', '⌃6', '⌃7', '⌃8', '⌃9', '⌃-', '⌃=',
+] as const;
+
+const cellCenters: Record<number, { x: number; y: number }> = {
+  0: { x: 480, y: 70 },
+  1: { x: 240, y: 225 },
+  2: { x: 470, y: 225 },
+  3: { x: 700, y: 225 },
+  4: { x: 240, y: 370 },
+  5: { x: 470, y: 370 },
+  6: { x: 700, y: 370 },
+  7: { x: 240, y: 515 },
+  8: { x: 470, y: 515 },
+  9: { x: 700, y: 515 },
+  10: { x: 55, y: 370 },
+  11: { x: 865, y: 370 },
+};
+
+const chipOffsets: Record<number, { x: number; y: number }> = {
+  0: { x: 0, y: 30 },
+  1: { x: 0, y: 30 },
+  2: { x: 0, y: 30 },
+  3: { x: 0, y: 30 },
+  4: { x: 0, y: 30 },
+  5: { x: 0, y: 30 },
+  6: { x: 0, y: 30 },
+  7: { x: 0, y: 30 },
+  8: { x: 0, y: 30 },
+  9: { x: 0, y: 30 },
+  10: { x: 30, y: 0 },
+  11: { x: -30, y: 0 },
+};
+
+const getChipX = (idx: number): number => {
+  const c = cellCenters[idx];
+  const o = chipOffsets[idx] ?? { x: 0, y: 0 };
+  return c ? c.x + o.x : 0;
+};
+
+const getChipY = (idx: number): number => {
+  const c = cellCenters[idx];
+  const o = chipOffsets[idx] ?? { x: 0, y: 0 };
+  return c ? c.y + o.y : 0;
+};
 
 </script>
 

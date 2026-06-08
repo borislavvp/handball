@@ -4,24 +4,24 @@
             <!-- <span class="font-semibold text-gray-800 pt-2 pb-4">{{goalkeeperSelected ? 'Goalkeeper Saves Statistic' : 'Shooting Statistic' }}</span> -->
             <div v-if="goalkeeperSelected" class="flex justify-between gap-6 px-6 mb-4">
                 <div class="flex-1 relative">
-                    <toggle-button :value="oneOnOneLost" @update:model-value="(val) => updateOneOnOneLost(val)" negative label="1-1 LOST" />
+                    <toggle-button :model-value="oneOnOneLost" @update:model-value="(val) => updateOneOnOneLost(val)" negative label="1-1 LOST" />
                     <shortcut-chip v-if="ctrlHeld" combo="⌃O" class="absolute top-1 right-1" />
                 </div>
                 <div class="flex-1 relative">
-                    <toggle-button :value="noRecovery" @update:model-value="(val) => updateNoRecovery(val)" negative label="NO RCV" />
+                    <toggle-button :model-value="noRecovery" @update:model-value="(val) => updateNoRecovery(val)" negative label="NO RCV" />
                 </div>
                 <div class="flex-1 relative">
-                    <toggle-button v-model="fastBreak" negative label="FASTBREAK" />
+                    <toggle-button :model-value="fastBreak" @update:model-value="(val) => shotBuilder.fastBreak.value = val" negative label="FASTBREAK" />
                     <shortcut-chip v-if="ctrlHeld" combo="⌃F" class="absolute top-1 right-1" />
                 </div>
             </div>
             <div v-else class="flex justify-between gap-6 px-6 mb-4">
                 <div class="flex-1 relative">
-                    <toggle-button v-model="oneOnOneWin" label="1-1 WON" />
+                    <toggle-button :model-value="oneOnOneWin" @update:model-value="(val) => shotBuilder.oneOnOneWin.value = val" label="1-1 WON" />
                     <shortcut-chip v-if="ctrlHeld" combo="⌃I" class="absolute top-1 right-1" />
                 </div>
                 <div class="flex-1 relative">
-                    <toggle-button v-model="fastBreak" label="FASTBREAK" />
+                    <toggle-button :model-value="fastBreak" @update:model-value="(val) => shotBuilder.fastBreak.value = val" label="FASTBREAK" />
                     <shortcut-chip v-if="ctrlHeld" combo="⌃F" class="absolute top-1 right-1" />
                 </div>
             </div>
@@ -214,21 +214,21 @@ const emit = defineEmits<{
 
 const store = useHandballStore();
 const statsPanel = useStatsPanel();
+const shotBuilder = useShotBuilder();
 const positiveStatStyle = "rounded-2xl border-2 border-emerald-700 p-2 bg-gray-10 h-24 text-emerald-700 font-semibold uppercase  active:bg-emerald-100 focus:shadow-inner";
 const negativeStatStyle = "rounded-2xl border-2 border-red-700 p-2 bg-gray-10 h-24 text-red-700 font-semibold uppercase  active:bg-red-100 focus:shadow-inner";
 const suspensionStatStyle = "flex items-center justify-center rounded-2xl h-24 p-2 border-2 border-gray-400 bg-gray-10 text-gray-700 font-semibold uppercase  active:bg-gray-100 focus:shadow-inner";
-const oneOnOneWin = ref(false)
+const oneOnOneWin = computed(() => shotBuilder.oneOnOneWin.value)
 const oneOnOneLost = ref(false)
-const noRecovery = ref(false)
-const fastBreak = ref(false)
+const noRecovery = computed(() => Boolean(store.selection.noRecovery.value))
+const fastBreak = computed(() => shotBuilder.fastBreak.value)
 const activeMatch = computed(() => store.matches.match.value!)
 const { $dialog } = useNuxtApp();
 const { shiftHeld, ctrlHeld } = useModifierState();
 
 watch(() => props.player, (newVal) => {
-    oneOnOneWin.value = false;
+    shotBuilder.oneOnOneWin.value = false;
     oneOnOneLost.value = false;
-    noRecovery.value = false;
     store.selection.oneOnOneLost.value = false;
     store.selection.noRecovery.value = false;
 })
@@ -267,7 +267,7 @@ const addShotToPlayer = (result: ShootingResult,) => {
         shootingArea = props.shootingArea!;
         shootingTarget = props.shootingTarget!;
     }
-    if(oneOnOneWin.value){
+    if(shotBuilder.oneOnOneWin.value){
         increasePlayerStats('1on1win')
     }
     if(oneOnOneLost.value){
@@ -288,8 +288,8 @@ const addShotToPlayer = (result: ShootingResult,) => {
         result: result,
         time: activeMatch.value.data.value.time,
         playerid: props.player.id,
-        fastbreak: fastBreak.value,
-        breakthrough: props.goalkeeperSelected ? oneOnOneLost.value : oneOnOneWin.value,
+        fastbreak: shotBuilder.fastBreak.value,
+        breakthrough: props.goalkeeperSelected ? oneOnOneLost.value : shotBuilder.oneOnOneWin.value,
         assistPrimary: store.selection.primaryAssist.value?.id || null,
         assistSecondary: store.selection.secondaryAssist.value?.id || null,
         mistakePlayer: store.selection.mistakePlayer.value?.id || null,
@@ -298,10 +298,7 @@ const addShotToPlayer = (result: ShootingResult,) => {
         matchid: activeMatch.value.data.value!.id,
     });
 
-    oneOnOneWin.value = false;
-    fastBreak.value = false;
-    oneOnOneLost.value = false;
-    noRecovery.value = false;
+    shotBuilder.clearShot();
     store.selection.clearSelection();
     emit('shotAdded')
 }
@@ -312,7 +309,6 @@ const updateOneOnOneLost = (val:boolean) => {
 }
 
 const updateNoRecovery = (val:boolean) => {
-    noRecovery.value = val;
     store.selection.noRecovery.value = val;
     if(!val){
         store.selection.noRecoveryPlayer.value = null;

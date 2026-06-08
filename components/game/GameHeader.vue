@@ -25,9 +25,10 @@
         <div class="flex items-center justify-center h-full">
             <span class="bg-yellow-300 text-black px-5 flex items-center font-bold justify-center h-full select-none">
                 {{match.data.value.time}}</span>
-            <button @click="toggleMatchTimer()" class="bg-white px-5 flex items-center justify-center h-full">
+            <button @click="toggleMatchTimer()" class="relative bg-white px-5 flex items-center justify-center h-full">
                 <pause v-if="match.data.value.playing" class="h-12 w-12 text-gray-900" />
                 <play v-else class="h-12 w-12 text-gray-900" />
+                <shortcut-chip combo="Space" class="absolute bottom-1 right-1" />
             </button>
         </div>
         <div class="relative"  >
@@ -58,6 +59,7 @@ import back from '../../components/icons/back.vue'
 import pause from '~/components/icons/pause.vue';
 import play from '~/components/icons/play.vue';
 import HeaderTwoMinutesTag from './HeaderTwoMinutesTag.vue';
+import ShortcutChip from '../shared/ShortcutChip.vue';
 
 const store = useHandballStore();
 const match = computed(() => store.matches.match.value!);

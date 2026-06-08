@@ -48,12 +48,30 @@
       >{{ getShootingAreaInfo('7M')['text'] }}</text>
     <path v-else d="M447.825 180L454.011 167.756V167.656H446.831V165.455H456.739V167.706L450.56 180H447.825ZM459.173 165.455H462.397L466.716 175.994H466.886L471.204 165.455H474.429V180H471.9V170.007H471.765L467.745 179.957H465.856L461.836 169.986H461.701V180H459.173V165.455Z":fill="selected === '7M' ? 'white' : 'black'"/>
 
+    <g v-if="ctrlHeld" pointer-events="none">
+      <text
+        v-for="chip in areaChips"
+        :key="chip.key"
+        :x="chip.x"
+        :y="chip.y"
+        text-anchor="middle"
+        alignment-baseline="middle"
+        font-size="16"
+        font-family="monospace"
+        font-weight="700"
+        class="select-none"
+        fill="white"
+        stroke="#050C58"
+        stroke-width="0.6"
+      >{{ chip.combo }}</text>
+    </g>
+
     </svg>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { Player, Position, ShootingArea, ShootingTarget } from '~/types/handball';
 import { getScoreColor } from '../utils/getScoreColor';
 
@@ -61,13 +79,14 @@ const props = defineProps<{
   player: Player | null,
   statsMode: boolean,
   selectedShootingTarget: ShootingTarget | null
-}>() 
+}>()
 const emit = defineEmits<{
     (e: 'positionClick', index: ShootingArea | null): void
 }>()
 
 const selected = ref(null as ShootingArea | null);
 const store = useHandballStore()
+const { ctrlHeld } = useModifierState()
 
 const zones = [
   // {key:"", path: "M447.825 180L454.011 167.756V167.656H446.831V165.455H456.739V167.706L450.56 180H447.825ZM459.173 165.455H462.397L466.716 175.994H466.886L471.204 165.455H474.429V180H471.9V170.007H471.765L467.745 179.957H465.856L461.836 169.986H461.701V180H459.173V165.455Z" },
@@ -176,6 +195,20 @@ function getTextColor(index:ShootingArea){
   }
 }
 
+
+const areaChips = computed<{ key: ShootingArea; combo: string; x: number; y: number }[]>(() => {
+  return [
+    { key: 'LW', combo: '⌃L', x: 35, y: 30 },
+    { key: 'RW', combo: '⌃W', x: 895, y: 30 },
+    { key: 'LB6', combo: '⌃B', x: 200, y: 110 },
+    { key: 'RB6', combo: '⌃R', x: 710, y: 110 },
+    { key: 'CB6', combo: '⌃C', x: 460, y: 80 },
+    { key: 'LB9', combo: '⌃B', x: 120, y: 305 },
+    { key: 'RB9', combo: '⌃R', x: 810, y: 305 },
+    { key: 'CB9', combo: '⌃C', x: 460, y: 310 },
+    { key: '7M', combo: '⌃T', x: 460, y: 200 },
+  ];
+});
 
 </script>
 

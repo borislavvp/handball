@@ -31,16 +31,16 @@
               </div>
             </div>
             <div class="flex flex-wrap w-full ml-8 space-x-6 py-6">
-              <players-list 
-              :stats-mode="store.selection.stats.value.goal" 
-              :shooting-target="shootingTarget" 
+              <players-list
+              :stats-mode="store.selection.stats.value.goal"
+              :shooting-target="shotBuilder.shootingTarget.value"
               />
             </div>
             <!-- Defense System -->
             <div class="flex items-center justify-between mb-5 mx-8">
               <div class="flex items center text-xl">
                 <span class="font-semibold">Defense:</span>
-                <select @input="changeDefenseSystem" 
+                <select @input="changeDefenseSystem"
                 :value="match.data.value.defenseSystem" class="font-semibold underline ml-2">
                   <option value="6:0">6:0</option>
                   <option value="5:1">5:1</option>
@@ -51,7 +51,7 @@
               </div>
               <div class="flex items-center text-xl">
                 <span class="font-semibold">Opposite Defense:</span>
-                <select @input="changeOppositeDefenseSystem" 
+                <select @input="changeOppositeDefenseSystem"
                 :value="match.data.value.opponentDefenseSystem" class="font-semibold underline ml-2">
                   <option value="6:0">6:0</option>
                   <option value="5:1">5:1</option>
@@ -62,17 +62,17 @@
               </div>
             </div>
             <div class="flex items-center justify-between mb-5 mx-8">
-             
-              <button @click="match.toggleEmptyGoal('home')" 
+
+              <button @click="match.toggleEmptyGoal('home')"
                 class="rounded-md select-none px-4 py-2 font-semibold text-lg flex text-gray-900 text-center items-center "
                 :class="[
-                  match.data.value.emptyGoalHome ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md ' 
+                  match.data.value.emptyGoalHome ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md '
                 ]"
               >EMPTY GOAL</button>
-              <button @click="match.toggleEmptyGoal('away')" 
+              <button @click="match.toggleEmptyGoal('away')"
                 class="rounded-md select-none px-4 py-2 font-semibold text-lg flex text-gray-900 text-center items-center "
                 :class="[
-                  match.data.value.emptyGoalAway ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md ' 
+                  match.data.value.emptyGoalAway ? 'bg-yellow-300 shadow-inner' : ' border border-gray-800 bg-white shadow-md '
                 ]"
               >OPPOSITE EMPTY GOAL</button>
 
@@ -81,33 +81,33 @@
 
         </div>
         <!-- Stats Side -->
-        <div class="w-3/5 h-full flex flex-col px-10 py-6 bg-gray-100 overflow-x-hidden" 
-        :class="shootingTarget !== null ? 'overflow-y-auto' : 'overflow-y-hidden'">
-          <goal 
+        <div class="w-3/5 h-full flex flex-col px-10 py-6 bg-gray-100 overflow-x-hidden"
+        :class="shotBuilder.shootingTarget.value !== null ? 'overflow-y-auto' : 'overflow-y-hidden'">
+          <goal
             @position-click="onShootingTargetClick"
             :goalkeep-selected="selectedPlayer?.position === 'GK'"
-            :shooting-target="shootingTarget"
-            :shooting-area="shootingArea"
+            :shooting-target="shotBuilder.shootingTarget.value"
+            :shooting-area="shotBuilder.shootingArea.value"
             :player="selectedPlayer"
             :stats-mode="store.selection.stats.value.goal"
             class="relative px-10 bg-gray-100"
           />
           <shooting-position
-          v-if="shootingTarget !== null " 
-            @position-click="onShootingAreaClick" 
+          v-if="shotBuilder.shootingTarget.value !== null "
+            @position-click="onShootingAreaClick"
             :player="selectedPlayer"
             :stats-mode="store.selection.stats.value.goal"
-            :selected-shooting-target="shootingTarget"
-            class="bg-white px-10 -mt-4 z-100" 
+            :selected-shooting-target="shotBuilder.shootingTarget.value"
+            class="bg-white px-10 -mt-4 z-100"
           />
-          <stats-options 
+          <stats-options
             class="flex-1"
-            :class="shootingTarget === null && 'mt-5'" 
+            :class="shotBuilder.shootingTarget.value === null && 'mt-5'"
             :mode="gameMode"
-            :goal-selected="shootingTarget !== null"
+            :goal-selected="shotBuilder.shootingTarget.value !== null"
             :goalkeeper-selected="selectedPlayer?.position === 'GK'"
-            :shooting-area="shootingArea"
-            :shooting-target="shootingTarget"
+            :shooting-area="shotBuilder.shootingArea.value"
+            :shooting-target="shotBuilder.shootingTarget.value"
             :player="selectedPlayer"
             :assist-primary="selectedPrimaryAssist"
             :assist-secondary="selectedSecondaryAssist"
@@ -115,14 +115,14 @@
             @shot-added="onShotAdded"
           />
         </div>
-        
+
       </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { useHandballStore } from '~/composables/useHandballStore';
-import { ShootingTarget, type DefenseSystem, type Player, type Position, type ShootingArea } from '~/types/handball';
+import { ShootingTarget, type DefenseSystem, type Player, type Position, type ShootingArea, type Stats } from '~/types/handball';
 import defense from '~/components/icons/defense2.vue';
 import attack from '~/components/icons/attack.vue';
 import statsIcon from '~/components/icons/statsIcon.vue';
@@ -139,13 +139,14 @@ import SelectedPlayerTag from '~/components/game/SelectedPlayerTag.vue';
 const { $dialog } = useNuxtApp()
 
 const store = useHandballStore();
+const shotBuilder = useShotBuilder();
+const statsPanel = useStatsPanel();
+const playerOrder = usePlayerOrder();
+const shortcuts = useKeyboardShortcuts();
 
 const match = computed(() => store.matches.match.value || null);
 
 const team = computed(() => match.value ? store.teams.getTeam(match.value.data.value.teamid) : null);
-
-const shootingTarget = ref<ShootingTarget | null>(null);
-const shootingArea = ref<ShootingArea | null>(null);
 
 const gameMode = computed(() => store.selection.gameMode.value);
 
@@ -164,6 +165,169 @@ const selectedSecondaryAssist = computed<Player | null>(() => {
 const selectedMistakePlayer = computed<Player | null>(() => {
   return store.selection.mistakePlayer.value;
 });
+
+const alertToast = (title: string) => {
+  $dialog.alert({ title });
+};
+
+const increaseStatForSelected = (stat: Stats) => {
+  if (!selectedPlayer.value) {
+    alertToast('Please select a player first');
+    return;
+  }
+  store.players.increasePlayerStat(selectedPlayer.value, stat);
+  if (statsPanel.provokesOpenned.value) {
+    statsPanel.provokesOpenned.value = false;
+  }
+};
+
+const setPlayerProvokeTwoMinutes = (stat: Stats) => {
+  if (!selectedPlayer.value) {
+    alertToast('Please select a player first');
+    return;
+  }
+  increaseStatForSelected(stat);
+  match.value?.addTwoMinute(selectedPlayer.value.id, 'away');
+  if (statsPanel.provokesOpenned.value) {
+    statsPanel.provokesOpenned.value = false;
+  }
+};
+
+const toggleMatchTimer = () => {
+  if (!match.value) return;
+  if (match.value.data.value.playing) {
+    match.value.pauseMatch();
+  } else {
+    match.value.resumeMatch();
+  }
+};
+
+const cancelCascade = () => {
+  if (statsPanel.provokesOpenned.value) {
+    statsPanel.provokesOpenned.value = false;
+    return;
+  }
+  if (statsPanel.extraDefenseOpened.value) {
+    statsPanel.extraDefenseOpened.value = false;
+    return;
+  }
+  if (shotBuilder.shootingTarget.value !== null) {
+    shotBuilder.setShootingTarget(null);
+    store.selection.clearSelection();
+    return;
+  }
+  if (store.selection.player.value !== null) {
+    store.selection.player.value = null;
+    store.selection.clearSelection();
+  }
+};
+
+const selectPlayerAtSlot = (slot: number) => {
+  const p = playerOrder.playerAtSlot(team.value, slot);
+  if (!p) return false;
+  store.selection.player.value = p;
+  return true;
+};
+
+const selectTargetDigit = (digit: string) => {
+  if (!selectedPlayer.value) {
+    alertToast('Please select a player first');
+    return false;
+  }
+  const n = Number(digit);
+  if (!Number.isInteger(n) || n < 0 || n > 9) return false;
+  shotBuilder.setShootingTarget(n as ShootingTarget);
+  return true;
+};
+
+const selectTargetSymbol = (symbol: '-' | '=') => {
+  if (!selectedPlayer.value) {
+    alertToast('Please select a player first');
+    return false;
+  }
+  const map: Record<string, ShootingTarget> = {
+    '-': ShootingTarget.OUT_LEFT,
+    '=': ShootingTarget.OUT_RIGHT,
+  };
+  const t = map[symbol];
+  if (t === undefined) return false;
+  shotBuilder.setShootingTarget(t);
+  return true;
+};
+
+const selectShootingAreaLetter = (letter: string) => {
+  const map: Record<string, ShootingArea> = {
+    L: 'LW',
+    W: 'RW',
+    T: '7M',
+  };
+  const fixed: Record<string, ShootingArea> = {
+    B: 'LB9',
+    C: 'CB9',
+    R: 'RB9',
+  };
+  if (map[letter]) {
+    shotBuilder.cycleShootingArea(map[letter]!);
+    return true;
+  }
+  if (fixed[letter]) {
+    shotBuilder.cycleShootingArea(fixed[letter]!);
+    return true;
+  }
+  return false;
+};
+
+const confirmShot = (result: 'goal' | 'miss' | 'gksave' | 'gkmiss') => {
+  if (!selectedPlayer.value) {
+    alertToast('Please select a player first');
+    return false;
+  }
+  if (shotBuilder.shootingTarget.value === null || shotBuilder.shootingArea.value === null) {
+    alertToast('Pick shooting area and target');
+    return false;
+  }
+  fireShot(result);
+  return true;
+};
+
+const fireShot = (result: 'goal' | 'miss' | 'gksave' | 'gkmiss') => {
+  if (!selectedPlayer.value) return;
+  const player = selectedPlayer.value;
+  const isGK = player.position === 'GK';
+  const activeMatch = match.value!;
+
+  if (shotBuilder.oneOnOneWin.value) {
+    store.players.increasePlayerStat(player, '1on1win');
+  }
+  if (store.selection.oneOnOneLost.value && store.selection.mistakePlayer.value) {
+    store.players.increasePlayerStat(store.selection.mistakePlayer.value, '1on1lost');
+  }
+  if (store.selection.noRecovery.value && store.selection.noRecoveryPlayer.value) {
+    store.players.increasePlayerStat(store.selection.noRecoveryPlayer.value, 'norebound');
+  }
+  if (result === 'gkmiss') {
+    activeMatch.increaseMatchScore('away');
+  } else if (result === 'goal') {
+    activeMatch.increaseMatchScore('home');
+  }
+  store.players.addShotToPlayer(player, {
+    from: shotBuilder.shootingArea.value!,
+    to: shotBuilder.shootingTarget.value!,
+    result,
+    time: activeMatch.data.value.time,
+    playerid: player.id,
+    fastbreak: shotBuilder.fastBreak.value,
+    breakthrough: isGK ? Boolean(store.selection.oneOnOneLost.value) : shotBuilder.oneOnOneWin.value,
+    assistPrimary: store.selection.primaryAssist.value?.id ?? null,
+    assistSecondary: store.selection.secondaryAssist.value?.id ?? null,
+    mistakePlayer: store.selection.mistakePlayer.value?.id ?? null,
+    noRecovery: store.selection.noRecovery.value,
+    noRecoveryPlayer: store.selection.noRecoveryPlayer.value?.id ?? null,
+    matchid: activeMatch.data.value.id,
+  });
+  shotBuilder.clearShot();
+  store.selection.clearSelection();
+};
 
 onMounted(async () => {
   if(!store.teams.selectedTeam.value){
@@ -184,9 +348,9 @@ onActivated(() => {
 })
 
 watch(() => match.value?.data.value.id, () => {
-  shootingTarget.value = null;
-  shootingArea.value = null;
+  shotBuilder.clearShot();
   store.selection.resetAll();
+  statsPanel.closeAll();
 });
 
 watch(() => match.value?.data.value.result, () => {
@@ -201,40 +365,142 @@ watch(() => match.value?.data.value.result, () => {
   }
 });
 
-// const toggleGameMode = () => {
-//   if(store.selection.gameMode.value === 'stats'){
-//     store.selection.changeGameMode('attack');
-//   }else{
-//     store.selection.changeGameMode('stats');
-//   }
-//   const mode = store.selection.gameMode.value
-//   if(mode === 'stats' && (selectedPlayer.value && !selectedPlayer.value?.currentStats)){
-//     store.selection.player.value = null;
-//   }
-  
-//   shootingTarget.value = null;
-//   shootingArea.value = null;
-//   store.selection.clearSelection();
-// }
+watch(() => selectedPlayer.value?.id, () => {
+  shotBuilder.oneOnOneWin.value = false;
+  store.selection.oneOnOneLost.value = false;
+  store.selection.noRecovery.value = false;
+});
 
+const registerKeymap = () => {
+  shortcuts.register('Space', toggleMatchTimer);
+  shortcuts.register('Escape', cancelCascade);
+
+  shortcuts.register('Shift+1', () => selectPlayerAtSlot(0));
+  shortcuts.register('Shift+2', () => {
+    if (statsPanel.provokesOpenned.value) {
+      setPlayerProvokeTwoMinutes('provokeTwoMin');
+      return;
+    }
+    selectPlayerAtSlot(1);
+  });
+  shortcuts.register('Shift+3', () => selectPlayerAtSlot(2));
+  shortcuts.register('Shift+4', () => selectPlayerAtSlot(3));
+  shortcuts.register('Shift+5', () => selectPlayerAtSlot(4));
+  shortcuts.register('Shift+6', () => selectPlayerAtSlot(5));
+  shortcuts.register('Shift+7', () => {
+    if (statsPanel.provokesOpenned.value) {
+      increaseStatForSelected('provokePenalty');
+      return;
+    }
+    selectPlayerAtSlot(6);
+  });
+  shortcuts.register('Shift+8', () => selectPlayerAtSlot(7));
+  shortcuts.register('Shift+9', () => selectPlayerAtSlot(8));
+  shortcuts.register('Shift+0', () => selectPlayerAtSlot(9));
+
+  shortcuts.register('Shift+D', () => increaseStatForSelected('defense'));
+  shortcuts.register('Shift+E', () => increaseStatForSelected('defensex2'));
+  shortcuts.register('Shift+S', () => increaseStatForSelected('steal'));
+  shortcuts.register('Shift+B', () => {
+    if (selectedPlayer.value) {
+      setPlayerProvokeTwoMinutes('block');
+    } else {
+      increaseStatForSelected('block');
+    }
+  });
+  shortcuts.register('Shift+L', () => increaseStatForSelected('lostball'));
+  shortcuts.register('Shift+K', () => increaseStatForSelected('penaltymade'));
+  shortcuts.register('Shift+N', () => increaseStatForSelected('norebound'));
+
+  shortcuts.register('Shift+Y', () => {
+    if (statsPanel.provokesOpenned.value) {
+      increaseStatForSelected('provokeCard');
+      return;
+    }
+    increaseStatForSelected('yellowcard');
+  });
+  shortcuts.register('Shift+R', () => {
+    if (statsPanel.provokesOpenned.value) {
+      setPlayerProvokeTwoMinutes('provokeCard');
+      return;
+    }
+    increaseStatForSelected('redcard');
+  });
+  shortcuts.register('Shift+U', () => {
+    if (statsPanel.provokesOpenned.value) {
+      setPlayerProvokeTwoMinutes('provokeCard');
+      return;
+    }
+    increaseStatForSelected('bluecard');
+  });
+
+  shortcuts.register('Shift+P', () => {
+    if (shotBuilder.shootingTarget.value !== null) {
+      shotBuilder.setShootingTarget(null);
+      store.selection.clearSelection();
+    }
+    statsPanel.toggleProvokes();
+  });
+
+  shortcuts.register('Ctrl+0', () => selectTargetDigit('0'));
+  shortcuts.register('Ctrl+1', () => selectTargetDigit('1'));
+  shortcuts.register('Ctrl+2', () => selectTargetDigit('2'));
+  shortcuts.register('Ctrl+3', () => selectTargetDigit('3'));
+  shortcuts.register('Ctrl+4', () => selectTargetDigit('4'));
+  shortcuts.register('Ctrl+5', () => selectTargetDigit('5'));
+  shortcuts.register('Ctrl+6', () => selectTargetDigit('6'));
+  shortcuts.register('Ctrl+7', () => selectTargetDigit('7'));
+  shortcuts.register('Ctrl+8', () => selectTargetDigit('8'));
+  shortcuts.register('Ctrl+9', () => selectTargetDigit('9'));
+  shortcuts.register('Ctrl+-', () => selectTargetSymbol('-'));
+  shortcuts.register('Ctrl+=', () => selectTargetSymbol('='));
+
+  shortcuts.register('Ctrl+L', () => selectShootingAreaLetter('L'));
+  shortcuts.register('Ctrl+W', () => selectShootingAreaLetter('W'));
+  shortcuts.register('Ctrl+B', () => selectShootingAreaLetter('B'));
+  shortcuts.register('Ctrl+C', () => selectShootingAreaLetter('C'));
+  shortcuts.register('Ctrl+R', () => selectShootingAreaLetter('R'));
+  shortcuts.register('Ctrl+T', () => selectShootingAreaLetter('T'));
+
+  shortcuts.register('Ctrl+F', () => {
+    if (shotBuilder.shootingTarget.value !== null) {
+      shotBuilder.toggleFastBreak();
+    }
+  });
+  shortcuts.register('Ctrl+I', () => {
+    if (shotBuilder.shootingTarget.value !== null && selectedPlayer.value?.position !== 'GK') {
+      shotBuilder.toggleOneOnOneWin();
+    }
+  });
+  shortcuts.register('Ctrl+O', () => {
+    if (shotBuilder.shootingTarget.value !== null && selectedPlayer.value?.position === 'GK') {
+      store.selection.oneOnOneLost.value = !store.selection.oneOnOneLost.value;
+    }
+  });
+
+  shortcuts.register('Ctrl+G', () => confirmShot('goal'));
+  shortcuts.register('Ctrl+M', () => confirmShot('miss'));
+  shortcuts.register('Ctrl+H', () => confirmShot('gksave'));
+  shortcuts.register('Ctrl+A', () => confirmShot('gkmiss'));
+};
+
+registerKeymap();
 
 function onShotAdded(){
-  shootingTarget.value = null;
-  shootingArea.value = null;
+  shotBuilder.clearShot();
   store.selection.clearSelection();
 }
 
 function onShootingTargetClick(index: number | null){
-  shootingTarget.value = index;
-  if (shootingTarget.value === null) {
-    shootingArea.value = null;
+  shotBuilder.setShootingTarget(index);
+  if (shotBuilder.shootingTarget.value === null) {
     store.selection.clearSelection();
   }
 }
 
 
 function onShootingAreaClick(index: ShootingArea | null){
-  shootingArea.value = index;
+  shotBuilder.setShootingArea(index);
 }
 
 function changeDefenseSystem(e:Event) {
