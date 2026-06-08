@@ -183,6 +183,7 @@ const store = useHandballStore();
 const shotBuilder = useShotBuilder();
 const statsPanel = useStatsPanel();
 const playerOrder = usePlayerOrder();
+const assistMode = useAssistMode();
 const shortcuts = useKeyboardShortcuts();
 
 const match = computed(() => store.matches.match.value || null);
@@ -268,15 +269,32 @@ const cancelCascade = () => {
 const selectPlayerAtSlot = (slot: number) => {
   const p = playerOrder.playerAtSlot(team.value, slot);
   if (!p) return false;
+  const mode = assistMode.mode.value;
+  if (mode === "primaryAssist") {
+    store.selection.primaryAssist.value = p;
+    assistMode.exit();
+    return true;
+  }
+  if (mode === "secondaryAssist") {
+    store.selection.secondaryAssist.value = p;
+    assistMode.exit();
+    return true;
+  }
+  if (mode === "mistake") {
+    store.selection.mistakePlayer.value = p;
+    assistMode.exit();
+    return true;
+  }
+  if (mode === "noRecovery") {
+    store.selection.noRecoveryPlayer.value = p;
+    assistMode.exit();
+    return true;
+  }
   store.selection.player.value = p;
   return true;
 };
 
 const selectTargetDigit = (digit: string) => {
-  if (!selectedPlayer.value) {
-    alertToast("Please select a player first");
-    return false;
-  }
   const n = Number(digit);
   if (!Number.isInteger(n) || n < 0 || n > 9) return false;
   shotBuilder.setShootingTarget(n as ShootingTarget);
@@ -284,10 +302,6 @@ const selectTargetDigit = (digit: string) => {
 };
 
 const selectTargetSymbol = (symbol: "-" | "=") => {
-  if (!selectedPlayer.value) {
-    alertToast("Please select a player first");
-    return false;
-  }
   const map: Record<string, ShootingTarget> = {
     "-": ShootingTarget.OUT_LEFT,
     "=": ShootingTarget.OUT_RIGHT
@@ -298,29 +312,7 @@ const selectTargetSymbol = (symbol: "-" | "=") => {
   return true;
 };
 
-const selectShootingAreaLetter = (letter: string) => {
-  const map: Record<string, ShootingArea> = {
-    L: "LW",
-    W: "RW",
-    T: "7M"
-  };
-  const fixed: Record<string, ShootingArea> = {
-    B: "LB9",
-    C: "CB9",
-    R: "RB9"
-  };
-  if (map[letter]) {
-    shotBuilder.cycleShootingArea(map[letter]!);
-    return true;
-  }
-  if (fixed[letter]) {
-    shotBuilder.cycleShootingArea(fixed[letter]!);
-    return true;
-  }
-  return false;
-};
-
-const confirmShot = (result: "goal" | "miss" | "gksave" | "gkmiss") => {
+const confirmShot = (result: "goal" | "miss" | "gksave") => {
   if (!selectedPlayer.value) {
     alertToast("Please select a player first");
     return false;
@@ -448,7 +440,13 @@ watch(
 
 const registerKeymap = () => {
   shortcuts.register("Space", toggleMatchTimer);
-  shortcuts.register("Escape", cancelCascade);
+  shortcuts.register("Escape", () => {
+    if (assistMode.mode.value) {
+      assistMode.exit();
+      return;
+    }
+    cancelCascade();
+  });
 
   shortcuts.register("Shift+1", () => selectPlayerAtSlot(0));
   shortcuts.register("Shift+2", () => {
@@ -474,7 +472,14 @@ const registerKeymap = () => {
   shortcuts.register("Shift+0", () => selectPlayerAtSlot(9));
 
   shortcuts.register("Shift+D", () => increaseStatForSelected("defense"));
-  shortcuts.register("Shift+E", () => increaseStatForSelected("defensex2"));
+  shortcuts.register("Shift+E", () => {
+    if (shotBuilder.shootingTarget.value !== null) {
+      shotBuilder.setShootingTarget(null);
+      store.selection.clearSelection();
+    }
+    statsPanel.toggleExtraDefense();
+  });
+  shortcuts.register("Shift+O", () => increaseStatForSelected("goalld"));
   shortcuts.register("Shift+S", () => increaseStatForSelected("steal"));
   shortcuts.register("Shift+B", () => {
     if (selectedPlayer.value) {
@@ -517,6 +522,11 @@ const registerKeymap = () => {
     statsPanel.toggleProvokes();
   });
 
+  shortcuts.register("Shift+A", () => assistMode.toggle("primaryAssist"));
+  shortcuts.register("Shift+X", () => assistMode.toggle("secondaryAssist"));
+  shortcuts.register("Shift+M", () => assistMode.toggle("mistake"));
+  shortcuts.register("Shift+J", () => assistMode.toggle("noRecovery"));
+
   shortcuts.register("Ctrl+0", () => selectTargetDigit("0"));
   shortcuts.register("Ctrl+1", () => selectTargetDigit("1"));
   shortcuts.register("Ctrl+2", () => selectTargetDigit("2"));
@@ -530,12 +540,12 @@ const registerKeymap = () => {
   shortcuts.register("Ctrl+-", () => selectTargetSymbol("-"));
   shortcuts.register("Ctrl+=", () => selectTargetSymbol("="));
 
-  shortcuts.register("Ctrl+L", () => selectShootingAreaLetter("L"));
-  shortcuts.register("Ctrl+W", () => selectShootingAreaLetter("W"));
-  shortcuts.register("Ctrl+B", () => selectShootingAreaLetter("B"));
-  shortcuts.register("Ctrl+C", () => selectShootingAreaLetter("C"));
-  shortcuts.register("Ctrl+R", () => selectShootingAreaLetter("R"));
-  shortcuts.register("Ctrl+T", () => selectShootingAreaLetter("T"));
+  shortcuts.register("Ctrl+L+W", () => shotBuilder.setShootingArea("LW"));
+  shortcuts.register("Ctrl+R+W", () => shotBuilder.setShootingArea("RW"));
+  shortcuts.register("Ctrl+7+M", () => shotBuilder.setShootingArea("7M"));
+  shortcuts.register("Ctrl+L+B", () => shotBuilder.cycleShootingArea("LB9"));
+  shortcuts.register("Ctrl+C+B", () => shotBuilder.cycleShootingArea("CB9"));
+  shortcuts.register("Ctrl+R+B", () => shotBuilder.cycleShootingArea("RB9"));
 
   shortcuts.register("Ctrl+F", () => {
     if (shotBuilder.shootingTarget.value !== null) {
@@ -543,26 +553,34 @@ const registerKeymap = () => {
     }
   });
   shortcuts.register("Ctrl+I", () => {
-    if (
-      shotBuilder.shootingTarget.value !== null &&
-      selectedPlayer.value?.position !== "GK"
-    ) {
+    if (shotBuilder.shootingTarget.value === null) return;
+    if (selectedPlayer.value?.position === "GK") {
+      store.selection.oneOnOneLost.value = !store.selection.oneOnOneLost.value;
+      if (store.selection.oneOnOneLost.value) {
+        assistMode.enter("mistake");
+      } else {
+        store.selection.mistakePlayer.value = null;
+        if (assistMode.mode.value === "mistake") assistMode.exit();
+      }
+    } else {
       shotBuilder.toggleOneOnOneWin();
     }
   });
-  shortcuts.register("Ctrl+O", () => {
-    if (
-      shotBuilder.shootingTarget.value !== null &&
-      selectedPlayer.value?.position === "GK"
-    ) {
-      store.selection.oneOnOneLost.value = !store.selection.oneOnOneLost.value;
+  shortcuts.register("Ctrl+J", () => {
+    if (shotBuilder.shootingTarget.value !== null) {
+      store.selection.noRecovery.value = !store.selection.noRecovery.value;
+      if (store.selection.noRecovery.value) {
+        assistMode.enter("noRecovery");
+      } else {
+        store.selection.noRecoveryPlayer.value = null;
+        if (assistMode.mode.value === "noRecovery") assistMode.exit();
+      }
     }
   });
 
   shortcuts.register("Ctrl+G", () => confirmShot("goal"));
   shortcuts.register("Ctrl+M", () => confirmShot("miss"));
-  shortcuts.register("Ctrl+H", () => confirmShot("gksave"));
-  shortcuts.register("Ctrl+A", () => confirmShot("gkmiss"));
+  shortcuts.register("Ctrl+S", () => confirmShot("gksave"));
 };
 
 registerKeymap();

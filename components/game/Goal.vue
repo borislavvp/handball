@@ -247,24 +247,47 @@
           {{ getShootingTargetInfo(num)["text"] }}
         </text>
 
-        <g v-if="ctrlHeld" pointer-events="none">
-          <text
+        <g v-if="ctrlHeld" pointer-events="none" class="shortcut-layer">
+          <g
             v-for="(combo, idx) in targetShortcuts"
             :key="`sc-${idx}`"
-            :x="getChipX(idx)"
-            :y="getChipY(idx)"
-            text-anchor="middle"
-            alignment-baseline="middle"
-            font-size="18"
-            font-family="monospace"
-            font-weight="700"
-            class="select-none"
-            fill="white"
-            stroke="#050C58"
-            stroke-width="0.6"
+            :transform="`translate(${getChipX(idx)}, ${getChipY(idx)})`"
           >
-            {{ combo }}
-          </text>
+            <g class="shortcut-chip">
+              <rect
+                x="-22"
+                y="-17"
+                width="44"
+                height="34"
+                rx="7"
+                ry="7"
+                fill="#0f172a"
+                stroke="#020617"
+                stroke-width="1"
+              />
+              <rect
+                x="-22"
+                y="13"
+                width="44"
+                height="2"
+                rx="1"
+                fill="rgba(255,255,255,0.08)"
+              />
+              <text
+                x="0"
+                y="1"
+                text-anchor="middle"
+                alignment-baseline="middle"
+                font-size="20"
+                font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+                font-weight="700"
+                class="select-none"
+                fill="#f8fafc"
+              >
+                {{ getShortcutKey(combo) }}
+              </text>
+            </g>
+          </g>
         </g>
       </svg>
     </div>
@@ -277,7 +300,8 @@ import {
   type Player,
   type ShootingArea
 } from "~/types/handball";
-import { getScoreColor } from "../utils/getScoreColor";
+import { getScoreColor } from "~/components/utils/getScoreColor";
+import { getShortcutKey } from "~/components/utils/formatShortcut";
 
 const props = defineProps<{
   goalkeepSelected: boolean;
@@ -529,13 +553,13 @@ const cellCenters: Record<number, { x: number; y: number }> = {
   0: { x: 480, y: 70 },
   1: { x: 240, y: 225 },
   2: { x: 470, y: 225 },
-  3: { x: 700, y: 225 },
+  3: { x: 680, y: 225 },
   4: { x: 240, y: 370 },
   5: { x: 470, y: 370 },
-  6: { x: 700, y: 370 },
+  6: { x: 680, y: 370 },
   7: { x: 240, y: 515 },
   8: { x: 470, y: 515 },
-  9: { x: 700, y: 515 },
+  9: { x: 680, y: 515 },
   10: { x: 55, y: 370 },
   11: { x: 865, y: 370 }
 };
@@ -578,5 +602,21 @@ const getChipY = (idx: number): number => {
 svg {
   max-width: 100%;
   height: auto;
+}
+
+.shortcut-layer .shortcut-chip {
+  animation: goal-shortcut-pop 160ms ease-out;
+  transform-origin: 0 0;
+}
+
+@keyframes goal-shortcut-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>

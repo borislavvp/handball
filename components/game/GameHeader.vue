@@ -49,7 +49,7 @@
             class="h-12 w-12 text-gray-900"
           />
           <play v-else class="h-12 w-12 text-gray-900" />
-          <shortcut-chip combo="Space" class="absolute bottom-1 right-1" />
+          <!-- <shortcut-chip combo="Space" class="absolute bottom-1 right-1" /> -->
         </button>
       </div>
       <div class="relative">

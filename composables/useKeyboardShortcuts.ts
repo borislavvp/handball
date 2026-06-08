@@ -2,6 +2,7 @@ import { onBeforeUnmount } from "vue";
 import { useEventListener } from "@vueuse/core";
 import {
   buildCombo,
+  clearPendingPrefix,
   shouldIgnoreKeyEvent,
   useKeymap,
   type Keymap
@@ -11,13 +12,16 @@ export const useKeyboardShortcuts = () => {
   const { keymap, register, unregister, press, clear } = useKeymap();
 
   const handler = (event: KeyboardEvent) => {
-    if (shouldIgnoreKeyEvent(event)) return;
-    const combo = buildCombo(event);
-    if (!combo) return;
-    if (press(combo)) {
-      event.preventDefault();
-      event.stopPropagation();
+    if (event.key === "Escape") {
+      clearPendingPrefix();
     }
+    if (shouldIgnoreKeyEvent(event)) return;
+    const { combo, consumed } = buildCombo(event);
+    if (consumed) {
+      event.preventDefault();
+    }
+    if (!combo) return;
+    press(combo);
   };
 
   if (import.meta.client) {
@@ -26,6 +30,7 @@ export const useKeyboardShortcuts = () => {
 
   onBeforeUnmount(() => {
     clear();
+    clearPendingPrefix();
   });
 
   return {

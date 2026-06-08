@@ -2,11 +2,7 @@ import { useMagicKeys } from "@vueuse/core";
 import { computed } from "vue";
 
 export const useModifierState = () => {
-  const keys = useMagicKeys({
-    shift: "shift",
-    ctrl: "ctrl",
-    alt: "alt"
-  });
+  const keys = useMagicKeys();
 
   const shiftHeld = computed(() => Boolean(keys.shift?.value));
   const ctrlHeld = computed(() => Boolean(keys.ctrl?.value));

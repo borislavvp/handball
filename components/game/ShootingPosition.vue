@@ -71,24 +71,47 @@
         :fill="selected === '7M' ? 'white' : 'black'"
       />
 
-      <g v-if="ctrlHeld" pointer-events="none">
-        <text
+      <g v-if="ctrlHeld" pointer-events="none" class="shortcut-layer">
+        <g
           v-for="chip in areaChips"
           :key="chip.key"
-          :x="chip.x"
-          :y="chip.y"
-          text-anchor="middle"
-          alignment-baseline="middle"
-          font-size="16"
-          font-family="monospace"
-          font-weight="700"
-          class="select-none"
-          fill="white"
-          stroke="#050C58"
-          stroke-width="0.6"
+          :transform="`translate(${chip.x}, ${chip.y})`"
         >
-          {{ chip.combo }}
-        </text>
+          <g class="shortcut-chip">
+            <rect
+              :x="-chipWidth(chip.combo) / 2"
+              y="-15"
+              :width="chipWidth(chip.combo)"
+              height="30"
+              rx="6"
+              ry="6"
+              fill="#0f172a"
+              stroke="#020617"
+              stroke-width="1"
+            />
+            <rect
+              :x="-chipWidth(chip.combo) / 2"
+              y="11"
+              :width="chipWidth(chip.combo)"
+              height="2"
+              rx="1"
+              fill="rgba(255,255,255,0.08)"
+            />
+            <text
+              x="0"
+              y="1"
+              text-anchor="middle"
+              alignment-baseline="middle"
+              font-size="16"
+              font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+              font-weight="700"
+              class="select-none"
+              fill="#f8fafc"
+            >
+              {{ formatChipLabel(chip.combo) }}
+            </text>
+          </g>
+        </g>
       </g>
     </svg>
   </div>
@@ -102,7 +125,8 @@ import type {
   ShootingArea,
   ShootingTarget
 } from "~/types/handball";
-import { getScoreColor } from "../utils/getScoreColor";
+import { getScoreColor } from "~/components/utils/getScoreColor";
+import { formatShortcut } from "~/components/utils/formatShortcut";
 
 const props = defineProps<{
   player: Player | null;
@@ -281,21 +305,44 @@ const areaChips = computed<
   { key: ShootingArea; combo: string; x: number; y: number }[]
 >(() => {
   return [
-    { key: "LW", combo: "⌃L", x: 35, y: 30 },
-    { key: "RW", combo: "⌃W", x: 895, y: 30 },
-    { key: "LB6", combo: "⌃B", x: 200, y: 110 },
-    { key: "RB6", combo: "⌃R", x: 710, y: 110 },
-    { key: "CB6", combo: "⌃C", x: 460, y: 80 },
-    { key: "LB9", combo: "⌃B", x: 120, y: 305 },
-    { key: "RB9", combo: "⌃R", x: 810, y: 305 },
-    { key: "CB9", combo: "⌃C", x: 460, y: 310 },
-    { key: "7M", combo: "⌃T", x: 460, y: 200 }
+    { key: "LW", combo: "Ctrl+L+W", x: 35, y: 30 },
+    { key: "RW", combo: "Ctrl+R+W", x: 895, y: 30 },
+    { key: "LB9", combo: "Ctrl+L+B", x: 120, y: 305 },
+    { key: "RB9", combo: "Ctrl+R+B", x: 810, y: 305 },
+    { key: "CB9", combo: "Ctrl+C+B", x: 460, y: 310 },
+    { key: "7M", combo: "Ctrl+7+M", x: 460, y: 200 }
   ];
 });
+
+const formatChipLabel = (combo: string): string => {
+  const label = formatShortcut(combo);
+  return label.replace(/ \+ /g, " · ");
+};
+
+const chipWidth = (combo: string): number => {
+  const label = formatChipLabel(combo);
+  return Math.max(36, label.length * 11 + 14);
+};
 </script>
 
 <style scoped>
 svg {
   user-select: none;
+}
+
+.shortcut-layer .shortcut-chip {
+  animation: pos-shortcut-pop 160ms ease-out;
+  transform-origin: 0 0;
+}
+
+@keyframes pos-shortcut-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>

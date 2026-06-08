@@ -35,16 +35,17 @@ export const useShotBuilder = () => {
 
   const cycleShootingArea = (next: ShootingArea) => {
     const current = shootingArea.value;
-    if (current && STATS_6M_AREA[current] === next) {
-      shootingArea.value = current;
-      return;
-    }
     if (current === next) {
       const toggled = STATS_6M_AREA[next];
       if (toggled) {
         shootingArea.value = toggled;
         return;
       }
+    }
+    const currentVariant = current ? STATS_6M_AREA[current] : null;
+    if (currentVariant === next) {
+      shootingArea.value = next;
+      return;
     }
     shootingArea.value = next;
   };

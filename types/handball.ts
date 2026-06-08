@@ -1,30 +1,29 @@
-export type Orientation = 'vertical' | 'horizontal';
+export type Orientation = "vertical" | "horizontal";
 
-export const AttackPosValues = [
-  'LW',
-  'LB',
-  'CB',
-  'RB',
-  'RW',
-  'PV',
-] as const;
+export const AttackPosValues = ["LW", "LB", "CB", "RB", "RW", "PV"] as const;
 
 export const DefensePosValues = [
-  'D1' , 'D2' , 'D3' , 'D4' , 'D5' , 'D6' , 'GK'
+  "D1",
+  "D2",
+  "D3",
+  "D4",
+  "D5",
+  "D6",
+  "GK"
 ] as const;
 
-export type AttackPosKey = typeof AttackPosValues[number]
+export type AttackPosKey = (typeof AttackPosValues)[number];
 
-export type DefensePosKey = typeof DefensePosValues[number]
+export type DefensePosKey = (typeof DefensePosValues)[number];
 
 export type Position = {
-  key:AttackPosKey|DefensePosKey;
-  label: string; 
-  x: number; 
-  y: number
-}
+  key: AttackPosKey | DefensePosKey;
+  label: string;
+  x: number;
+  y: number;
+};
 
-export type PlayerCurrentStats = {[key in Stats]: number;} & { value: number; };
+export type PlayerCurrentStats = { [key in Stats]: number } & { value: number };
 
 export interface Player {
   id: number;
@@ -34,9 +33,9 @@ export interface Player {
   currentShots?: Shot[];
   currentStats?: PlayerCurrentStats;
   liveByMatch?: Record<number, { stats: PlayerCurrentStats; shots: Shot[] }>;
-  recentStats:PlayerStats[];
+  recentStats: PlayerStats[];
   hasTwoMinutes: boolean;
-  hasCard: null | "yellow" | "red" | "blue"
+  hasCard: null | "yellow" | "red" | "blue";
 }
 
 export interface Team {
@@ -57,7 +56,7 @@ export interface Match {
   timeoutsLeftAway: number;
   shots: Shot[];
 }
-export type ActiveMatchData  = Match & {
+export type ActiveMatchData = Match & {
   time: string;
   playing: boolean;
   timeoutsLeftHome: number;
@@ -68,11 +67,20 @@ export type ActiveMatchData  = Match & {
   emptyGoalAway: boolean;
   twoMinutesHome: number[];
   twoMinutesAway: number[];
-}
+};
 
-export type DefenseSystem = "6:0" | "5:1" | "3:2:1" | "4:2" | "1:1"
+export type DefenseSystem = "6:0" | "5:1" | "3:2:1" | "4:2" | "1:1";
 
-export type ShootingArea = 'LW' | "LB9" | "LB6" | "CB9" | "CB6" | "RB6" | "RB9" | "RW" | "7M";
+export type ShootingArea =
+  | "LW"
+  | "LB9"
+  | "LB6"
+  | "CB9"
+  | "CB6"
+  | "RB6"
+  | "RB9"
+  | "RW"
+  | "7M";
 
 export enum ShootingTarget {
   OUT_TOP = 0,
@@ -86,50 +94,69 @@ export enum ShootingTarget {
   GOAL_BOTTOM_MIDDLE = 8,
   GOAL_BOTTOM_RIGHT = 9,
   OUT_LEFT = 10,
-  OUT_RIGHT = 11,
-} 
-export type Shot = {
-    assistPrimary: number | null;
-    assistSecondary: number | null;
-    mistakePlayer: number | null;
-    fastbreak: boolean;
-    breakthrough: boolean;
-    from: ShootingArea ;
-    matchid: number;
-    playerid: number;
-    result: ShootingResult;
-    time: string;
-    to: ShootingTarget;
-    noRecovery?: boolean;
-    noRecoveryPlayer?: number | null;
+  OUT_RIGHT = 11
 }
-export type ShootingResult = 'goal' | 'miss' | 'block' | 'gksave' | 'gkmiss' | 'goal_empty' | 'gkmiss_empty';
+export type Shot = {
+  assistPrimary: number | null;
+  assistSecondary: number | null;
+  mistakePlayer: number | null;
+  fastbreak: boolean;
+  breakthrough: boolean;
+  from: ShootingArea;
+  matchid: number;
+  playerid: number;
+  result: ShootingResult;
+  time: string;
+  to: ShootingTarget;
+  noRecovery: boolean | null;
+  noRecoveryPlayer?: number | null;
+};
+export type ShootingResult =
+  | "goal"
+  | "miss"
+  | "block"
+  | "gksave"
+  | "gkmiss"
+  | "goal_empty"
+  | "gkmiss_empty";
 
-export type MATCH_EVENTS = 'timeout_home' | 'timeout_away' | 'defense_change' | "opponent_defense_change" | 'empty_goal_home' | 'empty_goal_away' | 'playing' | Stats;
+export type MATCH_EVENTS =
+  | "timeout_home"
+  | "timeout_away"
+  | "defense_change"
+  | "opponent_defense_change"
+  | "empty_goal_home"
+  | "empty_goal_away"
+  | "playing"
+  | Stats;
 
-export type Stats = "goal" | 'goal_empty' | 'gkmiss_empty' |
-"assistprimary"|
-"assistsecondary"|
-"1on1win"|
-"provokePenalty"|
-"provokeTwoMin"|
-"provokeCard"|
-"miss"|
-"block"|
-"1on1lost"|
-"norebound"|
-"lostball"|
-"steal"|
-"defense"|
-"defensex2"|
-"1on1lost"|
-"penaltymade"|
-"twominutes"|
-"yellowcard"|
-"redcard"|
-"bluecard"|
-"gksave"|
-"gkmiss"
+export type Stats =
+  | "goal"
+  | "goal_empty"
+  | "gkmiss_empty"
+  | "goalld"
+  | "assistprimary"
+  | "assistsecondary"
+  | "1on1win"
+  | "provokePenalty"
+  | "provokeTwoMin"
+  | "provokeCard"
+  | "miss"
+  | "block"
+  | "1on1lost"
+  | "norebound"
+  | "lostball"
+  | "steal"
+  | "defense"
+  | "defensex2"
+  | "1on1lost"
+  | "penaltymade"
+  | "twominutes"
+  | "yellowcard"
+  | "redcard"
+  | "bluecard"
+  | "gksave"
+  | "gkmiss";
 
 export type PlayerStats = {
   [key in Stats]: number;
@@ -151,4 +178,3 @@ export type PlayerStats = {
     shots: Shot[];
   };
 };
-

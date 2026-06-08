@@ -4,6 +4,12 @@ export type ComboAction = () => void | boolean;
 
 export type Keymap = Map<Combo, ComboAction>;
 
+export type ComboResult = {
+  combo: string | null;
+  consumed: boolean;
+  fired: boolean;
+};
+
 const isEditableTarget = (target: EventTarget | null): boolean => {
   if (!target || !(target instanceof HTMLElement)) return false;
   const tag = target.tagName;
@@ -12,33 +18,92 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
   return false;
 };
 
-export const buildCombo = (event: KeyboardEvent): Combo | null => {
+const isMac =
+  typeof navigator !== "undefined" &&
+  /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+
+const SIDE_KEYS = new Set(["L", "C", "R", "7"]);
+const POSITION_KEYS = new Set(["W", "B", "M"]);
+const PREFIX_TIMEOUT_MS = 1000;
+
+let pendingPrefix: { key: string; expires: number } | null = null;
+
+export const consumePendingPrefix = (): string | null => {
+  if (pendingPrefix && Date.now() < pendingPrefix.expires) {
+    const key = pendingPrefix.key;
+    pendingPrefix = null;
+    return key;
+  }
+  pendingPrefix = null;
+  return null;
+};
+
+export const clearPendingPrefix = () => {
+  pendingPrefix = null;
+};
+
+const codeToKeyName = (code: string): string => {
+  if (code === "Space") return "Space";
+  if (code === "Escape") return "Escape";
+  if (code === "Minus") return "-";
+  if (code === "Equal") return "=";
+  if (code.startsWith("Digit")) return code.slice(5);
+  if (code.startsWith("Key")) return code.slice(3);
+  if (code.startsWith("Numpad")) return code.slice(6);
+  return code;
+};
+
+const ctrlLike = (event: KeyboardEvent): boolean =>
+  event.ctrlKey || (isMac && event.metaKey);
+
+export const buildCombo = (event: KeyboardEvent): ComboResult => {
   const parts: string[] = [];
   if (event.ctrlKey) parts.push("Ctrl");
   if (event.shiftKey) parts.push("Shift");
   if (event.altKey) parts.push("Alt");
-  if (event.metaKey) return null;
+  if (event.metaKey) {
+    if (isMac) {
+      parts.length = 0;
+      parts.push("Ctrl");
+    } else {
+      return { combo: null, consumed: false, fired: false };
+    }
+  }
 
-  let keyName: string;
-  const code = event.code;
-  if (code === "Space") {
-    keyName = "Space";
-  } else if (code === "Escape") {
-    keyName = "Escape";
-  } else if (code.startsWith("Digit")) {
-    keyName = code.slice(5);
-  } else if (code === "Minus") {
-    keyName = "-";
-  } else if (code === "Equal") {
-    keyName = "=";
-  } else if (code.startsWith("Key")) {
-    keyName = code.slice(3);
-  } else {
-    return null;
+  const keyName = codeToKeyName(event.code);
+  const isCtrl = ctrlLike(event);
+
+  if (
+    isCtrl &&
+    pendingPrefix &&
+    Date.now() < pendingPrefix.expires &&
+    POSITION_KEYS.has(keyName)
+  ) {
+    const prefix = pendingPrefix.key;
+    pendingPrefix = null;
+    return {
+      combo: ["Ctrl", prefix, keyName].join("+"),
+      consumed: true,
+      fired: true
+    };
+  }
+
+  if (isCtrl && SIDE_KEYS.has(keyName) && !event.shiftKey) {
+    pendingPrefix = { key: keyName, expires: Date.now() + PREFIX_TIMEOUT_MS };
+    return { combo: null, consumed: true, fired: false };
+  }
+
+  if (
+    pendingPrefix &&
+    Date.now() >= pendingPrefix.expires &&
+    !SIDE_KEYS.has(keyName) &&
+    !POSITION_KEYS.has(keyName)
+  ) {
+    pendingPrefix = null;
   }
 
   parts.push(keyName);
-  return parts.join("+");
+  return { combo: parts.join("+"), consumed: true, fired: true };
 };
 
 export const shouldIgnoreKeyEvent = (event: KeyboardEvent): boolean => {

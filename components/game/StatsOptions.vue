@@ -18,7 +18,7 @@
           />
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="⌃O"
+            combo="Ctrl+I"
             class="absolute top-1 right-1"
           />
         </div>
@@ -28,6 +28,11 @@
             @update:model-value="val => updateNoRecovery(val)"
             negative
             label="NO RCV"
+          />
+          <shortcut-chip
+            v-if="ctrlHeld"
+            combo="Ctrl+J"
+            class="absolute top-1 right-1"
           />
         </div>
         <div class="flex-1 relative">
@@ -39,7 +44,7 @@
           />
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="⌃F"
+            combo="Ctrl+F"
             class="absolute top-1 right-1"
           />
         </div>
@@ -53,7 +58,7 @@
           />
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="⌃I"
+            combo="Ctrl+I"
             class="absolute top-1 right-1"
           />
         </div>
@@ -65,7 +70,7 @@
           />
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="⌃F"
+            combo="Ctrl+F"
             class="absolute top-1 right-1"
           />
         </div>
@@ -75,10 +80,10 @@
           @click="addShotToPlayer(goalkeeperSelected ? 'gkmiss' : 'miss')"
           class="relative rounded flex-1 p-4 bg-red-700 active:bg-red-900 focus:shadow-inner font-semibold text-white"
         >
-          {{ goalkeeperSelected ? "GOAL" : "MISS" }}
+          {{ goalkeeperSelected ? "MISS" : "MISS" }}
           <shortcut-chip
             v-if="ctrlHeld"
-            :combo="goalkeeperSelected ? '⌃A' : '⌃M'"
+            combo="Ctrl+M"
             class="absolute top-1 right-1"
           />
         </button>
@@ -90,7 +95,7 @@
           STOP
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="⌃H"
+            combo="Ctrl+S"
             class="absolute top-1 right-1"
           />
         </button>
@@ -102,7 +107,7 @@
           GOAL
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="⌃G"
+            combo="Ctrl+G"
             class="absolute top-1 right-1"
           />
         </button>
@@ -127,16 +132,16 @@
       >
       <div
         v-if="statsPanel.provokesOpenned.value"
-        class="absolute flex flex-wrap gap-5 items-center bg-white text-white font-semibold rounded p-4 h-28 -ml-2"
+        class="absolute z-50 flex flex-wrap gap-5 items-center bg-white text-white font-semibold rounded h-28 -ml-2"
       >
         <button
           @click="setPlayerProvokeTwoMinutes('provokeCard')"
           class="bg-white text-emerald-900 py-4 rounded px-2 shadow-lg border border-emerald-900 flex items-center space-x-4 relative"
         >
-          RED <span class="ml-2 h-6 w-4 bg-red-600" />
+          CARD <span class="ml-2 h-6 w-4 bg-red-600" />
           <shortcut-chip
             v-if="shiftHeld"
-            combo="⇧R"
+            combo="Shift+R"
             class="absolute -top-2 -right-2"
           />
         </button>
@@ -144,10 +149,10 @@
           @click="setPlayerProvokeTwoMinutes('provokeCard')"
           class="bg-white text-emerald-900 py-4 rounded px-2 shadow-lg border border-emerald-900 flex items-center space-x-4 relative"
         >
-          BLUE <span class="ml-2 h-6 w-4 bg-blue-600" />
+          CARD <span class="relative ml-2 h-6 w-4 bg-blue-600" />
           <shortcut-chip
             v-if="shiftHeld"
-            combo="⇧U"
+            combo="Shift+U"
             class="absolute -top-2 -right-2"
           />
         </button>
@@ -155,10 +160,10 @@
           @click="increasePlayerStats('provokeCard')"
           class="bg-white text-emerald-900 py-4 rounded px-2 shadow-lg border border-emerald-900 flex items-center space-x-4 relative"
         >
-          YELLOW <span class="ml-2 h-6 w-4 bg-yellow-400" />
+          CARD <span class="ml-2 h-6 w-4 bg-yellow-400" />
           <shortcut-chip
             v-if="shiftHeld"
-            combo="⇧Y"
+            combo="Shift+Y"
             class="absolute -top-2 -right-2"
           />
         </button>
@@ -169,7 +174,7 @@
           Penalty
           <shortcut-chip
             v-if="shiftHeld"
-            combo="⇧7"
+            combo="Shift+7"
             class="absolute -top-2 -right-2"
           />
         </button>
@@ -180,14 +185,14 @@
           2 MIN
           <shortcut-chip
             v-if="shiftHeld"
-            combo="⇧2"
+            combo="Shift+2"
             class="absolute -top-2 -right-2"
           />
         </button>
       </div>
       <div
         v-if="statsPanel.extraDefenseOpened.value"
-        class="absolute right-0 flex flex-wrap gap-5 items-center bg-white text-white font-semibold rounded-r-4xl p-4 h-28 mr-5"
+        class="absolute z-50 right-0 flex flex-wrap gap-5 items-center bg-white text-white font-semibold rounded-r-4xl h-28 mr-2"
       >
         <button
           @click="increasePlayerStats('defensex2')"
@@ -195,11 +200,6 @@
         >
           <span class="text-md">EXTRA</span>
           <span class="text-4xl -mt-1 font-bold">+</span>
-          <shortcut-chip
-            v-if="shiftHeld"
-            combo="⇧E"
-            class="absolute -top-2 -right-2"
-          />
         </button>
         <button
           @click="increasePlayerStats('steal')"
@@ -207,11 +207,6 @@
         >
           <span class="text-md">STEAL</span>
           <steal class="h-6 w-6 text-blue-800" />
-          <shortcut-chip
-            v-if="shiftHeld"
-            combo="⇧S"
-            class="absolute -top-2 -right-2"
-          />
         </button>
         <button
           @click="setPlayerProvokeTwoMinutes('block')"
@@ -219,11 +214,6 @@
         >
           <span class="text-md">BLOCK</span>
           <block class="h-6 w-6 text-gray-800" />
-          <shortcut-chip
-            v-if="shiftHeld"
-            combo="⇧B"
-            class="absolute -top-2 -right-2"
-          />
         </button>
       </div>
 
@@ -274,7 +264,7 @@
               <span class="text-md">DEFENSE</span>
               <shortcut-chip
                 v-if="shiftHeld"
-                combo="⇧D"
+                combo="Shift+D"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -285,14 +275,24 @@
             >
               <sumo class="h-12 w-12 text-emerald-800" />
               <span class="text-md">DEFENSE+</span>
+              <shortcut-chip
+                v-if="shiftHeld"
+                combo="Shift+E"
+                class="absolute top-1 right-1"
+              />
             </button>
             <button
               class="relative flex flex-col items-center"
-              @click="addShotToPlayer('goal_empty')"
+              @click="increasePlayerStats('goalld')"
               :class="positiveStatStyle"
             >
               <longdistance class="h-12 w-20 text-emerald-800" />
               <span class="text-md">GOAL LD</span>
+              <shortcut-chip
+                v-if="shiftHeld"
+                combo="Shift+O"
+                class="absolute top-1 right-1"
+              />
             </button>
             <button
               class="relative flex flex-col items-center"
@@ -303,7 +303,7 @@
               <span class="text-md">PROVOKE</span>
               <shortcut-chip
                 v-if="shiftHeld"
-                combo="⇧P"
+                combo="Shift+P"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -318,7 +318,7 @@
               <span class="text-md">LOST BALL</span>
               <shortcut-chip
                 v-if="shiftHeld"
-                combo="⇧L"
+                combo="Shift+L"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -339,7 +339,7 @@
               <span class="text-md">PENALTY</span>
               <shortcut-chip
                 v-if="shiftHeld"
-                combo="⇧K"
+                combo="Shift+K"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -352,7 +352,7 @@
               <span class="text-md text-nowrap">NO REB</span>
               <shortcut-chip
                 v-if="shiftHeld"
-                combo="⇧N"
+                combo="Shift+N"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -365,11 +365,6 @@
             >
               <twofingers class="h-12 w-12 text-gray-800" />
               <span class="text-md">2 MIN</span>
-              <shortcut-chip
-                v-if="shiftHeld"
-                combo="⇧2"
-                class="absolute top-1 right-1"
-              />
             </button>
             <button
               class="relative flex flex-col justify-center items-center"
@@ -380,7 +375,7 @@
               <span class="text-md">CARD</span>
               <shortcut-chip
                 v-if="shiftHeld"
-                combo="⇧Y"
+                combo="Shift+Y"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -393,7 +388,7 @@
               <span class="text-md">CARD</span>
               <shortcut-chip
                 v-if="shiftHeld"
-                combo="⇧R"
+                combo="Shift+R"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -406,7 +401,7 @@
               <span class="text-md">CARD</span>
               <shortcut-chip
                 v-if="shiftHeld"
-                combo="⇧U"
+                combo="Shift+U"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -459,6 +454,7 @@ const emit = defineEmits<{
 const store = useHandballStore();
 const statsPanel = useStatsPanel();
 const shotBuilder = useShotBuilder();
+const assistMode = useAssistMode();
 const positiveStatStyle =
   "rounded-2xl border-2 border-emerald-700 p-2 bg-gray-10 h-24 text-emerald-700 font-semibold uppercase  active:bg-emerald-100 focus:shadow-inner";
 const negativeStatStyle =
@@ -466,7 +462,9 @@ const negativeStatStyle =
 const suspensionStatStyle =
   "flex items-center justify-center rounded-2xl h-24 p-2 border-2 border-gray-400 bg-gray-10 text-gray-700 font-semibold uppercase  active:bg-gray-100 focus:shadow-inner";
 const oneOnOneWin = computed(() => shotBuilder.oneOnOneWin.value);
-const oneOnOneLost = ref(false);
+const oneOnOneLost = computed(
+  () => store.selection.oneOnOneLost.value === true
+);
 const noRecovery = computed(() => Boolean(store.selection.noRecovery.value));
 const fastBreak = computed(() => shotBuilder.fastBreak.value);
 const activeMatch = computed(() => store.matches.match.value!);
@@ -477,7 +475,6 @@ watch(
   () => props.player,
   newVal => {
     shotBuilder.oneOnOneWin.value = false;
-    oneOnOneLost.value = false;
     store.selection.oneOnOneLost.value = false;
     store.selection.noRecovery.value = false;
   }
@@ -556,14 +553,16 @@ const addShotToPlayer = (result: ShootingResult) => {
 };
 
 const updateOneOnOneLost = (val: boolean) => {
-  oneOnOneLost.value = val;
   store.selection.oneOnOneLost.value = val;
 };
 
 const updateNoRecovery = (val: boolean) => {
   store.selection.noRecovery.value = val;
-  if (!val) {
+  if (val) {
+    assistMode.enter("noRecovery");
+  } else {
     store.selection.noRecoveryPlayer.value = null;
+    if (assistMode.mode.value === "noRecovery") assistMode.exit();
   }
 };
 

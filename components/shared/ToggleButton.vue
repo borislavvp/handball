@@ -2,7 +2,7 @@
   <button
     @click="toggle"
     :class="[
-      'flex items-center border justify-center gap-2 rounded-xl p-4 font-medium transition-all duration-200',
+      'flex w-full items-center border justify-center gap-2 rounded-xl p-4 font-medium transition-all duration-200',
       checked
         ? negative ?'bg-red-600 border-red-500 text-white shadow-md' : 'bg-emerald-600 border-emerald-500 text-white shadow-md '
         : 'bg-gray-100  border-gray-300 text-gray-700  '

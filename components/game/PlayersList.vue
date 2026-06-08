@@ -1,7 +1,15 @@
 <template>
   <div
     ref="listRef"
-    class="players-list flex flex-wrap items-start gap-4 p-2 touch-none"
+    class="players-list flex flex-wrap items-start gap-6 touch-none"
+  >
+    <span
+      class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse"
+    />
+  </div>
+  <div
+    ref="listRef"
+    class="players-list flex flex-wrap items-start gap-6 touch-none"
   >
     <div
       v-for="(p, idx) in orderedPlayers"
@@ -40,8 +48,8 @@
                 ? 'shadow-inner text-gray-900 border-emerald-300 bg-emerald-300'
                 : store.selection.mistakePlayer.value?.id == p.id
                   ? 'shadow-inner text-gray-900 border-red-400 bg-red-400'
-                  : store.selection.noRecoveryPlayer.value?.id == p.id
-                    ? 'shadow-inner text-white border-orange-400 bg-orange-400'
+                    : store.selection.noRecoveryPlayer.value?.id == p.id
+                    ? 'shadow-inner text-white border-amber-400 bg-amber-400'
                     : // gameMode === 'stats' && !p.currentStats ? 'border-gray-400 bg-gray-200 text-gray-500' :
                       p.position === 'GK'
                       ? 'text-white border-blue-700 bg-blue-400'
@@ -57,7 +65,8 @@
         <shortcut-chip
           v-if="shiftHeld && idx < 10"
           :combo="slotCombo(idx)"
-          class="absolute top-0 right-0 -mt-1 -mr-1"
+          size="sm"
+          class="absolute top-0 left-0 -mt-1 -ml-1 z-20"
         />
         <span
           v-if="playerFlashKind(p.id) && valueOverlayKey(p.id)"
@@ -137,6 +146,7 @@ const emits = defineEmits<{
 const store = useHandballStore();
 const playerOrder = usePlayerOrder();
 const { shiftHeld } = useModifierState();
+const assistMode = useAssistMode();
 const { flash: flashState, isFlashing } = usePlayerFlash();
 
 const isPlayerFlashing = (playerId: number) => {
@@ -172,7 +182,7 @@ watch(
     savingPlayerIds.value = nextSet;
     setTimeout(() => {
       const cleared = new Set(savingPlayerIds.value);
-      cleared.delete(next.playerId);
+      cleared.delete(next.playerId!);
       savingPlayerIds.value = cleared;
     }, 1100);
   },
@@ -221,7 +231,7 @@ const orderedPlayers = computed<Player[]>(() =>
 
 const slotCombo = (idx: number): string => {
   if (idx < 0 || idx > 9) return "";
-  return idx === 9 ? "⇧0" : `⇧${idx + 1}`;
+  return idx === 9 ? "Shift+0" : `Shift+${idx + 1}`;
 };
 
 watch(teamPlayers, next => {
@@ -242,7 +252,7 @@ function tileSlotAt(clientX: number, clientY: number): number {
   const slots =
     listRef.value?.querySelectorAll<HTMLElement>(".drop-slot") ?? [];
   for (let i = 0; i < slots.length; i++) {
-    const rect = slots[i].getBoundingClientRect();
+    const rect = slots[i]!.getBoundingClientRect();
     if (
       clientX >= rect.left &&
       clientX <= rect.right &&
@@ -296,7 +306,7 @@ function onPointerUp(event: PointerEvent, _index: number) {
   ) {
     const list = [...orderedPlayers.value];
     const [moved] = list.splice(sourceIndex, 1);
-    list.splice(targetIndex, 0, moved);
+    list.splice(targetIndex, 0, moved!);
     playerOrder.setReorder(list.map(p => p.id));
   }
   try {
@@ -337,6 +347,16 @@ function onClickTile(p: Player, event: MouseEvent) {
 }
 
 function onPlayerClick(p: Player) {
+  const mode = assistMode.mode.value;
+  if (mode) {
+    if (mode === "primaryAssist") store.selection.primaryAssist.value = p;
+    if (mode === "secondaryAssist") store.selection.secondaryAssist.value = p;
+    if (mode === "mistake") store.selection.mistakePlayer.value = p;
+    if (mode === "noRecovery") store.selection.noRecoveryPlayer.value = p;
+    assistMode.exit();
+    return;
+  }
+
   const selectMistakePlayer =
     store.selection.player.value?.position === "GK" &&
     store.selection.oneOnOneLost.value;
