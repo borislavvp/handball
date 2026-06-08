@@ -1,4 +1,5 @@
-import { useState, computed } from "nuxt/app";
+import { useState } from "nuxt/app";
+import { computed } from "vue";
 import type { Player, Team } from "~/types/handball";
 
 export const usePlayerOrder = () => {
