@@ -172,7 +172,7 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
             match.value.timeoutsLeftHome -= 1;
             $fetch(`/api/match/${match.value?.id}`, {
                 method: 'PUT',
-                body: {timeoutsLeftHome: match.value.timeoutsLeftHome }
+                body: match.value
             })
             saveMatchToLocalStorage(match.value);
             logMatchEvent({
@@ -183,7 +183,7 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
             match.value.timeoutsLeftAway -= 1;
             $fetch(`/api/match/${match.value?.id}`, {
                 method: 'PUT',
-                body: {timeoutsLeftAway: match.value.timeoutsLeftAway }
+                body: match.value
             })
             saveMatchToLocalStorage(match.value);
             logMatchEvent({
@@ -240,15 +240,13 @@ export const useActiveMatch = (data: Match, loadCache:boolean = false ) => {
     }
     const removeTwoMinute = (playerId:number, side: "away" | "home") => {
       if(side == "home"){
-        match.value?.twoMinutesHome.splice(
-          match.value.twoMinutesHome.indexOf(playerId), 1
-        )
+        const idx = match.value?.twoMinutesHome.indexOf(playerId);
+        if (idx !== -1) match.value?.twoMinutesHome.splice(idx, 1);
       }else{
-        match.value?.twoMinutesAway.splice(
-          match.value.twoMinutesAway.indexOf(playerId), 1
-        )
+        const idx = match.value?.twoMinutesAway.indexOf(playerId);
+        if (idx !== -1) match.value?.twoMinutesAway.splice(idx, 1);
       }
-        saveMatchToLocalStorage(match.value)        
+        saveMatchToLocalStorage(match.value)
     }
 
     const dispose = () => {

@@ -6,10 +6,10 @@ export default defineEventHandler(async (event): Promise<void> => {
     const matchId =event.context.params?.id
     const body = await readBody<UpdateMatchBody>(event)
 
-    if (!body?.result || !matchId) {
+    if (!matchId) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Player opponent and teamId are required'
+        statusMessage: 'Match id is required'
       })
     }
   

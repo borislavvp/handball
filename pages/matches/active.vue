@@ -128,7 +128,7 @@
           class="relative px-10 bg-gray-100"
         />
         <shooting-position
-          v-if="shotBuilder.shootingTarget.value !== null"
+          v-if="shotBuilder.shootingTarget.value !== null || store.selection.stats.value.goal"
           @position-click="onShootingAreaClick"
           :player="selectedPlayer"
           :stats-mode="store.selection.stats.value.goal"
@@ -479,7 +479,7 @@ const registerKeymap = () => {
     }
     statsPanel.toggleExtraDefense();
   });
-  shortcuts.register("Shift+O", () => increaseStatForSelected("goalld"));
+  shortcuts.register("Shift+O", () => increaseStatForSelected("goal_empty"));
   shortcuts.register("Shift+S", () => increaseStatForSelected("steal"));
   shortcuts.register("Shift+B", () => {
     if (selectedPlayer.value) {

@@ -29,17 +29,18 @@
           <span>{{ match.data.value.twoMinutesHome.length }}</span>
           <header-two-minutes-tag
             v-for="value in match.data.value.twoMinutesHome"
+            :key="`home-${value}`"
             :player-id="value"
             side="home"
           />
         </div>
       </div>
-      <div class="flex items-center justify-center h-full">
+      <div class="flex items-center w-60 justify-center h-full">
         <span
-          class="bg-yellow-300 text-black px-5 flex items-center font-bold justify-center h-full select-none"
+          class="bg-yellow-300 w-full text-black px-5 flex items-center justify-center h-full select-none font-bold tabular-nums"
         >
-          {{ match.data.value.time }}</span
-        >
+          {{ match.data.value.time }}
+        </span>
         <button
           @click="toggleMatchTimer()"
           class="relative bg-white px-5 flex items-center justify-center h-full"
@@ -58,11 +59,12 @@
         }}</span>
         <div
           v-if="match.data.value.twoMinutesAway.length > 0"
-          class="flex absolute text-sm justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white -mb-11 items-center w-full py-1"
+          class="flex absolute text-sm w-full justify-between px-4 left-0 bottom-0 border border-gray-300 text-center bg-white -mb-11 items-center w-full py-1"
         >
           <span>{{ match.data.value.twoMinutesAway.length }}</span>
           <header-two-minutes-tag
             v-for="value in match.data.value.twoMinutesAway"
+            :key="`away-${value}`"
             :player-id="value"
             side="away"
           />

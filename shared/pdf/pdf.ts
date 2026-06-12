@@ -729,6 +729,7 @@ export function buildAttackByDefenseStats(
   for (const shot of attackShots) {
     const defenseType = findDefenseAt(shot.time, events, true);
     const bucket = attackByOppDefense.get(defenseType) || attackByOppDefense.get("6-0")!;
+
     bucket.shots.total++;
     const scored = shot.result === 'goal' || shot.result === 'goal_empty';
     if (scored) bucket.shots.scored++;
@@ -797,7 +798,7 @@ export function buildDefenseByTypeStats(
     }
   }
   
-  if (defenseTypes.size === 0) defenseTypes.add("6-0");
+  defenseTypes.add("6-0");
   
   // Initialize maps
   const defenseByType = new Map<string, DefenseTypeBucket>();
@@ -822,6 +823,7 @@ export function buildDefenseByTypeStats(
     const defenseType = findDefenseAt(shot.time, events, false);
     const bucket = defenseByType.get(defenseType) || defenseByType.get("6-0")!;
     
+      console.log("Extracting defense types from events...",defenseType,bucket);
     const saved = shot.result === 'gksave';
     bucket.shots.total++;
     if (saved) bucket.shots.saved++;
