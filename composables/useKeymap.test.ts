@@ -104,14 +104,17 @@ describe('buildCombo', () => {
     }
   })
 
-  it('assembles a two-step Ctrl + side + position sequence', () => {
-    // First press of a side key arms the prefix and consumes silently.
-    const first = buildCombo(ev({ ctrlKey: true, code: 'KeyL' }))
-    expect(first).toMatchObject({ combo: null, consumed: true, fired: false })
-
-    // Following position key resolves to the combined combo.
-    const second = buildCombo(ev({ ctrlKey: true, code: 'KeyB' }))
-    expect(second).toMatchObject({ combo: 'Ctrl+L+B', fired: true })
+  it('builds single-key combos (no two-step prefix)', () => {
+    // Ctrl+L now fires immediately (it used to arm a prefix and wait).
+    expect(buildCombo(ev({ ctrlKey: true, code: 'KeyL' }))).toMatchObject({
+      combo: 'Ctrl+L',
+      consumed: true,
+      fired: true
+    })
+    expect(buildCombo(ev({ ctrlKey: true, code: 'KeyB' }))).toMatchObject({
+      combo: 'Ctrl+B',
+      fired: true
+    })
   })
 })
 

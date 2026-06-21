@@ -2,11 +2,22 @@ import type { CreatePlayerBody } from "~/types/dto";
 import type { Player, PlayerCurrentStats, PlayerStats, Position, Shot, Stats, Team } from "~/types/handball";
 import type { LoadingState } from "./useLoading";
 import type { ActiveMatch } from "./useActiveMatch";
+import type { UndoEntry } from "./useUndo";
+
+const toEventId = (request: Promise<unknown>): Promise<number | null> =>
+    request
+        .then(res =>
+            res && typeof (res as { eventId?: unknown }).eventId === "number"
+                ? ((res as { eventId: number }).eventId)
+                : null
+        )
+        .catch(() => null);
 
 export const usePlayer = (
     loadingState: LoadingState,
     team: ComputedRef<Team | undefined>,
-    currentMatch: ComputedRef<ActiveMatch | null>) => {
+    currentMatch: ComputedRef<ActiveMatch | null>,
+    recordUndo?: (entry: UndoEntry) => void) => {
     function getPlayer(playerId:number): Player | undefined {
         return team.value?.players.find(p => p.id === playerId);
     }
@@ -191,9 +202,58 @@ export const usePlayer = (
         computePlayerValue(player, playerState.stats);
         syncCurrentPlayerView(player, matchId);
 
-        $fetch('/api/shots', {
+        // A scored shot moves the scoreboard.
+        if (shot.result === 'goal' || shot.result === 'goal_empty') {
+            currentMatch.value?.increaseMatchScore('home');
+        } else if (shot.result === 'gkmiss' || shot.result === 'gkmiss_empty') {
+            currentMatch.value?.increaseMatchScore('away');
+        }
+
+        const request = $fetch('/api/shots', {
             method: 'POST',
             body: { matchId, playerId: player.id, shot },
+        });
+
+        recordUndo?.({
+            eventId: toEventId(request),
+            revert: () => {
+                const s = getMatchState(player, matchId);
+                s.stats[shot.result] = Math.max((s.stats[shot.result] ?? 0) - 1, 0);
+                if (s.shots.length) s.shots.pop();
+                const matchShots = currentMatch.value?.data.value.shots;
+                if (matchShots && matchShots.length) matchShots.pop();
+
+                if (shot.assistPrimary) {
+                    const ap = getPlayer(shot.assistPrimary);
+                    if (ap) {
+                        const as = getMatchState(ap, matchId);
+                        as.stats.assistprimary = Math.max(as.stats.assistprimary - 1, 0);
+                        computePlayerValue(ap, as.stats);
+                        syncCurrentPlayerView(ap, matchId);
+                    }
+                }
+                if (shot.assistSecondary) {
+                    const ap = getPlayer(shot.assistSecondary);
+                    if (ap) {
+                        const as = getMatchState(ap, matchId);
+                        as.stats.assistsecondary = Math.max(as.stats.assistsecondary - 1, 0);
+                        computePlayerValue(ap, as.stats);
+                        syncCurrentPlayerView(ap, matchId);
+                    }
+                }
+
+                const data = currentMatch.value?.data.value;
+                if (data) {
+                    if (shot.result === 'goal' || shot.result === 'goal_empty') {
+                        data.score = Math.max(data.score - 1, 0);
+                    } else if (shot.result === 'gkmiss' || shot.result === 'gkmiss_empty') {
+                        data.opponentScore = Math.max(data.opponentScore - 1, 0);
+                    }
+                }
+
+                computePlayerValue(player, s.stats);
+                syncCurrentPlayerView(player, matchId);
+            },
         });
     }
 
@@ -215,9 +275,22 @@ export const usePlayer = (
         syncCurrentPlayerView(player, matchId);
         flashTrigger(player.id, stat, { target: 'value' });
 
-        $fetch('/api/stats', {
+        const request = $fetch('/api/stats', {
             method: hasExistingState ? 'PUT' : 'POST',
             body: { matchId, playerId: player.id, statType: stat, time: currentMatch.value?.data.value.time },
+        });
+
+        recordUndo?.({
+            eventId: toEventId(request),
+            revert: () => {
+                const s = getMatchState(player, matchId);
+                s.stats[stat] = Math.max((s.stats[stat] ?? 0) - 1, 0);
+                if (stat === 'twominutes') {
+                    player.hasTwoMinutes = s.stats.twominutes > 0;
+                }
+                computePlayerValue(player, s.stats);
+                syncCurrentPlayerView(player, matchId);
+            },
         });
     }
 

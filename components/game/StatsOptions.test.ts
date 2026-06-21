@@ -70,7 +70,9 @@ function buildStore() {
     clearSelection: vi.fn()
   }
 
-  const store = { players, selection, matches: { match: shallowRef(activeMatch) } }
+  const undo = { record: vi.fn(), augmentLast: vi.fn(), undoLast: vi.fn(), clear: vi.fn() }
+
+  const store = { players, selection, matches: { match: shallowRef(activeMatch) }, undo }
   hoisted.store = store
   return { store, player, activeMatch }
 }

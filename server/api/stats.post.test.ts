@@ -45,6 +45,15 @@ describe('POST /api/stats', () => {
     await expect(run({ matchId: 1, statType: 'defense' }).result).rejects.toThrow()
   })
 
+  it('returns the created match_event id (for undo)', async () => {
+    const responder: Responder = ({ table, ops }) =>
+      table === 'match_event' && ops.some((o) => o.method === 'single')
+        ? { data: { id: 99 }, error: null }
+        : { data: null, error: null }
+    const { result } = run({ matchId: 1, playerId: 7, statType: 'defense', time: '0' }, responder)
+    await expect(result).resolves.toEqual({ eventId: 99 })
+  })
+
   it('throws when the insert returns an error', async () => {
     const responder: Responder = ({ table }) =>
       table === 'player_stats'

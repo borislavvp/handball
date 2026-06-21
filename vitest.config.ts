@@ -38,6 +38,8 @@ const base = defineVitestConfig({
         'composables/usePlayer.ts',
         'composables/useStats.ts',
         'composables/useKeymap.ts',
+        'composables/useMatchKeymap.ts',
+        'composables/useUndo.ts',
         'server/api/**/*.ts',
         'server/utils/matchEventStats.ts',
         'shared/pdf/**/*.ts'

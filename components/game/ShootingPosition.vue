@@ -305,12 +305,15 @@ const areaChips = computed<
   { key: ShootingArea; combo: string; x: number; y: number }[]
 >(() => {
   return [
-    { key: "LW", combo: "Ctrl+L+W", x: 35, y: 30 },
-    { key: "RW", combo: "Ctrl+R+W", x: 895, y: 30 },
-    { key: "LB9", combo: "Ctrl+L+B", x: 120, y: 305 },
-    { key: "RB9", combo: "Ctrl+R+B", x: 810, y: 305 },
-    { key: "CB9", combo: "Ctrl+C+B", x: 460, y: 310 },
-    { key: "7M", combo: "Ctrl+7+M", x: 460, y: 200 }
+    { key: "LW", combo: "Ctrl+G", x: 35, y: 30 },
+    { key: "RW", combo: "Ctrl+L", x: 895, y: 30 },
+    { key: "LB9", combo: "Ctrl+Y", x: 120, y: 305 },
+    { key: "RB9", combo: "Ctrl+O", x: 810, y: 305 },
+    { key: "CB9", combo: "Ctrl+U", x: 460, y: 310 },
+    { key: "LB6", combo: "Ctrl+H", x: 200, y: 170 },
+    { key: "CB6", combo: "Ctrl+J", x: 460, y: 138 },
+    { key: "RB6", combo: "Ctrl+K", x: 710, y: 170 },
+    { key: "7M", combo: "Ctrl+7", x: 460, y: 200 }
   ];
 });
 

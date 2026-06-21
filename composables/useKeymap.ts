@@ -22,25 +22,13 @@ const isMac =
   typeof navigator !== "undefined" &&
   /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 
-const SIDE_KEYS = new Set(["L", "C", "R", "7"]);
-const POSITION_KEYS = new Set(["W", "B", "M"]);
-const PREFIX_TIMEOUT_MS = 1000;
+// Combos are single modifier + key. A previous two-step "prefix" mechanism
+// (Ctrl+side then position, e.g. Ctrl+L then Ctrl+B) was removed when shooting
+// positions moved to dedicated single keys. These remain as no-ops so existing
+// imports keep working.
+export const consumePendingPrefix = (): string | null => null;
 
-let pendingPrefix: { key: string; expires: number } | null = null;
-
-export const consumePendingPrefix = (): string | null => {
-  if (pendingPrefix && Date.now() < pendingPrefix.expires) {
-    const key = pendingPrefix.key;
-    pendingPrefix = null;
-    return key;
-  }
-  pendingPrefix = null;
-  return null;
-};
-
-export const clearPendingPrefix = () => {
-  pendingPrefix = null;
-};
+export const clearPendingPrefix = () => {};
 
 const codeToKeyName = (code: string): string => {
   if (code === "Space") return "Space";
@@ -53,9 +41,6 @@ const codeToKeyName = (code: string): string => {
   return code;
 };
 
-const ctrlLike = (event: KeyboardEvent): boolean =>
-  event.ctrlKey || (isMac && event.metaKey);
-
 export const buildCombo = (event: KeyboardEvent): ComboResult => {
   const parts: string[] = [];
   if (event.ctrlKey) parts.push("Ctrl");
@@ -65,43 +50,13 @@ export const buildCombo = (event: KeyboardEvent): ComboResult => {
     if (isMac) {
       parts.length = 0;
       parts.push("Ctrl");
+      if (event.shiftKey) parts.push("Shift");
     } else {
       return { combo: null, consumed: false, fired: false };
     }
   }
 
   const keyName = codeToKeyName(event.code);
-  const isCtrl = ctrlLike(event);
-
-  if (
-    isCtrl &&
-    pendingPrefix &&
-    Date.now() < pendingPrefix.expires &&
-    POSITION_KEYS.has(keyName)
-  ) {
-    const prefix = pendingPrefix.key;
-    pendingPrefix = null;
-    return {
-      combo: ["Ctrl", prefix, keyName].join("+"),
-      consumed: true,
-      fired: true
-    };
-  }
-
-  if (isCtrl && SIDE_KEYS.has(keyName) && !event.shiftKey) {
-    pendingPrefix = { key: keyName, expires: Date.now() + PREFIX_TIMEOUT_MS };
-    return { combo: null, consumed: true, fired: false };
-  }
-
-  if (
-    pendingPrefix &&
-    Date.now() >= pendingPrefix.expires &&
-    !SIDE_KEYS.has(keyName) &&
-    !POSITION_KEYS.has(keyName)
-  ) {
-    pendingPrefix = null;
-  }
-
   parts.push(keyName);
   return { combo: parts.join("+"), consumed: true, fired: true };
 };

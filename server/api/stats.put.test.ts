@@ -44,6 +44,15 @@ describe('PUT /api/stats', () => {
     await expect(run({ matchId: 2, playerId: 5 }).result).rejects.toThrow()
   })
 
+  it('returns the created match_event id (for undo)', async () => {
+    const responder: Responder = ({ table, ops }) =>
+      table === 'match_event' && ops.some((o) => o.method === 'single')
+        ? { data: { id: 77 }, error: null }
+        : { data: null, error: null }
+    const { result } = run({ matchId: 2, playerId: 5, statType: 'defense', time: '0' }, responder)
+    await expect(result).resolves.toEqual({ eventId: 77 })
+  })
+
   it('throws when the RPC returns an error', async () => {
     const responder: Responder = ({ rpc }) =>
       rpc === 'increment_stat'

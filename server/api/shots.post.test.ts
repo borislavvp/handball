@@ -89,6 +89,19 @@ describe('POST /api/shots', () => {
     })
   })
 
+  it('returns the created match_event id (for undo)', async () => {
+    const responder: Responder = ({ table, ops }) => {
+      if (table === 'shots' && hasSingle(ops)) return { data: { id: 55 }, error: null }
+      if (table === 'match_event' && hasSingle(ops)) return { data: { id: 88 }, error: null }
+      return { data: null, error: null }
+    }
+    const { result } = run(
+      { matchId: 1, playerId: 7, shot: makeShot({ result: 'goal' }) },
+      responder
+    )
+    await expect(result).resolves.toEqual({ eventId: 88 })
+  })
+
   it('rejects when the shot is missing', async () => {
     await expect(run({ matchId: 1, playerId: 7 }).result).rejects.toThrow()
   })

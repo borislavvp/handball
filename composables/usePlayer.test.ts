@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 import { computePlayerValue, usePlayer } from './usePlayer'
+import type { UndoEntry } from './useUndo'
 import type { PlayerCurrentStats, Stats, Team } from '~/types/handball'
 import {
   makeActiveMatch,
@@ -271,5 +272,96 @@ describe('addShotToPlayer', () => {
     )
     api.addShotToPlayer(shooter, makeShot({ result: 'goal' }))
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('increments the scoreboard itself (goal -> home, gkmiss -> away)', () => {
+    const { shooter, activeMatch, api } = setupShot()
+    api.addShotToPlayer(shooter, makeShot({ result: 'goal', playerid: 1 }))
+    expect(activeMatch.increaseMatchScore).toHaveBeenCalledWith('home')
+    expect(activeMatch.data.value.score).toBe(1)
+
+    api.addShotToPlayer(shooter, makeShot({ result: 'gkmiss', playerid: 1 }))
+    expect(activeMatch.increaseMatchScore).toHaveBeenCalledWith('away')
+    expect(activeMatch.data.value.opponentScore).toBe(1)
+  })
+})
+
+describe('undo recording', () => {
+  const collector = () => {
+    const entries: UndoEntry[] = []
+    return { entries, record: (e: UndoEntry) => entries.push(e) }
+  }
+
+  beforeEach(() => {
+    resetIds()
+    fetchMock.mockReset()
+    fetchMock.mockResolvedValue({ eventId: 1 })
+    vi.stubGlobal('$fetch', fetchMock)
+    triggerSpy.mockReset()
+  })
+
+  it('records a stat entry whose revert decrements the stat and value', () => {
+    const { entries, record } = collector()
+    const player = makePlayer({ id: 7 })
+    const deps = makePlayerDeps([player])
+    const api = usePlayer(deps.loadingState, deps.teamRef, deps.matchRef, record)
+
+    api.increasePlayerStat(player, 'defense')
+    expect(player.currentStats?.value).toBe(1)
+    expect(entries).toHaveLength(1)
+
+    entries[0]!.revert()
+    expect(player.currentStats?.defense).toBe(0)
+    expect(player.currentStats?.value).toBe(0)
+  })
+
+  it('twominutes revert clears hasTwoMinutes', () => {
+    const { entries, record } = collector()
+    const player = makePlayer({ id: 7 })
+    const deps = makePlayerDeps([player])
+    const api = usePlayer(deps.loadingState, deps.teamRef, deps.matchRef, record)
+
+    api.increasePlayerStat(player, 'twominutes')
+    expect(player.hasTwoMinutes).toBe(true)
+    entries[0]!.revert()
+    expect(player.hasTwoMinutes).toBe(false)
+  })
+
+  it('reverts a shot: removes it, decrements the stat, rolls back the score and assist', () => {
+    const { entries, record } = collector()
+    const shooter = makePlayer({ id: 1 })
+    const assist = makePlayer({ id: 2 })
+    const activeMatch = makeActiveMatch()
+    const team = makeTeam([shooter, assist])
+    const api = usePlayer(
+      makeLoadingState(),
+      computed(() => team) as unknown as Parameters<typeof usePlayer>[1],
+      computed(() => activeMatch) as unknown as Parameters<typeof usePlayer>[2],
+      record
+    )
+
+    api.addShotToPlayer(shooter, makeShot({ result: 'goal', playerid: 1, assistPrimary: 2 }))
+    expect(shooter.currentStats?.goal).toBe(1)
+    expect(assist.currentStats?.assistprimary).toBe(1)
+    expect(activeMatch.data.value.score).toBe(1)
+    expect(activeMatch.data.value.shots).toHaveLength(1)
+
+    entries[0]!.revert()
+    expect(shooter.currentStats?.goal).toBe(0)
+    expect(shooter.currentStats?.value).toBe(0)
+    expect(assist.currentStats?.assistprimary).toBe(0)
+    expect(assist.currentStats?.value).toBe(0)
+    expect(activeMatch.data.value.score).toBe(0)
+    expect(activeMatch.data.value.shots).toHaveLength(0)
+  })
+
+  it('exposes the server event id on the recorded entry', async () => {
+    const { entries, record } = collector()
+    const player = makePlayer({ id: 7 })
+    const deps = makePlayerDeps([player])
+    const api = usePlayer(deps.loadingState, deps.teamRef, deps.matchRef, record)
+
+    api.increasePlayerStat(player, 'steal')
+    await expect(entries[0]!.eventId).resolves.toBe(1)
   })
 })

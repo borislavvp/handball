@@ -24,7 +24,7 @@ const incrementOrCreateStat = async (matchId:number, playerId:number, stat:Stats
     }
 }
 
-export default defineEventHandler(async (event): Promise<void> => {
+export default defineEventHandler(async (event): Promise<{ eventId: number | null }> => {
   try {
 
     const body = await readBody<ShotsBody>(event)
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event): Promise<void> => {
         statusMessage: 'Player id and shot and match id are required'
       })
     }
-  
+
     const {data,error} = await supabase
       .from("shots")
       .insert({
@@ -67,7 +67,7 @@ export default defineEventHandler(async (event): Promise<void> => {
             matchid: body.matchId,
         })
     }
-    await supabase
+    const { data: eventRow } = await supabase
     .from("match_event")
     .insert({
         matchid: body.matchId,
@@ -76,7 +76,9 @@ export default defineEventHandler(async (event): Promise<void> => {
         time: body.shot.time,
         metadata: `${data?.id}`
     })
-    
+    .select("id")
+    .single()
+
     incrementOrCreateStat(body.matchId, body.playerId, body.shot.result as Stats);
     if(body.shot.assistPrimary){
         incrementOrCreateStat(body.matchId, body.shot.assistPrimary, "assistprimary");
@@ -84,6 +86,8 @@ export default defineEventHandler(async (event): Promise<void> => {
     if(body.shot.assistSecondary){
         incrementOrCreateStat(body.matchId, body.shot.assistSecondary, "assistsecondary");
     }
+
+    return { eventId: eventRow?.id ?? null }
 
   }catch{
     throw createError({ statusCode: 400, statusMessage: "ERROR"})

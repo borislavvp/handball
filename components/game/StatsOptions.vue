@@ -31,7 +31,7 @@
           />
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="Ctrl+J"
+            combo="Ctrl+N"
             class="absolute top-1 right-1"
           />
         </div>
@@ -83,7 +83,7 @@
           {{ goalkeeperSelected ? "MISS" : "MISS" }}
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="Ctrl+M"
+            combo="Backspace"
             class="absolute top-1 right-1"
           />
         </button>
@@ -95,7 +95,7 @@
           STOP
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="Ctrl+S"
+            combo="Enter"
             class="absolute top-1 right-1"
           />
         </button>
@@ -107,7 +107,7 @@
           GOAL
           <shortcut-chip
             v-if="ctrlHeld"
-            combo="Ctrl+G"
+            combo="Enter"
             class="absolute top-1 right-1"
           />
         </button>
@@ -263,8 +263,8 @@
               <wrestling class="h-12 w-12 text-emerald-800" />
               <span class="text-md">DEFENSE</span>
               <shortcut-chip
-                v-if="shiftHeld"
-                combo="Shift+D"
+                v-if="ctrlHeld"
+                combo="Ctrl+F"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -276,8 +276,8 @@
               <sumo class="h-12 w-12 text-emerald-800" />
               <span class="text-md">DEFENSE+</span>
               <shortcut-chip
-                v-if="shiftHeld"
-                combo="Shift+E"
+                v-if="ctrlHeld"
+                combo="Ctrl+R"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -317,8 +317,8 @@
               <lostball class="h-12 w-12 text-red-600" />
               <span class="text-md">LOST BALL</span>
               <shortcut-chip
-                v-if="shiftHeld"
-                combo="Shift+L"
+                v-if="ctrlHeld"
+                combo="Ctrl+L"
                 class="absolute top-1 right-1"
               />
             </button>
@@ -523,12 +523,6 @@ const addShotToPlayer = (result: ShootingResult) => {
   if (noRecovery.value && store.selection.noRecoveryPlayer.value) {
     increasePlayerStats("norebound", store.selection.noRecoveryPlayer.value);
   }
-  if (result === "gkmiss" || result === "gkmiss_empty") {
-    activeMatch.value.increaseMatchScore("away");
-  } else if (result === "goal" || result === "goal_empty") {
-    activeMatch.value.increaseMatchScore("home");
-    // increasePlayerStats('goal_empty', props.player!)
-  }
   store.players.addShotToPlayer(props.player, {
     from: shootingArea,
     to: shootingTarget,
@@ -574,8 +568,13 @@ const setPlayerProvokeTwoMinutes = (stat: Stats) => {
   }
 };
 const setPlayerTwoMinutes = () => {
+  const player = props.player!;
   increasePlayerStats("twominutes");
-  store.matches.match.value?.addTwoMinute(props.player!.id, "home");
+  store.matches.match.value?.addTwoMinute(player.id, "home");
+  // Undo of the suspension should also clear the on-court 2-minute chip.
+  store.undo.augmentLast(() =>
+    store.matches.match.value?.removeTwoMinute(player.id, "home")
+  );
 };
 </script>
 

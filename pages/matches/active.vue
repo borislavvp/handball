@@ -312,7 +312,7 @@ const selectTargetSymbol = (symbol: "-" | "=") => {
   return true;
 };
 
-const confirmShot = (result: "goal" | "miss" | "gksave") => {
+const confirmShot = (result: "goal" | "miss" | "gksave" | "gkmiss") => {
   if (!selectedPlayer.value) {
     alertToast("Please select a player first");
     return false;
@@ -354,11 +354,6 @@ const fireShot = (result: "goal" | "miss" | "gksave" | "gkmiss") => {
       store.selection.noRecoveryPlayer.value,
       "norebound"
     );
-  }
-  if (result === "gkmiss") {
-    activeMatch.increaseMatchScore("away");
-  } else if (result === "goal") {
-    activeMatch.increaseMatchScore("home");
   }
   store.players.addShotToPlayer(player, {
     from: shotBuilder.shootingArea.value!,
@@ -408,6 +403,7 @@ watch(
     shotBuilder.clearShot();
     store.selection.resetAll();
     statsPanel.closeAll();
+    store.undo.clear();
   }
 );
 
@@ -438,122 +434,49 @@ watch(
   }
 );
 
-const registerKeymap = () => {
-  shortcuts.register("Space", toggleMatchTimer);
-  shortcuts.register("Escape", () => {
+const matchKeymap = useMatchKeymap({
+  isAiming: () => shotBuilder.shootingTarget.value !== null,
+  isProvokeOpen: () => statsPanel.provokesOpenned.value,
+  togglePlayClock: toggleMatchTimer,
+  cancel: () => {
     if (assistMode.mode.value) {
       assistMode.exit();
       return;
     }
     cancelCascade();
-  });
-
-  shortcuts.register("Shift+1", () => selectPlayerAtSlot(0));
-  shortcuts.register("Shift+2", () => {
-    if (statsPanel.provokesOpenned.value) {
-      setPlayerProvokeTwoMinutes("provokeTwoMin");
-      return;
-    }
-    selectPlayerAtSlot(1);
-  });
-  shortcuts.register("Shift+3", () => selectPlayerAtSlot(2));
-  shortcuts.register("Shift+4", () => selectPlayerAtSlot(3));
-  shortcuts.register("Shift+5", () => selectPlayerAtSlot(4));
-  shortcuts.register("Shift+6", () => selectPlayerAtSlot(5));
-  shortcuts.register("Shift+7", () => {
-    if (statsPanel.provokesOpenned.value) {
-      increaseStatForSelected("provokePenalty");
-      return;
-    }
-    selectPlayerAtSlot(6);
-  });
-  shortcuts.register("Shift+8", () => selectPlayerAtSlot(7));
-  shortcuts.register("Shift+9", () => selectPlayerAtSlot(8));
-  shortcuts.register("Shift+0", () => selectPlayerAtSlot(9));
-
-  shortcuts.register("Shift+D", () => increaseStatForSelected("defense"));
-  shortcuts.register("Shift+E", () => {
-    if (shotBuilder.shootingTarget.value !== null) {
-      shotBuilder.setShootingTarget(null);
-      store.selection.clearSelection();
-    }
-    statsPanel.toggleExtraDefense();
-  });
-  shortcuts.register("Shift+O", () => increaseStatForSelected("goal_empty"));
-  shortcuts.register("Shift+S", () => increaseStatForSelected("steal"));
-  shortcuts.register("Shift+B", () => {
-    if (selectedPlayer.value) {
-      setPlayerProvokeTwoMinutes("block");
-    } else {
-      increaseStatForSelected("block");
-    }
-  });
-  shortcuts.register("Shift+L", () => increaseStatForSelected("lostball"));
-  shortcuts.register("Shift+K", () => increaseStatForSelected("penaltymade"));
-  shortcuts.register("Shift+N", () => increaseStatForSelected("norebound"));
-
-  shortcuts.register("Shift+Y", () => {
-    if (statsPanel.provokesOpenned.value) {
-      increaseStatForSelected("provokeCard");
-      return;
-    }
-    increaseStatForSelected("yellowcard");
-  });
-  shortcuts.register("Shift+R", () => {
-    if (statsPanel.provokesOpenned.value) {
-      setPlayerProvokeTwoMinutes("provokeCard");
-      return;
-    }
-    increaseStatForSelected("redcard");
-  });
-  shortcuts.register("Shift+U", () => {
-    if (statsPanel.provokesOpenned.value) {
-      setPlayerProvokeTwoMinutes("provokeCard");
-      return;
-    }
-    increaseStatForSelected("bluecard");
-  });
-
-  shortcuts.register("Shift+P", () => {
+  },
+  undoLast: () => store.undo.undoLast(),
+  selectPlayer: selectPlayerAtSlot,
+  increaseStat: increaseStatForSelected,
+  provokeWithTwoMin: setPlayerProvokeTwoMinutes,
+  blockStat: () => {
+    if (selectedPlayer.value) setPlayerProvokeTwoMinutes("block");
+    else increaseStatForSelected("block");
+  },
+  toggleProvokes: () => {
     if (shotBuilder.shootingTarget.value !== null) {
       shotBuilder.setShootingTarget(null);
       store.selection.clearSelection();
     }
     statsPanel.toggleProvokes();
-  });
-
-  shortcuts.register("Shift+A", () => assistMode.toggle("primaryAssist"));
-  shortcuts.register("Shift+X", () => assistMode.toggle("secondaryAssist"));
-  shortcuts.register("Shift+M", () => assistMode.toggle("mistake"));
-  shortcuts.register("Shift+J", () => assistMode.toggle("noRecovery"));
-
-  shortcuts.register("Ctrl+0", () => selectTargetDigit("0"));
-  shortcuts.register("Ctrl+1", () => selectTargetDigit("1"));
-  shortcuts.register("Ctrl+2", () => selectTargetDigit("2"));
-  shortcuts.register("Ctrl+3", () => selectTargetDigit("3"));
-  shortcuts.register("Ctrl+4", () => selectTargetDigit("4"));
-  shortcuts.register("Ctrl+5", () => selectTargetDigit("5"));
-  shortcuts.register("Ctrl+6", () => selectTargetDigit("6"));
-  shortcuts.register("Ctrl+7", () => selectTargetDigit("7"));
-  shortcuts.register("Ctrl+8", () => selectTargetDigit("8"));
-  shortcuts.register("Ctrl+9", () => selectTargetDigit("9"));
-  shortcuts.register("Ctrl+-", () => selectTargetSymbol("-"));
-  shortcuts.register("Ctrl+=", () => selectTargetSymbol("="));
-
-  shortcuts.register("Ctrl+L+W", () => shotBuilder.setShootingArea("LW"));
-  shortcuts.register("Ctrl+R+W", () => shotBuilder.setShootingArea("RW"));
-  shortcuts.register("Ctrl+7+M", () => shotBuilder.setShootingArea("7M"));
-  shortcuts.register("Ctrl+L+B", () => shotBuilder.cycleShootingArea("LB9"));
-  shortcuts.register("Ctrl+C+B", () => shotBuilder.cycleShootingArea("CB9"));
-  shortcuts.register("Ctrl+R+B", () => shotBuilder.cycleShootingArea("RB9"));
-
-  shortcuts.register("Ctrl+F", () => {
-    if (shotBuilder.shootingTarget.value !== null) {
-      shotBuilder.toggleFastBreak();
-    }
-  });
-  shortcuts.register("Ctrl+I", () => {
-    if (shotBuilder.shootingTarget.value === null) return;
+  },
+  toggleAssist: target => assistMode.toggle(target),
+  setGoalTarget: target => shotBuilder.setShootingTarget(target),
+  setOutTarget: which => {
+    if (which === "top") selectTargetDigit("0");
+    else selectTargetSymbol(which === "left" ? "-" : "=");
+  },
+  setShootingArea: area => shotBuilder.setShootingArea(area),
+  confirmGoal: () => {
+    const isGK = selectedPlayer.value?.position === "GK";
+    confirmShot(isGK ? "gksave" : "goal");
+  },
+  confirmMiss: () => {
+    const isGK = selectedPlayer.value?.position === "GK";
+    confirmShot(isGK ? "gkmiss" : "miss");
+  },
+  toggleFastBreak: () => shotBuilder.toggleFastBreak(),
+  toggleOneOnOne: () => {
     if (selectedPlayer.value?.position === "GK") {
       store.selection.oneOnOneLost.value = !store.selection.oneOnOneLost.value;
       if (store.selection.oneOnOneLost.value) {
@@ -565,25 +488,19 @@ const registerKeymap = () => {
     } else {
       shotBuilder.toggleOneOnOneWin();
     }
-  });
-  shortcuts.register("Ctrl+J", () => {
-    if (shotBuilder.shootingTarget.value !== null) {
-      store.selection.noRecovery.value = !store.selection.noRecovery.value;
-      if (store.selection.noRecovery.value) {
-        assistMode.enter("noRecovery");
-      } else {
-        store.selection.noRecoveryPlayer.value = null;
-        if (assistMode.mode.value === "noRecovery") assistMode.exit();
-      }
+  },
+  toggleNoRecovery: () => {
+    store.selection.noRecovery.value = !store.selection.noRecovery.value;
+    if (store.selection.noRecovery.value) {
+      assistMode.enter("noRecovery");
+    } else {
+      store.selection.noRecoveryPlayer.value = null;
+      if (assistMode.mode.value === "noRecovery") assistMode.exit();
     }
-  });
+  }
+});
 
-  shortcuts.register("Ctrl+G", () => confirmShot("goal"));
-  shortcuts.register("Ctrl+M", () => confirmShot("miss"));
-  shortcuts.register("Ctrl+S", () => confirmShot("gksave"));
-};
-
-registerKeymap();
+matchKeymap.register(shortcuts.register);
 
 function onShotAdded() {
   shotBuilder.clearShot();

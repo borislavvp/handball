@@ -229,9 +229,14 @@ const orderedPlayers = computed<Player[]>(() =>
   playerOrder.orderedPlayers(store.teams.selectedTeam.value)
 );
 
+const PLAYER_SLOT_LETTERS = ["Q", "W", "E", "A", "S", "D", "Z", "X", "C"];
+
 const slotCombo = (idx: number): string => {
-  if (idx < 0 || idx > 9) return "";
-  return idx === 9 ? "Shift+0" : `Shift+${idx + 1}`;
+  if (idx >= 0 && idx < PLAYER_SLOT_LETTERS.length) {
+    return `Shift+${PLAYER_SLOT_LETTERS[idx]}`;
+  }
+  if (idx === 9) return "Shift+1"; // 10th player onward use numbers
+  return "";
 };
 
 watch(teamPlayers, next => {
