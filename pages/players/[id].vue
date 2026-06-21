@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { useHandballStore } from '~/composables/useHandballStore';
 import type { Player, PlayerStats, Position } from '~/types/handball';
+import { aggregatePlayerSeason, AREA_LABELS } from '~/composables/seasonStats';
 
 const route = useRoute();
 const store = useHandballStore();
 const id = Number(route.params.id);
 const originalPlayer = ref<Player | undefined>(undefined)
+
+const isGk = computed(() => player.value?.position === 'GK')
+const season = computed(() =>
+  player.value ? aggregatePlayerSeason(player.value.recentStats ?? [], player.value.id) : null
+)
 
 const { $dialog } = useNuxtApp();
 const player = ref<Player | undefined>(undefined)
@@ -126,6 +132,50 @@ async function saveChanges() {
             placeholder="Position" class="w-full border rounded-lg px-3 py-2 text-sm">
             <option v-for="p in positions" :key="p" :value="p">{{ p }}</option>
           </select>
+        </div>
+
+        <!-- Season summary -->
+        <div v-if="season && season.matches > 0" class="bg-gray-50 rounded-2xl p-4 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold text-gray-900">Season</h3>
+            <div class="flex items-center gap-3">
+              <FormIndicator v-if="season.form" :form="season.form" />
+              <span class="text-xs text-gray-500">{{ season.matches }} matches</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 md:grid-cols-6 gap-2 text-center">
+            <div class="bg-white rounded-lg p-2">
+              <p class="font-semibold">{{ season.goalsPerGame }}</p>
+              <p class="text-xs text-gray-500">Goals/G</p>
+            </div>
+            <div class="bg-white rounded-lg p-2">
+              <p class="font-semibold">{{ season.efficiency }}%</p>
+              <p class="text-xs text-gray-500">Efficiency</p>
+            </div>
+            <div class="bg-white rounded-lg p-2">
+              <p class="font-semibold text-emerald-600">{{ season.attack }}%</p>
+              <p class="text-xs text-gray-500">Attack</p>
+            </div>
+            <div class="bg-white rounded-lg p-2">
+              <p class="font-semibold text-blue-600">{{ season.defense }}%</p>
+              <p class="text-xs text-gray-500">Defense</p>
+            </div>
+            <div v-if="isGk" class="bg-white rounded-lg p-2">
+              <p class="font-semibold text-amber-600">{{ season.gkSaves }}%</p>
+              <p class="text-xs text-gray-500">Save%</p>
+            </div>
+            <div class="bg-white rounded-lg p-2">
+              <p class="font-semibold" :class="season.avgValue >= 0 ? 'text-gray-900' : 'text-red-500'">
+                {{ season.avgValue > 0 ? '+' : '' }}{{ season.avgValue }}
+              </p>
+              <p class="text-xs text-gray-500">Avg Value</p>
+            </div>
+            <div v-if="season.bestZone" class="bg-white rounded-lg p-2">
+              <p class="font-semibold">{{ season.bestZone.goalRate }}%</p>
+              <p class="text-xs text-gray-500">{{ AREA_LABELS[season.bestZone.area] }}</p>
+            </div>
+          </div>
+          <SeasonTrendChart :trend="season.trend" />
         </div>
 
         <!-- Stats per Match -->

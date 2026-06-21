@@ -20,6 +20,9 @@ const selectedTeamId = computed({
         <button @click="router.push('/')" class="p-2 rounded-full hover:bg-gray-100">
             Teams
         </button>
+        <button @click="router.push('/season')" class="p-2 rounded-full hover:bg-gray-100">
+            Season
+        </button>
         <button class="p-2 rounded-full hover:bg-gray-100">
             Settings
         </button>
