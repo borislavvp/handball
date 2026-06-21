@@ -18,6 +18,7 @@ export interface UpdateMatchBody {
 export interface CreateMatchBody {
     opponent: string
     teamId: number
+    opponentTeamId?: number | null
 }
 
 export interface CreateStatsBody {
@@ -51,6 +52,7 @@ export type MatchEventBody = {
 
 export type GeneralMatchBody = {
     matchId: number;
+    teamId?: number;
 }
 
 export type ShotsBody = {

@@ -50,26 +50,28 @@ export function parseTimeToSeconds(timeStr: string): number {
   return 0;
 }
 
-export async  function fetchMatchData(matchId: number) {
-  
+export async  function fetchMatchData(matchId: number, teamId?: number) {
+
   const { $supabase } = useNuxtApp()
   const { data: matchData, error: matchError } = await $supabase
     .from("match")
     .select("*, team(name)")
     .eq("id", matchId)
     .single();
-  
+
   if (!matchData || matchError) {
-    throw createError({ 
-      statusCode: 404, 
-      statusMessage: "Match not found" 
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Match not found"
     });
   }
-  
-  const teamId = matchData.teamid;
-  
+
+  // Defaults to the home team; pass the opponent's team id to analyse the
+  // other side of a match played against an existing team.
+  const resolvedTeamId = teamId ?? matchData.teamid;
+
   const [players, playerStats, shotsRaw, events] = await Promise.all([
-    $supabase.from("player").select("*").eq("teamid", teamId),
+    $supabase.from("player").select("*").eq("teamid", resolvedTeamId),
     $supabase.from("player_stats").select("*").eq("matchid", matchId),
     $supabase.from("shots").select("*").eq("matchid", matchId).order("time", { ascending: true }),
     $supabase.from("match_event").select("*").eq("matchid", matchId).order("time", { ascending: true }),

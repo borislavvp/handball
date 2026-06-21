@@ -16,11 +16,12 @@ export default defineEventHandler(async (event): Promise<{id:number, createdat: 
       .insert({
         opponent:body.opponent,
         teamid: body.teamId,
+        opponentTeamId: body.opponentTeamId ?? null,
         opponentScore: 0,
         score: 0,
         timeoutsLeftHome: 3,
         timeoutsLeftAway: 3,
-      })
+      } as any)
       .select()
       .single()
     if (error || !data) {

@@ -46,6 +46,24 @@
               >
             </div>
           </div>
+          <div
+            v-if="hasOpponentTeam"
+            class="flex items-center gap-3 mx-8 mb-1 mt-2"
+          >
+            <span class="text-lg font-semibold">Recording:</span>
+            <button
+              @click="toggleActiveTeam"
+              class="px-4 py-2 rounded-xl border-2 font-semibold text-lg active:scale-95 transition"
+              :class="
+                isOpponentActive
+                  ? 'border-rose-600 text-rose-700 bg-rose-50'
+                  : 'border-emerald-700 text-emerald-700 bg-emerald-50'
+              "
+            >
+              {{ team?.name ?? "—" }}
+              <span class="ml-2 text-sm opacity-70">⇄ switch</span>
+            </button>
+          </div>
           <div class="flex flex-wrap w-full ml-8 space-x-6 py-6">
             <players-list
               :stats-mode="store.selection.stats.value.goal"
@@ -188,9 +206,27 @@ const shortcuts = useKeyboardShortcuts();
 
 const match = computed(() => store.matches.match.value || null);
 
-const team = computed(() =>
-  match.value ? store.teams.getTeam(match.value.data.value.teamid) : null
+// The team currently being recorded/viewed. Defaults to the home team but can be
+// toggled to the opponent when the match is against an existing team.
+const team = computed(() => store.teams.activeTeam.value ?? null);
+
+const homeTeamId = computed(() => match.value?.data.value.teamid ?? null);
+const opponentTeamId = computed(() => match.value?.data.value.opponentTeamId ?? null);
+const hasOpponentTeam = computed(() => opponentTeamId.value != null);
+const isOpponentActive = computed(
+  () => hasOpponentTeam.value && team.value?.id === opponentTeamId.value
 );
+
+const toggleActiveTeam = () => {
+  if (!hasOpponentTeam.value) return;
+  store.teams.setActiveTeam(
+    isOpponentActive.value ? homeTeamId.value : opponentTeamId.value
+  );
+  // Clear any in-progress selection / shot when switching sides.
+  shotBuilder.clearShot();
+  store.selection.clearSelection();
+  statsPanel.closeAll();
+};
 
 const gameMode = computed(() => store.selection.gameMode.value);
 
@@ -380,9 +416,11 @@ onMounted(async () => {
   if (!store.teams.selectedTeam.value) {
     await store.initialize();
   }
+  store.teams.setActiveTeam(homeTeamId.value);
 });
 
 onActivated(() => {
+  store.teams.setActiveTeam(homeTeamId.value);
   if (match.value && match.value.data.value.result) {
     $dialog
       .alert({
@@ -397,6 +435,14 @@ onActivated(() => {
   }
 });
 
+onDeactivated(() => {
+  store.teams.setActiveTeam(null);
+});
+
+onBeforeUnmount(() => {
+  store.teams.setActiveTeam(null);
+});
+
 watch(
   () => match.value?.data.value.id,
   () => {
@@ -404,6 +450,7 @@ watch(
     store.selection.resetAll();
     statsPanel.closeAll();
     store.undo.clear();
+    store.teams.setActiveTeam(homeTeamId.value);
   }
 );
 

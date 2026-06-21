@@ -71,7 +71,7 @@ const getStatPercentage = (text:string, stats: Stats[], inverted:boolean = false
             }
         }
     }else{
-        const players = store.teams.selectedTeam.value?.players;
+        const players = store.teams.activeTeam.value?.players;
         stats.forEach(stat => {
             value += players?.reduce((sum, player) => sum + (player.currentStats?.[stat] ?? 0), 0) ?? 0;
         });
@@ -135,7 +135,7 @@ const defenseEfficiency = computed(() => {
         const value = badDefense === 0 ? 0 : upscale(goodDefense / (goodDefense+badDefense))
         return {available: value > 0, text: 'DEFENSE',goodDefense, badDefense, value: `${value}%`, color: getScoreColor(value).textColor};
     }
-    const players = store.teams.selectedTeam.value?.players;
+    const players = store.teams.activeTeam.value?.players;
 
     const goodDefense = players?.reduce((sum, player) => sum + (player.currentStats?.steal ?? 0) + 
                                     (player.currentStats?.block ?? 0) +

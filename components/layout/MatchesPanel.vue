@@ -3,9 +3,35 @@
   <section class="bg-white rounded-2xl shadow-sm p-6">
     <h2 class="text-xl font-semibold mb-4">Matches</h2>
 
-    <div class="flex gap-2 mb-4">
-      <input v-model="newMatchName" placeholder="Opponent" class="px-3 py-2 rounded-xl border bg-gray-50 text-md flex-1" />
-      <button @click="createMatch" class="px-4 py-2 rounded bg-blue-600 text-white text-md hover:bg-blue-700">Start</button>
+    <div class="flex flex-col gap-2 mb-4">
+      <div class="flex items-center gap-2">
+        <span class="text-md text-gray-700">Opponent:</span>
+        <ClientOnly>
+          <DropdownMenu>
+            <template #trigger>
+              <button class="px-1 underline text-md text-blue-600 font-medium">
+                {{ opponentTeam ? opponentTeam.name : "New team…" }}
+              </button>
+            </template>
+            <DropdownItem :action-id="'__new__'" :on-action="clearOpponentTeam">New team…</DropdownItem>
+            <DropdownItem
+              v-for="t in opponentTeamOptions"
+              :key="t.id"
+              :action-id="t.name"
+              :on-action="() => selectOpponentTeam(t.id)"
+            >{{ t.name }}</DropdownItem>
+          </DropdownMenu>
+        </ClientOnly>
+      </div>
+      <div class="flex gap-2">
+        <input
+          v-model="newMatchName"
+          :disabled="!!opponentTeam"
+          placeholder="Opponent name"
+          class="px-3 py-2 rounded-xl border bg-gray-50 text-md flex-1 disabled:opacity-60"
+        />
+        <button @click="createMatch" class="px-4 py-2 rounded bg-blue-600 text-white text-md hover:bg-blue-700">Start</button>
+      </div>
     </div>
 
     <div class="flex flex-col space-y-3">
@@ -36,11 +62,31 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHandballStore } from '~/composables/useHandballStore'
 import MatchItem from './MatchItem.vue'
+import DropdownMenu from '~/components/shared/DropdownMenu.vue'
+import DropdownItem from '~/components/shared/DropdownItem.vue'
 import type { Match } from '~/types/handball'
 
 const store = useHandballStore()
 const router = useRouter()
 const newMatchName = ref('')
+const opponentTeamId = ref<number | null>(null)
+
+// Teams you can face: every team in your roster except the home (selected) one.
+const opponentTeamOptions = computed(() =>
+  store.teams.teams.value.filter(t => t.id !== store.teams.selectedTeam.value?.id)
+)
+const opponentTeam = computed(() =>
+  opponentTeamId.value != null
+    ? store.teams.teams.value.find(t => t.id === opponentTeamId.value) ?? null
+    : null
+)
+
+const selectOpponentTeam = (id: number) => {
+  opponentTeamId.value = id
+}
+const clearOpponentTeam = () => {
+  opponentTeamId.value = null
+}
 
 const latestActiveMatches = computed(() =>
   Array.from(store.matches.activeMatches.values()).filter(m => m.data.value.teamid === store.teams.selectedTeam.value?.id)
@@ -61,7 +107,8 @@ const latestMatches = computed(() =>
 )
 
 const createMatch = async () => {
-  const match = await store.matches.createMatch(newMatchName.value || 'New Match')
+  const opponentName = opponentTeam.value?.name ?? (newMatchName.value || 'New Match')
+  const match = await store.matches.createMatch(opponentName, opponentTeam.value?.id ?? null)
   if (match) router.push('/matches/active')
 }
 

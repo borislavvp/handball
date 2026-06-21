@@ -284,6 +284,43 @@ describe('addShotToPlayer', () => {
     expect(activeMatch.increaseMatchScore).toHaveBeenCalledWith('away')
     expect(activeMatch.data.value.opponentScore).toBe(1)
   })
+
+  it('scores the opponent side when the active team is the away team', () => {
+    const shooter = makePlayer({ id: 1 })
+    const awayTeam = makeTeam([shooter], { id: 200 }) // not the match home teamid (100)
+    const activeMatch = makeActiveMatch() // teamid 100
+    const api = usePlayer(
+      makeLoadingState(),
+      computed(() => awayTeam) as unknown as Parameters<typeof usePlayer>[1],
+      computed(() => activeMatch) as unknown as Parameters<typeof usePlayer>[2]
+    )
+    api.addShotToPlayer(shooter, makeShot({ result: 'goal', playerid: 1 }))
+    expect(activeMatch.increaseMatchScore).toHaveBeenCalledWith('away')
+    expect(activeMatch.data.value.opponentScore).toBe(1)
+    expect(activeMatch.data.value.score).toBe(0)
+
+    // a conceded shot by the away GK credits the home side
+    api.addShotToPlayer(shooter, makeShot({ result: 'gkmiss', playerid: 1 }))
+    expect(activeMatch.increaseMatchScore).toHaveBeenCalledWith('home')
+    expect(activeMatch.data.value.score).toBe(1)
+  })
+
+  it('undo reverses the opponent-side score for an away-team goal', () => {
+    const entries: UndoEntry[] = []
+    const shooter = makePlayer({ id: 1 })
+    const awayTeam = makeTeam([shooter], { id: 200 })
+    const activeMatch = makeActiveMatch()
+    const api = usePlayer(
+      makeLoadingState(),
+      computed(() => awayTeam) as unknown as Parameters<typeof usePlayer>[1],
+      computed(() => activeMatch) as unknown as Parameters<typeof usePlayer>[2],
+      (e) => entries.push(e)
+    )
+    api.addShotToPlayer(shooter, makeShot({ result: 'goal', playerid: 1 }))
+    expect(activeMatch.data.value.opponentScore).toBe(1)
+    entries[0]!.revert()
+    expect(activeMatch.data.value.opponentScore).toBe(0)
+  })
 })
 
 describe('undo recording', () => {

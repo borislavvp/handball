@@ -105,14 +105,15 @@ export const useMatch = (loadingState: LoadingState, team: ComputedRef<Team | un
         }
     }
 
-    async function createMatch(opponent: string): Promise<Match | null> {
+    async function createMatch(opponent: string, opponentTeamId?: number | null): Promise<Match | null> {
         const data = await $fetch('/api/matches', {
             method: 'POST',
-            body: { opponent: opponent, teamId: team.value?.id },
+            body: { opponent: opponent, teamId: team.value?.id, opponentTeamId: opponentTeamId ?? null },
         });
         const match: ActiveMatchData = {
             id: data.id as number,
             opponent,
+            opponentTeamId: opponentTeamId ?? null,
             teamid: team.value!.id,
             createdat: `${data.createdat}`,
             result: null,

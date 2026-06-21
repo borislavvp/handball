@@ -14,24 +14,24 @@ import { buildAttackByDefenseStats, buildAttackDefenseSuperiorityStats, buildDef
   processGoalkeeperStats, processPlayerStats, SuperiortyResult } from "~/shared/pdf/pdf";
 import { calculateScoreProgression } from "~/shared/pdf/pdfChart";
 
-async function fetchMatchData(matchId: number) {
+async function fetchMatchData(matchId: number, teamId?: number) {
   const { data: matchData, error: matchError } = await supabase
     .from("match")
     .select("*, team(name)")
     .eq("id", matchId)
     .single();
-  
+
   if (!matchData || matchError) {
-    throw createError({ 
-      statusCode: 404, 
-      statusMessage: "Match not found" 
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Match not found"
     });
   }
-  
-  const teamId = matchData.teamid;
-  
+
+  const resolvedTeamId = teamId ?? matchData.teamid;
+
   const [players, playerStats, shotsRaw, events] = await Promise.all([
-    supabase.from("player").select("*").eq("teamid", teamId),
+    supabase.from("player").select("*").eq("teamid", resolvedTeamId),
     supabase.from("player_stats").select("*").eq("matchid", matchId),
     supabase.from("shots").select("*").eq("matchid", matchId),
     supabase.from("match_event").select("*").eq("matchid", matchId),
@@ -586,7 +586,7 @@ export default defineEventHandler(async (event) => {
     }
     
     // Fetch all data
-    const { match, players, playerStats, shots, events } = await fetchMatchData(body.matchId);
+    const { match, players, playerStats, shots, events } = await fetchMatchData(body.matchId, body.teamId);
     
     // Create player stats map for quick lookup
     const statsByPlayer = new Map<number, Partial<PlayerStats>>();

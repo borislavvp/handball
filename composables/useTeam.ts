@@ -6,8 +6,21 @@ export const useTeam = (loadingState: LoadingState) => {
     const teams = useState<Team[]>('teams', () => []);
     const selectedTeamId = ref<number | undefined | null>(0);
     const selectedTeam = computed(() => teams.value?.find(t => t.id === selectedTeamId.value));
-    
-    const selectTeam = (teamId: number) => {   
+
+    // During a match against an existing team, the screen can override which
+    // team is being recorded/viewed (home vs opponent). Falls back to the
+    // globally selected team everywhere else.
+    const activeTeamOverride = ref<number | null>(null);
+    const activeTeam = computed(() =>
+        activeTeamOverride.value != null
+            ? (teams.value?.find(t => t.id === activeTeamOverride.value) ?? selectedTeam.value)
+            : selectedTeam.value
+    );
+    const setActiveTeam = (teamId: number | null) => {
+        activeTeamOverride.value = teamId;
+    };
+
+    const selectTeam = (teamId: number) => {
         selectedTeamId.value = teamId;
     }
 
@@ -91,6 +104,9 @@ export const useTeam = (loadingState: LoadingState) => {
     return {
         teams,
         selectedTeam,
+        activeTeam,
+        activeTeamOverride,
+        setActiveTeam,
         fetchTeams,
         addTeam,
         removeTeam,

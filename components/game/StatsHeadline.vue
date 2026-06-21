@@ -15,7 +15,7 @@
         </span>
     </div>
     <span v-else class="bg-white items-center justify-center uppercase font-bold rounded-xl  border border-gray-200 flex text-gray-800 py-2 px-4 w-full text-2xl mb-4" >
-        overview of team {{ store.teams.selectedTeam.value?.name }} shots
+        overview of team {{ store.teams.activeTeam.value?.name }} shots
     </span>
 </template>
 

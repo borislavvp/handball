@@ -37,7 +37,7 @@ import SummaryTab from './SummaryTab.vue';
 import type { MatchStats } from '~/shared/pdf/fetchMatchStats';
 import type { Match } from '~/types/handball';
 
-const props = defineProps<{ stats: MatchStats, match: Match }>();
+const props = defineProps<{ stats: MatchStats, match: Match, teamId?: number | null }>();
 const emit = defineEmits<{
   (e: 'statsChanged'): void;
 }>();
@@ -54,7 +54,7 @@ const openPDF = async () => {
   try {
     const response = await $fetch<ArrayBuffer>(`/api/match/pdf`, {
       method: 'POST',
-      body: { matchId: props.match.id },
+      body: { matchId: props.match.id, teamId: props.teamId ?? undefined },
       responseType: 'arrayBuffer',
     });
 

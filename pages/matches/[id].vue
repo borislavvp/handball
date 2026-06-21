@@ -18,7 +18,25 @@
       </div>
       <div v-if="match && stats" class="flex-1 flex flex-col">
         <StatsHeader :match="match"/>
-        <StatsTabs :stats="stats" :match="match" @stats-changed="loadStats(matchId)" />
+        <div
+          v-if="hasOpponentTeam"
+          class="flex items-center gap-3 px-5 py-2 bg-gray-100 border-b"
+        >
+          <span class="text-sm font-semibold text-gray-700">Analysis for:</span>
+          <button
+            @click="toggleViewedTeam"
+            class="px-3 py-1.5 rounded-lg border-2 font-semibold text-sm"
+            :class="
+              isOpponentView
+                ? 'border-rose-600 text-rose-700 bg-rose-50'
+                : 'border-emerald-700 text-emerald-700 bg-emerald-50'
+            "
+          >
+            {{ viewedTeam?.name ?? "—" }}
+            <span class="ml-2 opacity-70">⇄ switch</span>
+          </button>
+        </div>
+        <StatsTabs :stats="stats" :match="match" :team-id="activeViewTeamId" @stats-changed="loadStats(matchId, viewedTeamId)" />
       </div>
     </div>
   </div>
@@ -37,25 +55,46 @@ const matchId = computed(() => Number(route.params.id));
 const match = computed(() => store.matches.getMatch(matchId.value));
 const team = computed(() => match.value ? store.teams.getTeam(match.value.teamid) : null);
 
+// Which team's analysis is shown. Defaults to the home team; can switch to the
+// opponent when the match was played against an existing team.
+const viewedTeamId = ref<number | null>(null);
+const homeTeamId = computed(() => match.value?.teamid ?? null);
+const opponentTeamId = computed(() => match.value?.opponentTeamId ?? null);
+const hasOpponentTeam = computed(() => opponentTeamId.value != null);
+const activeViewTeamId = computed(() => viewedTeamId.value ?? homeTeamId.value);
+const isOpponentView = computed(
+  () => hasOpponentTeam.value && activeViewTeamId.value === opponentTeamId.value
+);
+const viewedTeam = computed(() =>
+  activeViewTeamId.value != null ? store.teams.getTeam(activeViewTeamId.value) : null
+);
+
 const stats = ref<any>(null)
 
-async function loadStats(id: number) {
+async function loadStats(id: number, teamId?: number | null) {
   store.loadingState.fetching.value = true;
   try {
     if (!id || Number.isNaN(id)) {
       stats.value = null;
       return;
     }
-    stats.value = await fetchMatchStats(id);
+    stats.value = await fetchMatchStats(id, teamId ?? undefined);
   } finally {
     store.loadingState.fetching.value = false;
   }
 }
 
+const toggleViewedTeam = async () => {
+  if (!hasOpponentTeam.value) return;
+  viewedTeamId.value = isOpponentView.value ? homeTeamId.value : opponentTeamId.value;
+  await loadStats(matchId.value, viewedTeamId.value);
+};
+
 watch(
   () => route.params.id,
   async () => {
-    await loadStats(matchId.value);
+    viewedTeamId.value = homeTeamId.value;
+    await loadStats(matchId.value, viewedTeamId.value);
   },
   { immediate: true }
 );

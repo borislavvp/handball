@@ -159,6 +159,17 @@ export const usePlayer = (
         const matchId = getActiveMatchId();
         if (!matchId) return;
 
+        // Score follows the active team: a goal by whichever team is being
+        // recorded goes to that team's side of the scoreboard; a conceded shot
+        // (gkmiss*) credits the other side.
+        const isHomeTeam = team.value?.id === currentMatch.value?.data.value.teamid;
+        const scoringSide: 'home' | 'away' = isHomeTeam ? 'home' : 'away';
+        const concededSide: 'home' | 'away' = isHomeTeam ? 'away' : 'home';
+        const isScoringShot = shot.result === 'goal' || shot.result === 'goal_empty';
+        const isConcededShot = shot.result === 'gkmiss' || shot.result === 'gkmiss_empty';
+        const scoreField = (side: 'home' | 'away') =>
+            side === 'home' ? 'score' as const : 'opponentScore' as const;
+
         const { trigger: flashTrigger } = usePlayerFlash();
 
         const playerState = getMatchState(player, matchId);
@@ -202,11 +213,11 @@ export const usePlayer = (
         computePlayerValue(player, playerState.stats);
         syncCurrentPlayerView(player, matchId);
 
-        // A scored shot moves the scoreboard.
-        if (shot.result === 'goal' || shot.result === 'goal_empty') {
-            currentMatch.value?.increaseMatchScore('home');
-        } else if (shot.result === 'gkmiss' || shot.result === 'gkmiss_empty') {
-            currentMatch.value?.increaseMatchScore('away');
+        // A scored shot moves the scoreboard (toward the active team's side).
+        if (isScoringShot) {
+            currentMatch.value?.increaseMatchScore(scoringSide);
+        } else if (isConcededShot) {
+            currentMatch.value?.increaseMatchScore(concededSide);
         }
 
         const request = $fetch('/api/shots', {
@@ -244,10 +255,12 @@ export const usePlayer = (
 
                 const data = currentMatch.value?.data.value;
                 if (data) {
-                    if (shot.result === 'goal' || shot.result === 'goal_empty') {
-                        data.score = Math.max(data.score - 1, 0);
-                    } else if (shot.result === 'gkmiss' || shot.result === 'gkmiss_empty') {
-                        data.opponentScore = Math.max(data.opponentScore - 1, 0);
+                    if (isScoringShot) {
+                        const f = scoreField(scoringSide);
+                        data[f] = Math.max(data[f] - 1, 0);
+                    } else if (isConcededShot) {
+                        const f = scoreField(concededSide);
+                        data[f] = Math.max(data[f] - 1, 0);
                     }
                 }
 

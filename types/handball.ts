@@ -47,6 +47,7 @@ export interface Team {
 export interface Match {
   id: number;
   opponent: string;
+  opponentTeamId?: number | null;
   teamid: number;
   result: "WIN" | "LOST" | "FINISHED" | null;
   score: number;

@@ -200,7 +200,7 @@ const valueOverlayKey = (playerId: number) => {
 };
 
 const teamPlayers = computed(() => {
-  const players = store.teams.selectedTeam.value?.players;
+  const players = store.teams.activeTeam.value?.players;
   if (!players) {
     return [];
   }
@@ -226,7 +226,7 @@ const wasDragged = ref(false);
 const listRef = ref<HTMLElement | null>(null);
 
 const orderedPlayers = computed<Player[]>(() =>
-  playerOrder.orderedPlayers(store.teams.selectedTeam.value)
+  playerOrder.orderedPlayers(store.teams.activeTeam.value)
 );
 
 const PLAYER_SLOT_LETTERS = ["Q", "W", "E", "A", "S", "D", "Z", "X", "C"];
