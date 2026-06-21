@@ -822,8 +822,7 @@ export function buildDefenseByTypeStats(
   for (const shot of defenseShots) {
     const defenseType = findDefenseAt(shot.time, events, false);
     const bucket = defenseByType.get(defenseType) || defenseByType.get("6-0")!;
-    
-      console.log("Extracting defense types from events...",defenseType,bucket);
+
     const saved = shot.result === 'gksave';
     bucket.shots.total++;
     if (saved) bucket.shots.saved++;

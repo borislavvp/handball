@@ -24,3 +24,5 @@ logs
 !.env.example
 supabase/.temp
 notes.md
+
+coverage

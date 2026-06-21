@@ -283,7 +283,7 @@
             </button>
             <button
               class="relative flex flex-col items-center"
-              @click="increasePlayerStats('goalld')"
+              @click="addShotToPlayer('goal_empty')"
               :class="positiveStatStyle"
             >
               <longdistance class="h-12 w-20 text-emerald-800" />

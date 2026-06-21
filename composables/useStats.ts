@@ -101,7 +101,7 @@ export const useStats = (
         if(!stats){
             return -1;
         }
-        const positive = stats.goal  + stats.assistprimary + stats.assistsecondary + stats.provokeCard +
+        const positive = stats.goal + stats.assistprimary + stats.assistsecondary + stats.provokeCard +
             stats.provokePenalty + stats.provokeTwoMin + stats["1on1win"]
         const negative = stats.miss + stats.lostball
 

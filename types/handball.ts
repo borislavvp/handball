@@ -134,7 +134,6 @@ export type Stats =
   | "goal"
   | "goal_empty"
   | "gkmiss_empty"
-  | "goalld"
   | "assistprimary"
   | "assistsecondary"
   | "1on1win"
